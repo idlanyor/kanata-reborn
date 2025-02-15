@@ -20,7 +20,6 @@ import { gpt4Hika } from './lib/ai.js';
 import { schedulePrayerReminders } from './lib/jadwalshalat.js';
 import User from './database/models/User.js';
 import Group from './database/models/Group.js';
-import { tomp3 } from './lib/mediaMsg/converter.js'
 
 
 const app = express()
@@ -311,7 +310,6 @@ export async function startBot() {
         sock.ev.on('messages.upsert', async chatUpdate => {
             try {
                 const m = chatUpdate.messages[0];
-                await tomp3(sock, m, chatUpdate)
                 const { remoteJid } = m.key;
                 const sender = m.pushName || remoteJid;
                 const id = remoteJid;
