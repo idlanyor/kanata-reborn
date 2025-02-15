@@ -3,7 +3,7 @@ import { checkOwner } from "../../helper/permission.js";
 export const handler = 'upch';
 export const description = 'Upload To Channel';
 
-export default async ({ sock, m, id, psn, sender, caption, attf }) => {
+export default async ({ sock, m, id, psn, sender,noTel, caption, attf }) => {
     if (!await checkOwner(sock, id, noTel)) return;
     if (!psn && !attf) return sock.sendMessage(id, { text: "Text atau media apa yang mau dikirim ke channel?" });
 
