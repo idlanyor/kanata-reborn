@@ -12,7 +12,7 @@ import NodeCache from "node-cache";
 import fs from 'fs-extra';
 import { startBot } from "../app.js";
 import { logger } from './logger.js';
-import Session from '../database/models/Session.js';
+
 
 class Kanata {
     constructor(data, io = null) {
@@ -181,4 +181,13 @@ async function clearMessages(m) {
 
 const sanitizeBotId = botId => botId.split(":")[0] + "@s.whatsapp.net";
 
-export { Kanata, clearMessages, sanitizeBotId };
+const getPpUrl = async (sock, id) => {
+    const ppUrl = globalThis.defaultProfilePic
+    try {
+        return await sock.profilePictureUrl(id, "image")
+    } catch {
+        return ppUrl
+    }
+}
+
+export { Kanata, clearMessages, sanitizeBotId, getPpUrl };

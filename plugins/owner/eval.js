@@ -1,7 +1,7 @@
 import { checkOwner } from '../../helper/permission.js';
 import util from 'util';
 
-export default async ({ sock, m, id, noTel, psn }) => {
+export default async ({ sock, m, id, noTel, psn,sender }) => {
     if (!await checkOwner(sock, id, noTel)) return;
     
     if (!psn) {
@@ -15,6 +15,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
             sock,
             m,
             id,
+            sender,
             noTel,
             psn,
             console: {

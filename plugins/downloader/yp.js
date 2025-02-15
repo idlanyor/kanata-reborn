@@ -9,7 +9,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             return;
         }
 
-        await sock.sendMessage(id, { text: `🔍 Sedang mencari *${psn}*...` });
+        await sock.sendMessage(id, { text: `🔍 Sedang mencari *${psn}* di Youtube...` });
         let result = await ytPlay(psn);
         // console.log(result)
         caption = '*Hasil Pencarian YouTube Play*';
