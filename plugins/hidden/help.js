@@ -1,30 +1,94 @@
 import { helpMessage } from '../../helper/help.js'
 import loadAssets from '../../helper/loadAssets.js';
-import { getBuffer } from '../../helper/mediaMsg.js';
+
 export const handler = ["menu", "help", "h", "hai"]
 export const description = "List All Menu";
+
 export default async ({ sock, id, m, noTel, sender }) => {
     const { caption, plugins } = await helpMessage()
+    
+    // Generate sections dengan format yang lebih menarik
     let sections = []
-    for (const plugin in plugins) {
-        sections.push({
-            header: 'Daftar Menu Kanata V2',
-            highlight_label: 'V2',
-            title: `❏┄┅━┅┄〈 〘 ${plugin.toUpperCase()} 〙`,
-            rows: plugins[plugin].map((command) => {
-                return {
-                    title: Array.isArray(command.handler)
-                        ? command.handler.map(h => h.toUpperCase()).join(', ')
-                        : command.handler.toUpperCase(),
-                    description: command.description,
-                    id: `${command.handler}`
-                }
-            })
-        })
+    const emojis = {
+        'DOWNLOADER': '📥',
+        'TOOLS': '🛠️',
+        'OWNER': '👑',
+        'GROUP': '👥',
+        'AI': '🤖',
+        'GAME': '🎮',
+        'ANIME': '🎭',
+        'STICKER': '🎨',
+        'SEARCH': '🔍'
     }
+
+    // Filter out 'HIDDEN' category
+    for (const plugin in plugins) {
+        if (plugin.toUpperCase() !== 'HIDDEN') {
+            sections.push({
+                header: '╭─「 KANATA BOT MENU 」',
+                highlight_label: '2.0',
+                title: `${emojis[plugin.toUpperCase()] || '📌'} ${plugin.toUpperCase()} MENU`,
+                rows: plugins[plugin].map((command) => {
+                    const cmdName = Array.isArray(command.handler)
+                        ? command.handler.map(h => h.toUpperCase()).join(', ')
+                        : command.handler.toUpperCase()
+                    return {
+                        title: `⌁ ${cmdName}`,
+                        description: command.description || 'Tidak ada deskripsi',
+                        id: `${command.handler}`
+                    }
+                })
+            })
+        }
+    }
+
+    // Calculate total commands excluding HIDDEN
+    const totalCommands = Object.entries(plugins)
+        .filter(([category]) => category.toUpperCase() !== 'HIDDEN')
+        .reduce((acc, [_, commands]) => acc + commands.length, 0);
+
+    // Calculate total categories excluding HIDDEN
+    const totalCategories = Object.keys(plugins)
+        .filter(category => category.toUpperCase() !== 'HIDDEN')
+        .length;
+
+    // Generate waktu
+    const time = new Date()
+    const hours = time.getHours()
+    let greeting = ''
+    if (hours >= 4 && hours < 11) greeting = 'Pagi'
+    else if (hours >= 11 && hours < 15) greeting = 'Siang'
+    else if (hours >= 15 && hours < 18) greeting = 'Sore'
+    else greeting = 'Malam'
+
+    const menuMessage = `╭─「 KANATA BOT 」
+├ Selamat ${greeting} 👋
+├ @${noTel}
+│
+├ *Time:* ${time.toLocaleTimeString()}
+├ *Date:* ${time.toLocaleDateString()}
+│
+├ *Bot Info:*
+├ Version: 2.0
+├ Library: @seeavey/baileys
+├ Platform: NodeJS
+│
+├ *Command Info:*
+├ Prefix: Multi
+├ Total Commands: ${totalCommands}
+├ Total Categories: ${totalCategories}
+╰──────────────────
+
+${caption}
+
+╭─「 *How to Use* 」
+├ Type *!help/!menu* for full commands
+├ Type *!ping* to check bot status
+├ Type *!owner* to contact owner
+╰──────────────────`
+
     await sock.sendMessage(id, {
-        caption,
-        thumbnail: await getBuffer('https://telegra.ph/file/8360caca1efd0f697d122.jpg'),
+        caption: menuMessage,
         image: {
             url: await loadAssets('kanata-cover.jpeg', 'image'),
         },
@@ -32,13 +96,13 @@ export default async ({ sock, id, m, noTel, sender }) => {
             {
                 buttonId: 'ping',
                 buttonText: {
-                    displayText: 'Test Ping'
+                    displayText: '🚀 Test Ping'
                 },
                 type: 4,
                 nativeFlowInfo: {
                     name: 'single_select',
                     paramsJson: JSON.stringify({
-                        title: 'Daftar Menu Kanata V2',
+                        title: '📚 DAFTAR MENU KANATA V2',
                         sections
                     }),
                 },
@@ -46,29 +110,30 @@ export default async ({ sock, id, m, noTel, sender }) => {
             {
                 buttonId: 'owner',
                 buttonText: {
-                    displayText: 'Owner Contact'
+                    displayText: '👑 Owner Contact'
                 },
                 type: 1,
             }
         ],
-        footer: 'KANATA V2',
+        footer: '© 2024 Kanata Bot • Created with ❤️ by Roy',
         headerType: 1,
         viewOnce: true,
         contextInfo: {
-            mentionedJid: [...sender],
+            mentionedJid: [sender],
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: globalThis.newsLetterJid,
-                newsletterName: 'Powered By : Roy',
+                newsletterName: '乂 Powered By : Roy 乂',
                 serverMessageId: -1
             },
             forwardingScore: 999,
             externalAdReply: {
-                title: 'Kanata-V2',
+                title: '乂 Kanata Bot Menu 乂',
+                body: 'Click here to join our channel!',
                 thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
                 sourceUrl:'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                 mediaType: 2,
-                renderLargerThumbnail: false
+                renderLargerThumbnail: true
             }
         },
     }, {

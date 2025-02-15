@@ -2,54 +2,100 @@ import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg
 import moment from 'moment';
 import { getBuffer } from '../../helper/mediaMsg.js';
-export const description = "Ping Bot";
-export const handler = "ping"
+import os from 'os';
+
+export const description = "Ping Bot & System Info";
+export const handler = "ping";
+
 const calculatePing = function (timestamp, now) {
     return moment.duration(now - moment(timestamp * 1000)).asSeconds();
 };
 
+const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+const getSystemInfo = () => {
+    const totalRAM = os.totalmem();
+    const freeRAM = os.freemem();
+    const usedRAM = totalRAM - freeRAM;
+    const ramUsage = ((usedRAM / totalRAM) * 100).toFixed(2);
+    
+    const uptime = os.uptime();
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
+
+    return {
+        ram: {
+            total: formatBytes(totalRAM),
+            used: formatBytes(usedRAM),
+            free: formatBytes(freeRAM),
+            usage: ramUsage
+        },
+        uptime: {
+            hours,
+            minutes,
+            seconds
+        },
+        platform: os.platform(),
+        arch: os.arch()
+    };
+};
+
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
-    let invite = generateWAMessageFromContent(id, proto.Message.fromObject({
-        groupInviteMessage: {
+    const pingTime = calculatePing(m.messageTimestamp, Date.now());
+    const sysInfo = getSystemInfo();
+    
+    // Generate progress bar for RAM
+    const progressBarLength = 10;
+    const filledBars = Math.round((sysInfo.ram.usage / 100) * progressBarLength);
+    const progressBar = '█'.repeat(filledBars) + '░'.repeat(progressBarLength - filledBars);
+
+    const message = generateWAMessageFromContent(id, proto.Message.fromObject({
+        extendedTextMessage: {
+            text: `*🤖 KANATA BOT STATUS*\n\n` +
+                  `*⚡ Response Time:* ${pingTime} detik\n\n` +
+                  `*💻 System Information*\n` +
+                  `➸ *Platform:* ${sysInfo.platform} (${sysInfo.arch})\n` +
+                  `➸ *RAM Usage:* ${progressBar} ${sysInfo.ram.usage}%\n` +
+                  `➸ *Total RAM:* ${sysInfo.ram.total}\n` +
+                  `➸ *Used RAM:* ${sysInfo.ram.used}\n` +
+                  `➸ *Free RAM:* ${sysInfo.ram.free}\n\n` +
+                  `*⏰ Uptime:* ${sysInfo.uptime.hours}h ${sysInfo.uptime.minutes}m ${sysInfo.uptime.seconds}s\n\n` +
+                  `_Powered by Kanata Bot_`,
             contextInfo: {
                 isForwarded: true,
                 forwardingScore: 9999999,
-                isForwarded: true,
                 externalAdReply: {
-                    title: `乂 Kanata 乂`,
-                    body: 'Kanata Bot',
+                    title: `乂 Kanata Bot Status 乂`,
+                    body: `Response Time: ${pingTime}s`,
                     mediaType: 1,
                     previewType: 0,
                     renderLargerThumbnail: true,
-                    thumbnailUrl: await getBuffer('https://telegra.ph/file/8360caca1efd0f697d122.jpg'),
-                    sourceUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
-                }
-            },
-            groupJpegThumbnailUrl: await getBuffer('https://telegra.ph/file/8360caca1efd0f697d122.jpg'),
-            groupJid: "20363176955019646@g.us",
-            inviteCode: "JU36ze/gq5VH4UTR",
-            inviteExpiration: 12052025,
-            groupName: 'KANATA BOT - V2', //input nama group
-            jpegThumbnailUrl: await getBuffer('https://telegra.ph/file/8360caca1efd0f697d122.jpg'),
-            caption: `_Bot merespon dalam *${calculatePing(m.messageTimestamp, Date.now())} detik*_` //input caption                    
-        }
-    }), { userJid: id, quoted: m })
-    await sock.relayMessage(id, invite.message, { messageId: invite.key.id })
-    return
-    await sock.sendMessage(id, { text: `Bot merespon dalam *_${calculatePing(m.messageTimestamp, Date.now())} detik_*` }, {
-        contextInfo: {
-            isForwarded: true,
-            forwardingScore: 9999999,
-            isForwarded: true,
-            externalAdReply: {
-                title: `乂 Kanata 乂`,
-                body: 'Kanata Bot',
-                mediaType: 1,
-                previewType: 0,
-                renderLargerThumbnail: true,
-                thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
-                sourceUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
+                },
+                mentionedJid: [m.sender]
             }
-        },
-    })
+        }
+    }), { userJid: id, quoted: m });
+
+    await sock.relayMessage(id, message.message, { messageId: message.key.id });
+
+    // Kirim reaksi berdasarkan kecepatan respons
+    let reactionEmoji = '🚀'; // Default fast
+    if (pingTime > 3) reactionEmoji = '⚡'; // Medium
+    if (pingTime > 5) reactionEmoji = '🐌'; // Slow
+    
+    await sock.sendMessage(id, { 
+        react: { 
+            text: reactionEmoji, 
+            key: m.key 
+        } 
+    });
 };
