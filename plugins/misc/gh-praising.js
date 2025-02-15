@@ -1,5 +1,7 @@
 import { hikaru } from "../../helper/hikaru.js";
 import loadAssets from "../../helper/loadAssets.js";
+import pkg from '@seaavey/baileys';
+const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = "praise";
 export const description = "Github Praise";
@@ -7,7 +9,17 @@ export const description = "Github Praise";
 export default async ({ sock, m, id, psn }) => {
     if (!psn) {
         return sock.sendMessage(id, {
-            text: "⚠️ Masukkan username GitHub kamu untuk mendapatkan pujian!"
+            text: "⚠️ Masukkan username GitHub kamu untuk mendapatkan pujian!",
+            contextInfo: {
+                externalAdReply: {
+                    title: '乂 GitHub Praise 乂',
+                    body: 'Please provide a GitHub username',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
         });
     }
     
@@ -21,24 +33,67 @@ export default async ({ sock, m, id, psn }) => {
         });
         
         const profile = data.result.profile;
-        const caption = `🎉 *GitHub Praise* 🎉\n\n`
-            + `👤 *Nama:* ${profile.name || "Belum diatur"}\n`
-            + `📜 *Bio:* ${profile.bio || "Belum diatur"}\n`
-            + `🏢 *Perusahaan:* ${profile.company || "Belum diatur"}\n`
-            + `👥 *Followers:* ${profile.followers || "Gak tau"}\n`
-            + `👤 *Following:* ${profile.following || "Gak tau"}\n`
-            + `📂 *Public Repo:* ${profile.public_repos || "Belum bikin"}\n\n`
-            + `💬 ${data.result.praising}`;
+        const message = generateWAMessageFromContent(id, proto.Message.fromObject({
+            extendedTextMessage: {
+                text: `╭─「 *GITHUB PROFILE* 」
+├ 👤 *Name:* ${profile.name || "Not Set"}
+├ 📜 *Bio:* ${profile.bio || "Not Set"}
+├ 🏢 *Company:* ${profile.company || "Not Set"}
+├ 👥 *Followers:* ${profile.followers || "0"}
+├ 👤 *Following:* ${profile.following || "0"}
+├ 📂 *Public Repos:* ${profile.public_repos || "0"}
+│
+├ *Praise Message:*
+├ ${data.result.praising}
+╰──────────────────
+
+_Powered by Kanata-V2_`,
+                contextInfo: {
+                    isForwarded: true,
+                    forwardingScore: 9999999,
+                    externalAdReply: {
+                        title: `乂 ${profile.name || psn}'s GitHub 乂`,
+                        body: `GitHub Profile Information`,
+                        mediaType: 1,
+                        previewType: 0,
+                        renderLargerThumbnail: true,
+                        thumbnailUrl: profile.avatar_url || 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                        sourceUrl: `https://github.com/${psn}`
+                    }
+                }
+            }
+        }), { userJid: id, quoted: m });
+
+        await sock.relayMessage(id, message.message, { messageId: message.key.id });
         
-        const imageUrl = await loadAssets("github.png", "image");
-        await sock.sendMessage(id, {
-            image: { url: imageUrl },
-            caption
-        }, { quoted: m });
+        // Kirim reaksi sukses
+        await sock.sendMessage(id, { 
+            react: { 
+                text: '🎉', 
+                key: m.key 
+            } 
+        });
+
     } catch (error) {
         await sock.sendMessage(id, {
-            text: "❌ Username tidak ditemukan. Coba periksa kembali ya!"
+            text: "❌ Username tidak ditemukan. Coba periksa kembali ya!",
+            contextInfo: {
+                externalAdReply: {
+                    title: '❌ GitHub Error',
+                    body: 'Username not found',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            }
         });
-        console.error("Error fetching GitHub Praise:", error);
+        
+        // Kirim reaksi error
+        await sock.sendMessage(id, { 
+            react: { 
+                text: '❌', 
+                key: m.key 
+            } 
+        });
     }
 };

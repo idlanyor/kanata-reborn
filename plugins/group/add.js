@@ -1,17 +1,65 @@
 export const handler = 'add'
 export const description = 'Menambahkan anggota ke dalam group'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
-
-    if (psn === '') {
-        await sock.sendMessage(id, { text: '📋 *Gunakan format:* \n\n`add <@tag>`\n\nContoh:\n`add @user`' });
+    if (!psn) {
+        await sock.sendMessage(id, { 
+            text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.add @user*\n\n📌 Contoh:\n*.add @user*',
+            contextInfo: {
+                externalAdReply: {
+                    title: '乂 Group Manager 乂',
+                    body: 'Add member to group',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        });
         return;
     }
 
     try {
         let res = await sock.groupParticipantsUpdate(id, [psn.replace('@', '') + '@s.whatsapp.net'], 'add')
-        console.log(res)
-        await sock.sendMessage(id, { text: `✅ *Berhasil Menambahkan \`\`\`${psn.trim()}\`\`\` ke group*` });
+        await sock.sendMessage(id, { 
+            text: `✅ Berhasil menambahkan *${psn.trim()}* ke dalam grup!`,
+            contextInfo: {
+                externalAdReply: {
+                    title: '✅ Member Added',
+                    body: 'Successfully added new member',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            }
+        });
+        
+        // Kirim reaksi sukses
+        await sock.sendMessage(id, { 
+            react: { 
+                text: '✅', 
+                key: m.key 
+            } 
+        });
     } catch (error) {
-        await sock.sendMessage(id, { text: '❌ *Terjadi kesalahan:* \n' + error.message });
+        await sock.sendMessage(id, { 
+            text: `❌ *Gagal menambahkan member:*\n${error.message}`,
+            contextInfo: {
+                externalAdReply: {
+                    title: '❌ Failed to Add',
+                    body: 'An error occurred',
+                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            }
+        });
+        
+        // Kirim reaksi error
+        await sock.sendMessage(id, { 
+            react: { 
+                text: '❌', 
+                key: m.key 
+            } 
+        });
     }
 };
