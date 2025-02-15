@@ -356,8 +356,9 @@ export async function startBot() {
                     try {
                         if (!(await Group.getSettings(id)).autoai == 1) {
                             return
+                        } else {
+                            await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage}  ${ctx}`, id }) })
                         }
-                        await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage}  ${ctx}`, id }) })
                     } catch (error) {
                         await sock.sendMessage(id, { text: 'ups,ada yang salah' })
 
