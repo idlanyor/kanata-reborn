@@ -20,6 +20,7 @@ import { gpt4Hika } from './lib/ai.js';
 import { schedulePrayerReminders } from './lib/jadwalshalat.js';
 import User from './database/models/User.js';
 import Group from './database/models/Group.js';
+import { tomp3 } from './lib/mediaMsg/converter.js'
 
 
 const app = express()
@@ -177,6 +178,10 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         cmd = command.toLowerCase().substring(1).split(' ')[0];
         args = command.split(' ').slice(1)
     }
+    if (command.startsWith('.')) {
+        cmd = command.toLowerCase().substring(1).split(' ')[0];
+        args = command.split(' ').slice(1)
+    }
     logger.info(`Pesan baru diterima dari ${m.pushName || m.participant?.pushName}`);
     logger.message.in(command);
 
@@ -263,11 +268,11 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         if (expResult.levelUp) {
             await sock.sendMessage(id, {
                 text: `🎉 Selamat! Level kamu naik ke level ${expResult.newLevel}!`
-            });
+            }, { quoted: m });
         }
 
         // Jika ada command, increment counter command
-        if (command.startsWith('!')) {
+        if (command.startsWith('!') || command.startsWith('.')) {
             await User.incrementCommand(noTel);
         }
 
@@ -306,7 +311,7 @@ export async function startBot() {
         sock.ev.on('messages.upsert', async chatUpdate => {
             try {
                 const m = chatUpdate.messages[0];
-
+                await tomp3(sock, m, chatUpdate)
                 const { remoteJid } = m.key;
                 const sender = m.pushName || remoteJid;
                 const id = remoteJid;
@@ -351,8 +356,8 @@ export async function startBot() {
                 // auto AI mention
                 if (botMentioned) {
                     try {
-                        if(!(await Group.getSettings(id)).autoai == 1) {
-                            return 
+                        if (!(await Group.getSettings(id)).autoai == 1) {
+                            return
                         }
                         await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage}  ${ctx}`, id }) })
                     } catch (error) {
