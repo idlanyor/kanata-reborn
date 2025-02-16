@@ -12,17 +12,17 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     try {
         // Deteksi jenis media dari message
         if (m.message?.imageMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
-            messageOptions.image = { url: attf };
+            messageOptions.image = attf ;
             messageOptions.caption = psn || '';
             messageOptions.mimetype = 'image/jpeg';
         } 
         else if (m.message?.videoMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage) {
-            messageOptions.video = { url: attf };
+            messageOptions.video = attf ;
             messageOptions.caption = psn || '';
             messageOptions.mimetype = 'video/mp4';
         }
         else if (m.message?.audioMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage) {
-            messageOptions.audio = { url: attf };
+            messageOptions.audio = attf;
             messageOptions.mimetype = 'audio/mp4';
             messageOptions.ptt = true;
         }
