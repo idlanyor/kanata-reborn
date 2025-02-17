@@ -227,18 +227,21 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 }
             }
 
-            // Cek antitoxic (contoh sederhana)
+            // Cek antitoxic
             if (settings.antitoxic) {
-                const toxicWords = ['anjing', 'babi', 'bangsat', 'kontol']; // Tambahkan kata-kata toxic
-                const message = m.message?.conversation?.toLowerCase() ||
-                    m.message?.extendedTextMessage?.text?.toLowerCase() || '';
-
-                if (toxicWords.some(word => message.includes(word))) {
-                    await sock.sendMessage(id, {
-                        text: `⚠️ @${noTel.split('@')[0]} Tolong jaga kata-kata!`,
-                        mentions: [noTel]
+                try {
+                    const { default: antitoxic } = await import('./plugins/events/antitoxic.js');
+                    await antitoxic({ 
+                        sock, 
+                        m, 
+                        id, 
+                        psn: m.message?.conversation || 
+                             m.message?.extendedTextMessage?.text || '', 
+                        sender: noTel + '@s.whatsapp.net' 
                     });
-                    return;
+                    return; // Hentikan proses jika toxic terdeteksi
+                } catch (error) {
+                    logger.error('Error in antitoxic:', error);
                 }
             }
 

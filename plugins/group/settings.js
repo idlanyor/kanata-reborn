@@ -16,6 +16,7 @@ export default async ({ sock, m, id, psn, sender }) => {
 ├ 👋 *Goodbye:* ${settings.goodbye ? '✅' : '❌'}
 ├ 🔄 *Antispam:* ${settings.antispam ? '✅' : '❌'}
 ├ 🤬 *Antitoxic:* ${settings.antitoxic ? '✅' : '❌'}
+  ├─ *Warning:* ${settings.antitoxic ? '5x Kick' : '-'}
 ├ 👑 *Only Admin:* ${settings.only_admin ? '✅' : '❌'}
 │
 ├ 📝 *Cara mengubah:*
@@ -26,6 +27,11 @@ _Powered by Kanata-V2_`,
                     contextInfo: {
                         isForwarded: true,
                         forwardingScore: 9999999,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363305152329358@newsletter',
+                            newsletterName: 'Kanata Settings',
+                            serverMessageId: -1
+                        },
                         externalAdReply: {
                             title: '乂 Group Settings 乂',
                             body: 'Manage your group settings',
