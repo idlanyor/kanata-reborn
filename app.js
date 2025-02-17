@@ -231,15 +231,15 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             if (settings.antitoxic) {
                 try {
                     const { default: antitoxic } = await import('./plugins/events/antitoxic.js');
-                    await antitoxic({ 
-                        sock, 
-                        m, 
-                        id, 
-                        psn: m.message?.conversation || 
-                             m.message?.extendedTextMessage?.text || '', 
-                        sender: noTel + '@s.whatsapp.net' 
+                    await antitoxic({
+                        sock,
+                        m,
+                        id,
+                        psn: m.message?.conversation ||
+                            m.message?.extendedTextMessage?.text || '',
+                        sender: noTel + '@s.whatsapp.net'
                     });
-                    return; // Hentikan proses jika toxic terdeteksi
+                    // return; // Hentikan proses jika toxic terdeteksi
                 } catch (error) {
                     logger.error('Error in antitoxic:', error);
                 }
@@ -321,18 +321,18 @@ export async function startBot() {
                 const mediaType = {
                     image: {
                         buffer: m.message?.imageMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage,
-                        caption: m.message?.imageMessage?.caption || m.message.extendedTextMessage?.text,
-                        mime: m.message?.imageMessage?.mime || m.message.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage?.mime,
+                        caption: m.message?.imageMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.imageMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage?.mime,
                     },
                     video: {
                         buffer: m.message?.videoMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage,
-                        caption: m.message?.videoMessage?.caption || m.message.extendedTextMessage?.text,
-                        mime: m.message?.videoMessage?.mime || m.message.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage?.mime,
+                        caption: m.message?.videoMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.videoMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage?.mime,
                     },
                     audio: {
                         buffer: m.message?.audioMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage,
-                        caption: m.message?.audioMessage?.caption || m.message.extendedTextMessage?.text,
-                        mime: m.message?.audioMessage?.mime || m.message.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage?.mime,
+                        caption: m.message?.audioMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.audioMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage?.mime,
                     }
                 }
                 if (mediaType.image.buffer) {
@@ -349,7 +349,7 @@ export async function startBot() {
                 }
 
                 if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage) {
-                    const cmd = JSON.parse(m.message.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson);
+                    const cmd = JSON.parse(m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson);
                     await prosesPerintah({ command: `!${cmd.id}`, sock, m, id, sender, noTel, attf: null, mime: null });
                 }
                 if (m.message?.templateButtonReplyMessage) {
