@@ -37,41 +37,27 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 }
             }), { userJid: id });
 
-            // Kirim pesan dengan tombol
+            // Kirim pesan dengan template buttons
             await sock.sendMessage(id, {
                 caption: message.message.extendedTextMessage.text,
                 image: {
                     url: linkGambar,
                 },
                 footer: '© 2024 Kanata Bot • Created with ❤️ by Roy',
-                buttons: [
+                templateButtons: [
                     {
-                        buttonId: 'copy',
-                        buttonText: {
-                            displayText: '📋 Copy Link'
-                        },
-                        type: 1,
-                        nativeFlowInfo: {
-                            name: "cta_copy",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: '📋 Copy Link',
-                                copy_code: linkGambar,
-                            }),
-                        },
+                        index: 1,
+                        urlButton: {
+                            displayText: '🌐 Visit Link',
+                            url: linkGambar
+                        }
                     },
                     {
-                        buttonId: 'visit',
-                        buttonText: {
-                            displayText: '🌐 Visit Link'
-                        },
-                        type: 1,
-                        nativeFlowInfo: {
-                            name: "cta_url",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: '🌐 Visit Link',
-                                url: linkGambar,
-                            }),
-                        },
+                        index: 2, 
+                        quickReplyButton: {
+                            displayText: '📋 Copy Link',
+                            id: `copy_${linkGambar}`
+                        }
                     }
                 ],
                 viewOnce: true,
@@ -145,4 +131,3 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         }
     });
 };
-
