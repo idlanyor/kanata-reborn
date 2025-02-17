@@ -213,17 +213,39 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 }
             }
 
-            // Cek antilink
-            if (settings.antilink && (m.message?.conversation?.includes('http') ||
-                m.message?.extendedTextMessage?.text?.includes('http'))) {
-                const groupAdmins = await getGroupAdmins({ sock, id });
-                if (!groupAdmins.includes(noTel)) {
-                    await sock.groupParticipantsUpdate(id, [noTel], 'remove');
-                    await sock.sendMessage(id, {
-                        text: `@${noTel.split('@')[0]} telah dikeluarkan karena mengirim link`,
-                        mentions: [noTel]
+            // Cek antipromosi
+            if (settings.antipromosi) {
+                try {
+                    const { default: antipromosi } = await import('./plugins/events/antipromosi.js');
+                    await antipromosi({
+                        sock,
+                        m,
+                        id,
+                        psn: m.message?.conversation ||
+                            m.message?.extendedTextMessage?.text || '',
+                        sender: noTel + '@s.whatsapp.net'
                     });
-                    return;
+                    // return; // Hentikan proses jika promosi terdeteksi
+                } catch (error) {
+                    logger.error('Error in antipromosi:', error);
+                }
+            }
+
+            // Cek antilink
+            if (settings.antilink) {
+                try {
+                    const { default: antilink } = await import('./plugins/events/antilink.js');
+                    await antilink({
+                        sock,
+                        m,
+                        id,
+                        psn: m.message?.conversation ||
+                            m.message?.extendedTextMessage?.text || '',
+                        sender: noTel + '@s.whatsapp.net'
+                    });
+                    // return; // Hentikan proses jika link terdeteksi
+                } catch (error) {
+                    logger.error('Error in antilink:', error);
                 }
             }
 

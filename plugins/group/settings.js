@@ -12,11 +12,15 @@ export default async ({ sock, m, id, psn, sender }) => {
                 extendedTextMessage: {
                     text: `╭─「 *GROUP SETTINGS* 」
 ├ 🔗 *Antilink:* ${settings.antilink ? '✅' : '❌'}
+  ├─ *Warning:* ${settings.antilink ? '3x Kick' : '-'}
+  ├─ *Note:* Kecuali link download yang diizinkan
 ├ 👋 *Welcome:* ${settings.welcome ? '✅' : '❌'}
 ├ 👋 *Goodbye:* ${settings.goodbye ? '✅' : '❌'}
 ├ 🔄 *Antispam:* ${settings.antispam ? '✅' : '❌'}
 ├ 🤬 *Antitoxic:* ${settings.antitoxic ? '✅' : '❌'}
   ├─ *Warning:* ${settings.antitoxic ? '5x Kick' : '-'}
+├ 📢 *Antipromosi:* ${settings.antipromosi ? '✅' : '❌'}
+  ├─ *Warning:* ${settings.antipromosi ? '3x Kick' : '-'}
 ├ 👑 *Only Admin:* ${settings.only_admin ? '✅' : '❌'}
 │
 ├ 📝 *Cara mengubah:*
@@ -50,7 +54,7 @@ _Powered by Kanata-V2_`,
         }
 
         const [feature, value] = psn.split(' ');
-        if (!['antilink', 'welcome', 'goodbye', 'antispam', 'antitoxic', 'only_admin'].includes(feature)) {
+        if (!['antilink', 'welcome', 'goodbye', 'antispam', 'antitoxic', 'antipromosi', 'only_admin'].includes(feature)) {
             await sock.sendMessage(id, { 
                 text: '❌ Fitur tidak valid!',
                 contextInfo: {
