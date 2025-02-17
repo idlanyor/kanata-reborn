@@ -15,14 +15,14 @@ export async function runSpeedTest() {
         });
         
         result = `🚀 *Hasil Speed Test*\n\n`;
-        result += `📥 *Download*: ${(test.download.bandwidth / 125000).toFixed(2)} Mbps\n`;
-        result += `📤 *Upload*: ${(test.upload.bandwidth / 125000).toFixed(2)} Mbps\n`;
-        result += `📶 *Ping*: ${test.ping.latency.toFixed(2)} ms\n\n`;
+        result += `📥 *Download*: ${(test.download.bandwidth / 125000)} Mbps\n`;
+        result += `📤 *Upload*: ${(test.upload.bandwidth / 125000)} Mbps\n`;
+        result += `📶 *Ping*: ${test.ping.latency} ms\n\n`;
         result += `🌍 *ISP*: ${test.isp}\n`;
         result += `📍 *Server*:\n`;
         result += `   • Nama: ${test.server.name}\n`;
         result += `   • Lokasi: ${test.server.location} (${test.server.country})\n`;
-        result += `   • Jarak: ${test.server.distance.toFixed(2)} km\n`;
+        result += `   • Jarak: ${test.server.distance} km\n`;
         
         return result;
     } catch (error) {
