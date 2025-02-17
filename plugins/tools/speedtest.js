@@ -22,7 +22,6 @@ export async function runSpeedTest() {
         result += `📍 *Server*:\n`;
         result += `   • Nama: ${test.server.name}\n`;
         result += `   • Lokasi: ${test.server.location} (${test.server.country})\n`;
-        result += `   • Jarak: ${test.server.distance} km\n`;
         
         return result;
     } catch (error) {
