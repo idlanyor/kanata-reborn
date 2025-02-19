@@ -102,7 +102,7 @@ ${caption}
                 nativeFlowInfo: {
                     name: 'single_select',
                     paramsJson: JSON.stringify({
-                        title: '📚 DAFTAR MENU KANATA V2',
+                        title: '📚 DAFTAR MENU KANATA V3',
                         sections
                     }),
                 },
