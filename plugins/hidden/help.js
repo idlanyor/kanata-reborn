@@ -90,7 +90,7 @@ ${caption}
     await sock.sendMessage(id, {
         caption: menuMessage,
         image: {
-            url: await loadAssets('kanata-cover.jpeg', 'image'),
+            url: await loadAssets('kanata-cover.jpg', 'image'),
         },
         buttons: [
             {
