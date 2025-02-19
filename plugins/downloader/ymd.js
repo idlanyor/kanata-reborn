@@ -19,7 +19,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         const outputPath = `./temp/${Date.now()}.mp3`;
         
         // Download dengan youtube-dl
-        await execAsync(`youtube-dl -f bestaudio -o "${outputPath}.%(ext)s" ${psn}`);
+        await execAsync(`yt-dlp -f bestaudio -o "${outputPath}.%(ext)s" ${psn}`);
         
         // Convert ke MP3 dengan ffmpeg
         await execAsync(`ffmpeg -i "${outputPath}.webm" -codec:a libmp3lame -qscale:a 2 "${outputPath}"`);
