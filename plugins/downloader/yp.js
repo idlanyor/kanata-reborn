@@ -19,7 +19,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { image: { url: result.thumbnail }, caption }, { quoted: m });
 
 
-        await sock.sendMessage(id, { audio: { url: result.audio },mimetype: 'audio/mpeg',  fileName: result.title }, { quoted: m });
+        await sock.sendMessage(id, { audio: { result.audio },mimetype: 'audio/mpeg',  fileName: result.title }, { quoted: m });
 
     } catch (error) {
         await sock.sendMessage(id, { text: '❌ Ups, terjadi kesalahan: ' + error.message });
