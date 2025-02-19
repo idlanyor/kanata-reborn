@@ -23,7 +23,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
 ├ *Date:* ${time.toLocaleDateString()}
 │
 ├ *Bot Info:*
-├ Version: 2.0
+├ Version: 3.0
 ├ Library: @seeavey/baileys
 ├ Platform: NodeJS
 │
@@ -36,7 +36,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
     await sock.sendMessage(id, {
         caption: menuMessage,
         image: {
-            url: await loadAssets('kanata-cover.jpeg', 'image'),
+            url: await loadAssets('kanata-cover.jpg', 'image'),
         },
         buttons: [
             {
