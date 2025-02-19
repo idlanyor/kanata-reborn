@@ -1,5 +1,5 @@
 import { yutubAudio } from "../../lib/downloader.js";
-export const description = "YouTube Audio Downloader provided by *Roidev*";
+export const description = "YouTube Audio Downloader provided by *Roy*";
 export const handler = "ymd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {

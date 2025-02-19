@@ -44,7 +44,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
                         text: "🕹 *Pilih mini game sing pengen dicoba*"
                     }),
                     footer: proto.Message.InteractiveMessage.Footer.create({
-                        text: `©Little Kanata || Roidev`
+                        text: `©Kanata V3 || Roy`
                     }),
                     header: proto.Message.InteractiveMessage.Header.create({
                         title: `🕹 *Daftar Mini Games* 🎯`

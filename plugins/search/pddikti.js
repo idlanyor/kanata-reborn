@@ -17,7 +17,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     })
     await sock.sendMessage(id, {
         text: `Hasil Pencarian *PDDikti* untuk ${psn}\n Klik Hasil pencarian untuk melihat detail`,
-        footer: 'Kanata-V2',
+        footer: 'Kanata-V3',
         buttons: [
 
             {

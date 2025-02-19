@@ -1,5 +1,5 @@
 /**
- * @author : Idlanyor~VC~
+ * @author : Roy~VC~
  * @Channel : https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m
  * @name : Spotify Downloader
  * @module : ES6 Module

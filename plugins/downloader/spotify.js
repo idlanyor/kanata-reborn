@@ -1,6 +1,6 @@
 import { spotify } from "../../lib/downloader.js";
 import { spotifySong } from "../../lib/neoxr/spotify.js";
-export const description = "Spotify Downloader provided by *Roidev*";
+export const description = "Spotify Downloader provided by *Roy*";
 export const handler = "spotify"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {

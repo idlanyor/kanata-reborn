@@ -1,5 +1,5 @@
 /**
- * @author : Roidev~404~
+ * @author : Roy~404~
  * @Channel : https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m
  * @name : JKT 48 Official Site Scraper
  * @module : ES6 Module
@@ -54,7 +54,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                         // businessMessageForwardInfo: { businessOwnerJid: sock.decodeJid(sock.user.id) },
                         forwardingScore: 256,
                         externalAdReply: {
-                            title: 'Roidev',
+                            title: 'Roy',
                             thumbnailUrl: 'https://telegra.ph/file/a6f3ef42e42efcf542950.jpg',
                             sourceUrl: 'https://whatsapp.com/channel/0029ValMR7jDp2Q7ldcaNK1L',
                             mediaType: 2,

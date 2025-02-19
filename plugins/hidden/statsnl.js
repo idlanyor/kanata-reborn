@@ -101,7 +101,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     //             currencyCode: "IDR",
     //             message: await systemSpec(),
     //             priceAmount1000: "91000",
-    //             thumbnail: await getBuffer('https://telegra.ph/file/8360caca1efd0f697d122.jpg'),
+    //             thumbnail: await getBuffer('https://s6.imgcdn.dev/YYoFZh.jpg'),
     //             surface: "Kanata Bot",
     //             contextInfo: { mentionedJid: [id] },
     //         },

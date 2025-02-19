@@ -8,7 +8,7 @@ globalThis.groupJid = '0@g.us'
 globalThis.communityId = '0@g.us'
 globalThis.newsLetterJid = '0@newsletter'
 globalThis.newsLetterUrl = 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
-globalThis.kanataThumb = 'https://telegra.ph/file/8360caca1efd0f697d122.jpg'
+globalThis.kanataThumb = 'https://s6.imgcdn.dev/YYoFZh.jpg'
 
 
 // fungsi dasar

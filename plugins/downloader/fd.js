@@ -1,5 +1,5 @@
 import { meta } from "../../lib/downloader.js";
-export const description = "Downloader Facebook Reels provided by *Roidev*";
+export const description = "Downloader Facebook Reels provided by *Roy*";
 export const handler = "fd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {
@@ -16,7 +16,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 externalAdReply: {
                     title: '乂 Facebook Downloader 乂',
                     body: 'Download Video From Facebook',
-                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true

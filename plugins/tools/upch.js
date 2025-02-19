@@ -38,14 +38,14 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             forwardedNewsletterMessageInfo: {
                 newsletterJid: globalThis.newsLetterJid,
                 serverMessageId: -1,
-                newsletterName: 'Kanata-V2'
+                newsletterName: 'Kanata-V3'
             },
             externalAdReply: {
                 showAdAttribution: true,
-                title: '乂 Kanata-V2 乂',
+                title: '乂 Kanata-V3 乂',
                 body: m.pushName || sender,
                 mediaType: 1,
-                thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                 sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                 renderLargerThumbnail: true
             }
@@ -61,7 +61,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '乂 Channel Update 乂',
                     body: 'Message sent successfully!',
-                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -85,7 +85,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '❌ Upload Failed',
                     body: 'An error occurred while uploading',
-                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

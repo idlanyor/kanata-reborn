@@ -1,5 +1,5 @@
 import { meta } from "../../lib/downloader.js";
-export const description = "Downloader Instagram Video provided by *Roidev*";
+export const description = "Downloader Instagram Video provided by *Roy*";
 export const handler = "igv"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {

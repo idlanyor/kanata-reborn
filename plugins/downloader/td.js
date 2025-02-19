@@ -2,7 +2,7 @@ import { tiktok } from "../../lib/downloader.js";
 import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
-export const description = "Downloader TikTok provided by *Roidev*";
+export const description = "Downloader TikTok provided by *Roy*";
 export const handler = "td"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {
@@ -19,7 +19,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 externalAdReply: {
                     title: '乂 TikTok Downloader 乂',
                     body: 'Download TikTok Videos',
-                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -49,7 +49,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     externalAdReply: {
                         title: 'TikTok Downloader',
                         body: result.title,
-                        thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         sourceUrl: psn,
                         mediaType: 1,
                         renderLargerThumbnail: true
@@ -88,7 +88,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 externalAdReply: {
                     title: '❌ Download Error',
                     body: 'An error occurred',
-                    thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1
                 }

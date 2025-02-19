@@ -70,7 +70,7 @@ export const logger = {
     },
     showBanner: () => {
         console.clear();
-        console.log(createBanner('Kanata-V2'));
+        console.log(createBanner('Kanata-V3'));
         logger.divider();
         logger.system('Bot is initializing...');
         logger.divider();

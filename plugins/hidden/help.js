@@ -130,7 +130,7 @@ ${caption}
             externalAdReply: {
                 title: '乂 Kanata Bot Menu 乂',
                 body: 'Click here to join our channel!',
-                thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                 sourceUrl:'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                 mediaType: 2,
                 renderLargerThumbnail: true
@@ -149,7 +149,7 @@ ${caption}
 //     message: {
 //         newsletterAdminInviteMessage: {
 //             newsletterJid: '120363293401077915@newsletter',
-//             newsletterName: 'Roidev',
+//             newsletterName: 'Roy',
 //             caption: 'Kanata'
 //         }
 //     }

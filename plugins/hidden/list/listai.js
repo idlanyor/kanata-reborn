@@ -55,7 +55,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
                         text: "🔍 *Pilih AI favoritmu dari daftar di bawah ini!*"
                     }),
                     footer: proto.Message.InteractiveMessage.Footer.create({
-                        text: `©Little Kanata || Roidev`
+                        text: `©Kanata V3 || Roy`
                     }),
                     header: proto.Message.InteractiveMessage.Header.create({
                         title: `🧠 *AI Menu*`

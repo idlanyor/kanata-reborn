@@ -8,7 +8,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             degreesLatitude: -7.2263672241412324,
             degreesLongitude: 109.36419066123185,
             name: 'Lorem Ipsum',
-            address: 'Kanata V2',
+            address: 'Kanata V3',
             // jpegThumbnail: 'https://telegra.ph/file/a6f3ef42e42efcf542950.jpg',
             url: 'https://roidev.my.id',
         },

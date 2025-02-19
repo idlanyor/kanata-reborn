@@ -60,7 +60,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
                         text: "📥 *Pilih downloader sing pengen karo pencet tombol ing ngisor iki* 📥"
                     }),
                     footer: proto.Message.InteractiveMessage.Footer.create({
-                        text: `©Little Kanata || Roidev`
+                        text: `©Kanata V3 || Roy`
                     }),
                     header: proto.Message.InteractiveMessage.Header.create({
                         title: `🛠 *Downloader Tools* 🛠`

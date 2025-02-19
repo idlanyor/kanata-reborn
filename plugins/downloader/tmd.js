@@ -1,5 +1,5 @@
 import { tiktok } from "../../lib/downloader.js";
-export const description = "Downloader TikTok Audio provided by *Roidev*";
+export const description = "Downloader TikTok Audio provided by *Roy*";
 export const handler = "tmd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {

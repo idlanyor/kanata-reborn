@@ -1,12 +1,12 @@
 <div align="center">
-<h1>Little Kanata</h1>
+<h1>Kanata V3</h1>
 <h2 style="color:#1496DC">by Roy</h2>
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/idlanyor/kanata-v2)
 ![GitHub stars](https://img.shields.io/github/stars/idlanyor/kanata-v2?style=social)
 ![GitHub license](https://img.shields.io/github/license/idlanyor/kanata-v2)
 
-![Kanata](https://telegra.ph/file/8360caca1efd0f697d122.jpg)
+![Kanata](https://s6.imgcdn.dev/YYoFZh.jpg)
 
 </div>
 
@@ -40,7 +40,7 @@ globalThis.groupJid = '0@g.us'
 globalThis.communityId = '0@g.us'
 globalThis.newsLetterJid = '0@newsletter'
 globalThis.newsLetterUrl = 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
-globalThis.kanataThumb = 'https://telegra.ph/file/8360caca1efd0f697d122.jpg'
+globalThis.kanataThumb = 'https://s6.imgcdn.dev/YYoFZh.jpg'
 
 
 // fungsi dasar

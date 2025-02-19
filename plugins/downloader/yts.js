@@ -9,18 +9,18 @@ let image = 'https://telegra.ph/file/30897fc6b429c59d2a733.jpg';
 const ytSearchResult = async (query) => {
     const hasilPencarian = await ytsearch(query);
     let sections = [{
-        title: "Little Kanata",
+        title: "Kanata V3",
         highlight_label: 'Start Chats',
         rows: [{
-            header: "Little Kanata",
+            header: "Kanata V3",
             title: "Menu",
             description: `Kembali ke menu!`,
             id: '.menu'
         },
         {
-            header: "Little Kanata",
+            header: "Kanata V3",
             title: "Owner Bot",
-            description: "Owner bot Little Kanata",
+            description: "Owner bot Kanata V3",
             id: '.owner'
         }]
     }];
@@ -61,7 +61,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         return sock.sendMessage(id, { text: "🔎 Mau cari apa?\nKetik *yts <query>*\nContoh: *yts himawari*" });
     }
     if (id.endsWith('@g.us')) {
-        let roy = `*Powered By Little Kanata*\nMenampilkan hasil pencarian untuk: "${psn}", pilih di bawah ini sesuai format yang Kamu inginkan. 🍿`;
+        let roy = `*Powered By Kanata V3*\nMenampilkan hasil pencarian untuk: "${psn}", pilih di bawah ini sesuai format yang Kamu inginkan. 🍿`;
 
         let msg = generateWAMessageFromContent(m.chat, {
             viewOnceMessage: {
@@ -75,7 +75,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             text: roy
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.create({
-                            text: '©️ Little Kanata'
+                            text: '©️ Kanata V3'
                         }),
                         header: proto.Message.InteractiveMessage.Header.create({
                             subtitle: sender,
@@ -154,7 +154,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             // businessMessageForwardInfo: { businessOwnerJid: sock.decodeJid(sock.user.id) },
                             forwardingScore: 256,
                             externalAdReply: {
-                                title: 'Roidev',
+                                title: 'Roy',
                                 thumbnailUrl: 'https://telegra.ph/file/a6f3ef42e42efcf542950.jpg',
                                 sourceUrl: 'https://whatsapp.com/channel/0029ValMR7jDp2Q7ldcaNK1L',
                                 mediaType: 2,

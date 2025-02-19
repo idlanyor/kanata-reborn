@@ -59,7 +59,7 @@ export default async ({ sock, m, id, psn, sender }) => {
                     externalAdReply: {
                         title: '⚠️ Anti-Toxic Warning',
                         body: 'Keep the chat clean!',
-                        thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                         renderLargerThumbnail: true

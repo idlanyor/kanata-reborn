@@ -31,8 +31,8 @@ export const sendIAMessage = async (jid, btns = [], quoted, opts = {}, sock) => 
                         // mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
-                        sourceUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        sourceUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         mediaType: 1, // Media tipe (default: gambar)
                     },
                     nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({

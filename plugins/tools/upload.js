@@ -70,7 +70,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                     externalAdReply: {
                         title: '❌ Upload Failed',
                         body: 'An error occurred while uploading',
-                        thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
@@ -99,7 +99,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     //         externalAdReply: {
     //             title: 'Image Uploader',
     //             body: 'Upload your images easily',
-    //             thumbnailUrl: 'https://telegra.ph/file/8360caca1efd0f697d122.jpg',
+    //             thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
     //             sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
     //             mediaType: 1,
     //         }
