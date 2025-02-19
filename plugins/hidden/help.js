@@ -26,7 +26,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
         if (plugin.toUpperCase() !== 'HIDDEN') {
             sections.push({
                 header: '╭─「 KANATA BOT MENU 」',
-                highlight_label: '2.0',
+                highlight_label: '3.0',
                 title: `${emojis[plugin.toUpperCase()] || '📌'} ${plugin.toUpperCase()} MENU`,
                 rows: plugins[plugin].map((command) => {
                     const cmdName = Array.isArray(command.handler)
@@ -69,7 +69,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
 ├ *Date:* ${time.toLocaleDateString()}
 │
 ├ *Bot Info:*
-├ Version: 2.0
+├ Version: 3.0
 ├ Library: @seeavey/baileys
 ├ Platform: NodeJS
 │
