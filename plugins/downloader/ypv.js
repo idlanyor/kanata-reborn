@@ -1,28 +1,63 @@
-import { ytPlayVideo } from '../../lib/youtube.js';
+import { yutubVideo } from '../../lib/downloader.js';
 
 export const description = 'Putar dan Download Video dari *YouTube*';
 export const handler = "ypv"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         if (psn === '') {
-            await sock.sendMessage(id, { text: '🎥 Masukkan judul video yang ingin diputar atau dicari.' });
+            await sock.sendMessage(id, { 
+                text: `🎥 *YouTube Video Downloader*\n\n` +
+                      `*Cara Penggunaan:*\n` +
+                      `- Ketik: ypv <judul video/url>\n\n` +
+                      `*Contoh:*\n` +
+                      `ypv Minecraft Gameplay\n` +
+                      `ypv https://youtu.be/xxxxx\n\n` +
+                      `*Note:* Max kualitas 720p`
+            });
             return;
         }
 
-        await sock.sendMessage(id, { text: '🔍 Sedang mencari video... Mohon tunggu sebentar.' });
-        let result = await ytPlayVideo(psn);
-        console.log(result)
-        caption = '*Hasil Pencarian Video YouTube*';
-        caption += `\n\n📹 *Judul:* ${result.title}`;
-        caption += `\n📺 *Channel:* ${result.channel}`;
-        caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
-        // const response = await fetch(result.video);
-        // const arrBuffer = await response.arrayBuffer()
-        // console.log(Buffer.from(arrBuffer))
+        await sock.sendMessage(id, { 
+            text: `🔍 *Pencarian Dimulai*\n\n` +
+                  `Query: ${psn}\n` +
+                  `Status: Sedang mencari & memproses...\n` +
+                  `Estimasi: 1-3 menit tergantung durasi`
+        });
 
-        await sock.sendMessage(id, { video: { url: result.video }, mimetype: 'video/mp4', caption, fileName: result.title }, { quoted: m });
+        // Kirim reaction processing
+        await sock.sendMessage(id, { react: { text: '⏳', key: m.key }});
+
+        let result = await yutubVideo(psn);
+        
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        caption = `📽️ *YOUTUBE VIDEO DOWNLOADER*\n\n`;
+        caption += `📝 *Judul:* ${result.title}\n`;
+        caption += `👤 *Channel:* ${result.channel}\n`;
+        caption += `🎥 *Kualitas:* 720p\n`;
+        caption += `🔗 *Link:* ${psn}\n`;
+        caption += `\n⏳ _Video sedang dikirim, mohon tunggu..._`;
+
+        await sock.sendMessage(id, { 
+            video: { url: result.video }, 
+            mimetype: 'video/mp4', 
+            caption, 
+            fileName: `${result.title}.mp4` 
+        }, { quoted: m });
+
+        // Kirim reaction selesai
+        await sock.sendMessage(id, { react: { text: '✅', key: m.key }});
 
     } catch (error) {
-        await sock.sendMessage(id, { text: '❌ Ups, terjadi kesalahan: ' + error.message });
+        await sock.sendMessage(id, { 
+            text: `❌ *GAGAL MEMPROSES*\n\n` +
+                  `*Pesan Error:* ${error.message}\n\n` +
+                  `*Solusi:*\n` +
+                  `1. Pastikan URL/Query valid\n` +
+                  `2. Coba video dengan durasi lebih pendek\n` +
+                  `3. Laporkan ke owner jika masih error`
+        });
     }
 };
