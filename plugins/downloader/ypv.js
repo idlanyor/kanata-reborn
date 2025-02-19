@@ -1,63 +1,55 @@
-import { yutubVideo } from '../../lib/downloader.js';
+import { ytShorts } from '../../lib/scraper/yt-shorts.js';
+import { ytsearch } from '../../lib/youtube.js';
 
 export const description = 'Putar dan Download Video dari *YouTube*';
 export const handler = "ypv"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         if (psn === '') {
-            await sock.sendMessage(id, { 
-                text: `🎥 *YouTube Video Downloader*\n\n` +
-                      `*Cara Penggunaan:*\n` +
-                      `- Ketik: ypv <judul video/url>\n\n` +
-                      `*Contoh:*\n` +
-                      `ypv Minecraft Gameplay\n` +
-                      `ypv https://youtu.be/xxxxx\n\n` +
-                      `*Note:* Max kualitas 720p`
-            });
+            await sock.sendMessage(id, { text: '🎥 Masukkan judul video atau URL YouTube yang ingin diputar.' });
             return;
         }
 
-        await sock.sendMessage(id, { 
-            text: `🔍 *Pencarian Dimulai*\n\n` +
-                  `Query: ${psn}\n` +
-                  `Status: Sedang mencari & memproses...\n` +
-                  `Estimasi: 1-3 menit tergantung durasi`
-        });
+        await sock.sendMessage(id, { text: '🔍 Sedang memproses... Mohon tunggu sebentar.' });
 
-        // Kirim reaction processing
-        await sock.sendMessage(id, { react: { text: '⏳', key: m.key }});
+        // Cek apakah input adalah URL YouTube
+        if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
+            const result = await ytShorts(psn);
+            caption = '*YouTube Video Downloader*';
+            caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
 
-        let result = await yutubVideo(psn);
-        
-        if (result.error) {
-            throw new Error(result.error);
+            await sock.sendMessage(id, { 
+                video: { url: result.videoSrc }, 
+                mimetype: 'video/mp4', 
+                caption
+            }, { quoted: m });
+        } else {
+            // Jika bukan URL, lakukan pencarian video
+            const videos = await ytsearch(psn);
+            const result = videos[0]; // Ambil hasil pertama
+
+            // Download video hasil pencarian menggunakan ytShorts
+            const videoResult = await ytShorts(result.url);
+            
+            caption = '*Hasil Pencarian Video YouTube*';
+            caption += `\n\n📹 *Judul:* ${result.title}`;
+            caption += `\n📺 *Channel:* ${result.author}`;
+            caption += `\n🔗 *URL:* ${result.url}`;
+            caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
+
+            await sock.sendMessage(id, {
+                image: { url: result.image },
+                caption
+            });
+
+            await sock.sendMessage(id, {
+                video: { url: videoResult.videoSrc },
+                mimetype: 'video/mp4',
+                caption: `*${result.title}*\n\nBerhasil diunduh menggunakan Kanata V3`
+            }, { quoted: m });
         }
 
-        caption = `📽️ *YOUTUBE VIDEO DOWNLOADER*\n\n`;
-        caption += `📝 *Judul:* ${result.title}\n`;
-        caption += `👤 *Channel:* ${result.channel}\n`;
-        caption += `🎥 *Kualitas:* 720p\n`;
-        caption += `🔗 *Link:* ${psn}\n`;
-        caption += `\n⏳ _Video sedang dikirim, mohon tunggu..._`;
-
-        await sock.sendMessage(id, { 
-            video: { url: result.video }, 
-            mimetype: 'video/mp4', 
-            caption, 
-            fileName: `${result.title}.mp4` 
-        }, { quoted: m });
-
-        // Kirim reaction selesai
-        await sock.sendMessage(id, { react: { text: '✅', key: m.key }});
-
     } catch (error) {
-        await sock.sendMessage(id, { 
-            text: `❌ *GAGAL MEMPROSES*\n\n` +
-                  `*Pesan Error:* ${error.message}\n\n` +
-                  `*Solusi:*\n` +
-                  `1. Pastikan URL/Query valid\n` +
-                  `2. Coba video dengan durasi lebih pendek\n` +
-                  `3. Laporkan ke owner jika masih error`
-        });
+        await sock.sendMessage(id, { text: '❌ Ups, terjadi kesalahan: ' + error.message });
     }
 };

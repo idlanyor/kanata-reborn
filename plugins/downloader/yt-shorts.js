@@ -1,4 +1,6 @@
 import { ytShorts } from "../../lib/scraper/yt-shorts.js";
+import { ytsearch } from "../../lib/youtube.js";
+
 export const description = "YouTube Short Downloader provided by *Roy*";
 export const handler = ['ysd', 'yd2']
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -10,8 +12,29 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await sock.sendMessage(id, { text: '🔄 *Sedang diproses...* \n_Mohon tunggu sebentar_ ...' });
-        let { videoSrc } = await ytShorts(psn)
-        await sock.sendMessage(id, { video: { url: videoSrc } });
+        
+        // Cek apakah input adalah URL YouTube
+        if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
+            const result = await ytShorts(psn);
+            const videoInfo = await ytsearch(psn);
+            
+            caption = '*YouTube Shorts Downloader*';
+            caption += `\n\n📹 *Judul:* ${videoInfo[0].title}`;
+            caption += `\n📺 *Channel:* ${videoInfo[0].author}`;
+            caption += `\n🔗 *URL:* ${videoInfo[0].url}`;
+            
+            await sock.sendMessage(id, {
+                image: { url: videoInfo[0].image },
+                caption
+            });
+
+            await sock.sendMessage(id, { 
+                video: { url: result.videoSrc },
+                caption: `*${videoInfo[0].title}*\n\nBerhasil diunduh menggunakan Kanata V3`
+            });
+        } else {
+            await sock.sendMessage(id, { text: '❌ *URL tidak valid! Masukkan URL YouTube yang benar.*' });
+        }
     } catch (error) {
         await sock.sendMessage(id, { text: '❌ *Ups,Terjadi kesalahan Silahkan coba beberapa saat lagi*' });
         throw error
