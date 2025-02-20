@@ -12,7 +12,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         await sock.sendMessage(id, { text: '🔄 *Sedang Memproses...* Mohon tunggu sebentar...' });
         let { thumbnail, title, audio, author } = await spotifySong(psn);
-        let caption = `🎵 *Judul:* ${title}\n🎤 *Artis:* ${artist}\n⏳ `
+        let caption = `🎵 *Judul:* ${title}\n🎤 *Artis:* ${author || 'YNTKTS'}\n⏳ `
         await sock.sendMessage(id, { image: { url: thumbnail }, caption }, { quoted: m })
         await sock.sendMessage(id, { audio: { url: audio }, mimetype: 'audio/mpeg' }, { quoted: m });
     } catch (error) {
