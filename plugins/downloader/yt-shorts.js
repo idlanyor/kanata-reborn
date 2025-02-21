@@ -1,5 +1,6 @@
 import { ytShorts } from "../../lib/scraper/yt-shorts.js";
 import { ytsearch } from "../../lib/youtube.js";
+import axios from 'axios'
 
 export const description = "YouTube Short Downloader provided by *Roy*";
 export const handler = ['ysd', 'yd2']
@@ -15,7 +16,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const result = await ytShorts(psn);
+            const result = await axios.get('https://roy.sirandu.icu/api/ytshorts',{
+                params:{
+                    url:psn
+                }
+            });
             const videoInfo = await ytsearch(psn);
             
             caption = '*YouTube Shorts Downloader*';
