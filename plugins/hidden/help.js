@@ -1,12 +1,58 @@
 import { helpMessage } from '../../helper/help.js'
 import loadAssets from '../../helper/loadAssets.js';
-import pkg from '@seaavey/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ["menu", "help", "h", "hai"]
 export const description = "List All Menu";
 
 export default async ({ sock, id, m, noTel, sender }) => {
+    const { caption, plugins } = await helpMessage()
+    
+    // Generate sections dengan format yang lebih menarik
+    let sections = []
+    const emojis = {
+        'DOWNLOADER': '📥',
+        'TOOLS': '🛠️',
+        'OWNER': '👑',
+        'GROUP': '👥',
+        'AI': '🤖',
+        'GAME': '🎮',
+        'ANIME': '🎭',
+        'STICKER': '🎨',
+        'SEARCH': '🔍'
+    }
+
+    // Filter out 'HIDDEN' category
+    for (const plugin in plugins) {
+        if (plugin.toUpperCase() !== 'HIDDEN') {
+            sections.push({
+                header: '╭─「 KANATA BOT MENU 」',
+                highlight_label: '2.0',
+                title: `${emojis[plugin.toUpperCase()] || '📌'} ${plugin.toUpperCase()} MENU`,
+                rows: plugins[plugin].map((command) => {
+                    const cmdName = Array.isArray(command.handler)
+                        ? command.handler.map(h => h.toUpperCase()).join(', ')
+                        : command.handler.toUpperCase()
+                    return {
+                        title: `⌁ ${cmdName}`,
+                        description: command.description || 'Tidak ada deskripsi',
+                        id: `${command.handler}`
+                    }
+                })
+            })
+        }
+    }
+
+    // Calculate total commands excluding HIDDEN
+    const totalCommands = Object.entries(plugins)
+        .filter(([category]) => category.toUpperCase() !== 'HIDDEN')
+        .reduce((acc, [_, commands]) => acc + commands.length, 0);
+
+    // Calculate total categories excluding HIDDEN
+    const totalCategories = Object.keys(plugins)
+        .filter(category => category.toUpperCase() !== 'HIDDEN')
+        .length;
+
+    // Generate waktu
     const time = new Date()
     const hours = time.getHours()
     let greeting = ''
@@ -27,10 +73,18 @@ export default async ({ sock, id, m, noTel, sender }) => {
 ├ Library: @seeavey/baileys
 ├ Platform: NodeJS
 │
-├ *Cara Penggunaan:*
-├ Ketik *!category* untuk melihat
-├ daftar kategori menu yang 
-├ tersedia
+├ *Command Info:*
+├ Prefix: Multi
+├ Total Commands: ${totalCommands}
+├ Total Categories: ${totalCategories}
+╰──────────────────
+
+${caption}
+
+╭─「 *How to Use* 」
+├ Type *!help/!menu* for full commands
+├ Type *!ping* to check bot status
+├ Type *!owner* to contact owner
 ╰──────────────────`
 
     await sock.sendMessage(id, {
@@ -40,37 +94,51 @@ export default async ({ sock, id, m, noTel, sender }) => {
         },
         buttons: [
             {
-                buttonId: 'category',
+                buttonId: 'ping',
                 buttonText: {
-                    displayText: '📋 Lihat Kategori'
+                    displayText: '🚀 Test Ping'
                 },
-                type: 1
+                type: 4,
+                nativeFlowInfo: {
+                    name: 'single_select',
+                    paramsJson: JSON.stringify({
+                        title: '📚 DAFTAR MENU KANATA V3',
+                        sections
+                    }),
+                },
             },
             {
                 buttonId: 'owner',
                 buttonText: {
                     displayText: '👑 Owner Contact'
                 },
-                type: 1
+                type: 1,
             }
         ],
-        footer: '© 2024 Kanata Bot • Created by Roy',
+        footer: '© 2024 Kanata Bot • Created with ❤️ by Roy',
         headerType: 1,
         viewOnce: true,
         contextInfo: {
             mentionedJid: [sender],
             isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: globalThis.newsLetterJid,
+                newsletterName: '乂 Powered By : Roy 乂',
+                serverMessageId: -1
+            },
             forwardingScore: 999,
             externalAdReply: {
-                title: '乂 Kanata Bot Menu 乂', 
+                title: '乂 Kanata Bot Menu 乂',
                 body: 'Click here to join our channel!',
                 thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-                sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                mediaType: 1,
+                sourceUrl:'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                mediaType: 2,
                 renderLargerThumbnail: true
             }
-        }
-    }, { quoted: m })
+        },
+    }, {
+        quoted: m
+    })
 }
 
 // {
