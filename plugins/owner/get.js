@@ -5,12 +5,11 @@ export default async ({ sock, m, id, noTel, psn }) => {
     if (!await checkOwner(sock, id, noTel)) return;
 
     if (!psn) {
-        await sock.sendMessage(id, { text: '❌ Masukkan URL yang akan di-GET!' });
+        await sock.sendMessage(id, { text: '❌ Masukkan URL yang akan di-GET!\n*Contoh:* !get https://api.example.com/data' });
         return;
     }
 
     try {
-        // Parse URL dan headers (jika ada)
         let [url, ...headerStrings] = psn.split('\n');
         let headers = {};
 
@@ -22,33 +21,60 @@ export default async ({ sock, m, id, noTel, psn }) => {
             });
         }
 
-        // Kirim loading message
-        await sock.sendMessage(id, { text: '⏳ Fetching data...' });
+        // Kirim loading reaction
+        await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
-        const response = await axios.get(url, { headers });
+        const response = await axios.get(url, { headers, responseType: 'arraybuffer' });
+        const contentType = response.headers['content-type'];
+        const fileName = url.split('/').pop() || 'file';
 
-        // Format response
-        let result = `🌐 *GET ${url}*\n\n`;
-        result += `📊 Status: ${response.status}\n`;
-        result += `⏱️ Time: ${response.headers['x-response-time'] || 'N/A'}\n\n`;
-
-        // Format response data
-        if (typeof response.data === 'object') {
-            result += `📥 Response:\n${JSON.stringify(response.data, null, 2)}`;
+        if (contentType.includes('image')) {
+            await sock.sendMessage(id, {
+                image: Buffer.from(response.data),
+                caption: '☑️ Response 200 OK ☑️',
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: url,
+                        thumbnailUrl: `${globalThis.ppUrl}`,
+                        sourceUrl: url,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            });
+        } else if (contentType.includes('video')) {
+            await sock.sendMessage(id, {
+                video: Buffer.from(response.data),
+                caption: '☑️ Response 200 OK ☑️',
+            });
+        } else if (contentType.includes('audio')) {
+            await sock.sendMessage(id, {
+                audio: Buffer.from(response.data),
+                mimetype: 'audio/mp4',
+                fileName: `${fileName}.mp3`,
+            });
+        } else if (contentType.includes('application') || contentType.includes('text/csv')) {
+            await sock.sendMessage(id, {
+                document: Buffer.from(response.data),
+                mimetype: contentType,
+                fileName: fileName,
+                caption: `🛜 *GET Request - Document*\n📃 *Type:* ${contentType}`,
+            });
         } else {
-            result += `📥 Response:\n${response.data}`;
+            // Jika bukan file media, kirim sebagai teks atau JSON
+            const textData = response.data.toString('utf-8');
+            try {
+                const jsonData = JSON.parse(textData);
+                await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(jsonData, null, 2)}` });
+            } catch {
+                await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${textData}` });
+            }
         }
 
-        // Split response jika terlalu panjang
-        // if (result.length > 4096) {
-        //     const chunks = result.match(/.{1,4096}/g);
-        //     for (const chunk of chunks) {
-        //         await sock.sendMessage(id, { text: chunk });
-        //     }
-        // } else {
-        await sock.sendMessage(id, { text: result });
-        // }
+        // Kirim reaction sukses
+        await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
     } catch (error) {
         let errorMessage = `❌ *ERROR*\n\n`;
         if (error.response) {
@@ -58,10 +84,9 @@ export default async ({ sock, m, id, noTel, psn }) => {
             errorMessage += error.message;
         }
         await sock.sendMessage(id, { text: errorMessage });
+        await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
 };
 
 export const handler = 'get';
-export const tags = ['owner'];
-export const command = ['get'];
-export const help = 'Melakukan HTTP GET request'; 
+export const description = 'Melakukan HTTP GET request';

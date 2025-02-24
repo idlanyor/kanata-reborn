@@ -20,6 +20,7 @@ import { gpt4Hika } from './lib/ai.js';
 import { schedulePrayerReminders } from './lib/jadwalshalat.js';
 import User from './database/models/User.js';
 import Group from './database/models/Group.js';
+import { addMessageHandler } from './helper/message.js'
 
 
 const app = express()
@@ -334,9 +335,10 @@ export async function startBot() {
         logger.divider();
         sock.ev.on('messages.upsert', async chatUpdate => {
             try {
-                const m = chatUpdate.messages[0];
-
+                let m = chatUpdate.messages[0];
+                m = addMessageHandler(m, sock)
                 const { remoteJid } = m.key;
+                console.log(m.quoted)
                 const sender = m.pushName || remoteJid;
                 const id = remoteJid;
                 const noTel = (id.endsWith('@g.us')) ? m.key.participant.split('@')[0].replace(/[^0-9]/g, '') : remoteJid.split('@')[0].replace(/[^0-9]/g, '');

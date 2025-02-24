@@ -57,9 +57,10 @@ class Kanata {
             // Create socket connection
             const sock = makeWASocket({
                 version,
+                markOnlineOnConnect: true,
                 logger: P,
                 printQRInTerminal: false,
-                browser: Browsers.macOS("Opera"),
+                browser: Browsers.macOS("Safari"),
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, P),

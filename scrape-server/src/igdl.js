@@ -11,7 +11,7 @@ import puppeteer from 'puppeteer';
 export const igDl = async (url) => {
     try {
         const browser = await puppeteer.launch({
-            headless: true,
+            headless: false,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -62,11 +62,12 @@ export const igDl = async (url) => {
         // console.log(data);
         return data;
     } catch (error) {
-        throw new Error('Terjadi error saat scraping:', error)
+        throw error
+        // throw new Error('Terjadi error saat scraping:', error)
     }
 };
 
-// (async () => {
-//     await igDl('https://www.instagram.com/reel/DF4oOlavxSq/?igsh=MWRxMDF1N3Z6dnl4OQ==')
-// })()
+(async () => {
+    await igDl('https://www.instagram.com/reel/DF4oOlavxSq/?igsh=MWRxMDF1N3Z6dnl4OQ==')
+})()
 
