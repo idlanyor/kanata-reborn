@@ -182,7 +182,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         cmd = command.toLowerCase().substring(1).split(' ')[0];
         args = command.split(' ').slice(1)
     }
-    logger.info(`Pesan baru diterima dari ${m.pushName || m.participant?.pushName}`);
+    logger.info(`Pesan baru diterima dari ${m.pushName}`);
     logger.message.in(command);
 
     try {
@@ -217,13 +217,12 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             // Cek antipromosi
             if (settings.antipromosi) {
                 try {
-                    const { default: antipromosi } = await import('./plugins/events/antipromosi.js');
+                    const { default: antipromosi } = await import('./plugins/hidden/events/antipromosi.js');
                     await antipromosi({
                         sock,
                         m,
                         id,
-                        psn: m.message?.conversation ||
-                            m.message?.extendedTextMessage?.text || '',
+                        psn: m.body,
                         sender: noTel + '@s.whatsapp.net'
                     });
                     // return; // Hentikan proses jika promosi terdeteksi
@@ -235,13 +234,12 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             // Cek antilink
             if (settings.antilink) {
                 try {
-                    const { default: antilink } = await import('./plugins/events/antilink.js');
+                    const { default: antilink } = await import('./plugins/hidden/events/antilink.js');
                     await antilink({
                         sock,
                         m,
                         id,
-                        psn: m.message?.conversation ||
-                            m.message?.extendedTextMessage?.text || '',
+                        psn: m.body,
                         sender: noTel + '@s.whatsapp.net'
                     });
                     // return; // Hentikan proses jika link terdeteksi
@@ -253,13 +251,12 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             // Cek antitoxic
             if (settings.antitoxic) {
                 try {
-                    const { default: antitoxic } = await import('./plugins/events/antitoxic.js');
+                    const { default: antitoxic } = await import('./plugins/hidden/events/antitoxic.js');
                     await antitoxic({
                         sock,
                         m,
                         id,
-                        psn: m.message?.conversation ||
-                            m.message?.extendedTextMessage?.text || '',
+                        psn: m.body,
                         sender: noTel + '@s.whatsapp.net'
                     });
                     // return; // Hentikan proses jika toxic terdeteksi
@@ -336,27 +333,26 @@ export async function startBot() {
         sock.ev.on('messages.upsert', async chatUpdate => {
             try {
                 let m = chatUpdate.messages[0];
-                m = addMessageHandler(m, sock)
-                const { remoteJid } = m.key;
-                console.log(m.quoted)
-                const sender = m.pushName || remoteJid;
-                const id = remoteJid;
-                const noTel = (id.endsWith('@g.us')) ? m.key.participant.split('@')[0].replace(/[^0-9]/g, '') : remoteJid.split('@')[0].replace(/[^0-9]/g, '');
+                m = addMessageHandler(m, sock);
+                const sender = m.pushName;
+                const id = m.chat;
+                const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
+
                 const mediaType = {
                     image: {
-                        buffer: m.message?.imageMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage,
-                        caption: m.message?.imageMessage?.caption || m.message?.extendedTextMessage?.text,
-                        mime: m.message?.imageMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage?.mime,
+                        buffer: m.message?.imageMessage || m.quoted?.imageMessage,
+                        caption: m.message?.imageMessage?.caption || m.body,
+                        mime: m.message?.imageMessage?.mime || m.quoted?.imageMessage?.mime,
                     },
                     video: {
-                        buffer: m.message?.videoMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage,
-                        caption: m.message?.videoMessage?.caption || m.message?.extendedTextMessage?.text,
-                        mime: m.message?.videoMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage?.mime,
+                        buffer: m.message?.videoMessage || m.quoted?.videoMessage,
+                        caption: m.message?.videoMessage?.caption || m.body,
+                        mime: m.message?.videoMessage?.mime || m.quoted?.videoMessage?.mime,
                     },
                     audio: {
-                        buffer: m.message?.audioMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage,
-                        caption: m.message?.audioMessage?.caption || m.message?.extendedTextMessage?.text,
-                        mime: m.message?.audioMessage?.mime || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage?.mime,
+                        buffer: m.message?.audioMessage || m.quoted?.audioMessage,
+                        caption: m.message?.audioMessage?.caption || m.body,
+                        mime: m.message?.audioMessage?.mime || m.quoted?.audioMessage?.mime,
                     }
                 }
                 if (mediaType.image.buffer) {
@@ -387,9 +383,8 @@ export async function startBot() {
                 let botId = sock.user.id.replace(/:\d+/, '')
                 let botMentioned = m.message?.extendedTextMessage?.contextInfo?.participant?.includes(botId)
                     || m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(botId)
-                let fullmessage = m.message?.conversation || m.message?.extendedTextMessage?.text
-                    || m.message?.extendedTextMessage?.contextInfo
-                let ctx = m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation || ''
+                let fullmessage = m.body
+                let ctx = m.quoted?.text || ''
                 // auto AI mention
                 if (botMentioned) {
                     try {

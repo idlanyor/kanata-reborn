@@ -72,6 +72,9 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
     try {
         if (!command) return;
         
+        // Tambahkan message handler
+        m = addMessageHandler(m, sock);
+        
         // Parse command dan args
         let cmd = '';
         let args = [];
@@ -84,16 +87,26 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             cmd = cmd.toLowerCase();
         }
 
+        // Cek mode bot
+        const mode = globalThis.botMode || 'public';
+        
+        // Validasi berdasarkan mode
+        if (mode === 'self' && m.isGroup) {
+            return; // Tidak merespon di grup jika mode self
+        }
+        
+        if (mode === 'restricted' && m.isGroup && !m.isOwner) {
+            return; // Di grup hanya owner yang bisa menggunakan
+        }
+
         // Check command validity and initialize necessary data
         if (!await checkCommand(cmd, m, noTel, id)) {
-            await sock.sendMessage(id, { 
-                text: '❌ Terjadi kesalahan saat memproses command'
-            });
+            await m.reply('❌ Terjadi kesalahan saat memproses command');
             return;
         }
 
         // Inisialisasi pengaturan grup
-        if (id.endsWith('@g.us')) {
+        if (m.isGroup) {
             await Group.initGroup(id);
             const settings = await Group.getSettings(id);
 
@@ -104,55 +117,26 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                     await Group.incrementWarning(noTel, id);
                     if (spamCheck.warningCount >= 3) {
                         await sock.groupParticipantsUpdate(id, [noTel], 'remove');
-                        await sock.sendMessage(id, { 
-                            text: `@${noTel.split('@')[0]} telah dikeluarkan karena spam`,
-                            mentions: [noTel]
-                        });
+                        await m.reply(`@${noTel.split('@')[0]} telah dikeluarkan karena spam`, true, false);
                         return;
                     }
-                    await sock.sendMessage(id, { 
-                        text: `⚠️ @${noTel.split('@')[0]} Warning ke-${spamCheck.warningCount + 1} untuk spam!`,
-                        mentions: [noTel]
-                    });
+                    await m.reply(`⚠️ @${noTel.split('@')[0]} Warning ke-${spamCheck.warningCount + 1} untuk spam!`, true, false);
                     return;
                 }
             }
 
             // Cek antilink
-            if (settings.antilink && (m.message?.conversation?.includes('http') || 
-                m.message?.extendedTextMessage?.text?.includes('http'))) {
-                const groupAdmins = await getGroupAdmins({ sock, id });
-                if (!groupAdmins.includes(noTel)) {
+            if (settings.antilink && m.body.includes('http')) {
+                if (!await m.isAdmin()) {
                     await sock.groupParticipantsUpdate(id, [noTel], 'remove');
-                    await sock.sendMessage(id, { 
-                        text: `@${noTel.split('@')[0]} telah dikeluarkan karena mengirim link`,
-                        mentions: [noTel]
-                    });
-                    return;
-                }
-            }
-
-            // Cek antitoxic (contoh sederhana)
-            if (settings.antitoxic) {
-                const toxicWords = ['anjing', 'babi', 'bangsat', 'kontol']; // Tambahkan kata-kata toxic
-                const message = m.message?.conversation?.toLowerCase() || 
-                              m.message?.extendedTextMessage?.text?.toLowerCase() || '';
-                
-                if (toxicWords.some(word => message.includes(word))) {
-                    await sock.sendMessage(id, { 
-                        text: `⚠️ @${noTel.split('@')[0]} Tolong jaga kata-kata!`,
-                        mentions: [noTel]
-                    });
+                    await m.reply(`@${noTel.split('@')[0]} telah dikeluarkan karena mengirim link`, true, false);
                     return;
                 }
             }
 
             // Cek only admin
-            if (settings.only_admin) {
-                const groupAdmins = await getGroupAdmins({ sock, id });
-                if (!groupAdmins.includes(noTel)) {
-                    return;
-                }
+            if (settings.only_admin && !(await m.isAdmin())) {
+                return;
             }
         }
 
@@ -189,6 +173,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             }))
         );
 
+        // Eksekusi plugin
         if (plugins[cmd]) {
             logger.info(`Executing command: ${cmd}`);
             await plugins[cmd]({ sock, m, id, psn: args.join(' '), sender, noTel, attf, cmd });

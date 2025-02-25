@@ -27,7 +27,6 @@ export const uploadGambar = async (buffer) => {
 }
 
 export const uploadGambar2 = async (buffer) => {
-    console.log(buffer);
     try {
         const readStream = bufferToReadStream(buffer, `/tmp/kanata_temp${Math.floor(Math.random() * 1000)}.jpg`);
         const form = new FormData()

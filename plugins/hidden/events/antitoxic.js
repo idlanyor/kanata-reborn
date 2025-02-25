@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
-const TOXIC_WORDS = ['anjing', 'bangsat', 'kontol', 'memek', 'jembut', 'kntl', 'mmk', 'anj', 'bngst', 'asw', 'ngentot'];
+const TOXIC_WORDS = ['anjing', 'bangsat', 'kontol', 'memek', 'jembut', 'ngentot', 'goblok', 'tolol', 'babi', 'monyet', 'lonte', 'bejat', 'keparat', 'biadab', 'bajingan', 'bacot', 'tai', 'jancok', 'perek', 'bencong', 'banci', 'fuck', 'shit', 'bitch', 'pussy', 'asshole', 'bastard'];
 const WARNING_FILE = 'lib/database/toxic_warnings.json';
 
 // Load existing warnings

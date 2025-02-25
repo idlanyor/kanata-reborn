@@ -1,65 +1,83 @@
 export const handler = 'kick'
 export const description = 'Mengeluarkan anggota dari group'
-export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
-    if (!psn) {
-        await sock.sendMessage(id, { 
-            text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.kick @user*\n\n📌 Contoh:\n*.kick @user*',
-            contextInfo: {
-                externalAdReply: {
-                    title: '乂 Group Manager 乂',
-                    body: 'Kick member from group',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
-            }
-        });
-        return;
-    }
 
+export default async ({ sock, m, id, psn }) => {
     try {
-        await sock.groupParticipantsUpdate(id, [psn.replace('@', '') + '@s.whatsapp.net'], 'remove')
-        await sock.sendMessage(id, { 
+        // Cek apakah di grup
+        if (!m.isGroup) {
+            await m.reply('⚠️ Perintah ini hanya dapat digunakan di dalam grup!');
+            return;
+        }
+
+        // Cek apakah bot admin
+        if (!await m.isBotAdmin()) {
+            await m.reply('❌ Bot harus menjadi admin untuk mengeluarkan member!');
+            return;
+        }
+
+        // Cek apakah pengirim adalah admin
+        if (!await m.isAdmin()) {
+            await m.reply('❌ Perintah ini hanya untuk admin grup!');
+            return;
+        }
+
+        if (!psn) {
+            await m.reply({ 
+                text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.kick @user*\n\n📌 Contoh:\n*.kick @user*',
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 Group Manager 乂',
+                        body: 'Kick member from group',
+                        thumbnailUrl: globalThis.thumbnailUrl,
+                        sourceUrl: globalThis.sourceUrl,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            });
+            return;
+        }
+
+        // Proses kick member
+        await sock.groupParticipantsUpdate(id, [psn.replace('@', '') + '@s.whatsapp.net'], 'remove');
+        
+        await m.reply({ 
             text: `✅ Berhasil mengeluarkan *${psn.trim()}* dari grup!`,
             contextInfo: {
                 externalAdReply: {
                     title: '✅ Member Kicked',
                     body: 'Successfully removed member',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    thumbnailUrl: globalThis.thumbnailUrl,
+                    sourceUrl: globalThis.sourceUrl,
                     mediaType: 1,
                 }
             }
         });
         
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '👢', 
-                key: m.key 
-            } 
-        });
+        await m.react('👢');
+
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await m.reply({ 
             text: `❌ *Gagal mengeluarkan member:*\n${error.message}`,
             contextInfo: {
                 externalAdReply: {
                     title: '❌ Failed to Kick',
                     body: 'An error occurred',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    thumbnailUrl: globalThis.thumbnailUrl,
+                    sourceUrl: globalThis.sourceUrl,
                     mediaType: 1,
                 }
             }
         });
         
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
-        });
+        await m.react('❌');
     }
+};
+
+export const help = {
+    name: 'kick',
+    description: 'Mengeluarkan anggota dari group',
+    usage: '.kick @user'
 };
