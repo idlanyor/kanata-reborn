@@ -1,6 +1,6 @@
 import { getGroupMetadata } from "../../helper/group.js";
 
-export const handler = 'hidetag'
+export const handler = '~'
 export const description = 'Tag semua anggota group secara tersembunyi'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     let teks = `${psn ? psn : ''}`

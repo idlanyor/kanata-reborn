@@ -2,6 +2,7 @@
 globalThis.owner = "Roynaldi";
 globalThis.ownerNumber = ["62895395590009","62"]
 globalThis.botNumber = ""
+globalThis.botMode = "self"
 globalThis.botName = "Kanata"
 globalThis.sessionName = 'kanata-bot'
 globalThis.groupJid = '0@g.us'

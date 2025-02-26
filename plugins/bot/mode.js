@@ -1,5 +1,5 @@
 import { checkOwner } from '../../helper/permission.js';
-
+export const handler = 'mode'
 export const description = "Mengatur mode bot (self/public/restricted)";
 
 export default async ({ sock, m, id, psn, noTel }) => {

@@ -8,7 +8,11 @@
   "scripts": {
     "start": "node ."
   },
-  "keywords": ["bot","bot-whatsapp","baileys"],
+  "keywords": [
+    "bot",
+    "bot-whatsapp",
+    "baileys"
+  ],
   "author": "Roynaldi",
   "license": "MIT",
   "dependencies": {

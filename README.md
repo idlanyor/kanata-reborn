@@ -1,38 +1,68 @@
 <div align="center">
-<h1>Kanata V3</h1>
-<h2 style="color:#1496DC">by Roy</h2>
+<h1>🤖 Kanata V3</h1>
+<p><i>A powerful WhatsApp bot with modular plugin architecture</i></p>
 
-![GitHub repo size](https://img.shields.io/github/repo-size/idlanyor/kanata-v2)
-![GitHub stars](https://img.shields.io/github/stars/idlanyor/kanata-v2?style=social)
-![GitHub license](https://img.shields.io/github/license/idlanyor/kanata-v2)
+[![GitHub repo size](https://img.shields.io/github/repo-size/idlanyor/kanata-v2)](https://github.com/idlanyor/kanata-v2)
+[![GitHub stars](https://img.shields.io/github/stars/idlanyor/kanata-v2?style=social)](https://github.com/idlanyor/kanata-v2)
+[![GitHub license](https://img.shields.io/github/license/idlanyor/kanata-v2)](https://github.com/idlanyor/kanata-v2)
+[![Node.js Version](https://img.shields.io/badge/Node.js-14+-43853D?logo=node.js)](https://nodejs.org/)
+[![Baileys](https://img.shields.io/badge/Baileys-Latest-blue)](https://github.com/whiskeysockets/baileys)
 
 ![Kanata](https://s6.imgcdn.dev/YYoFZh.jpg)
 
 </div>
 
+## ✨ Features
 
-This is a project that demonstrates how to use plugin modular stucture to make a Bot Whatsapp using Baileys
+- 🔌 Modular plugin architecture
+- 🤖 AI-powered responses using multiple models
+- 🖼️ Image manipulation and generation
+- 📝 PDF manipulation and conversion
+- 🎮 Fun games and interactive commands
+- 🔒 Advanced group management
+- 📊 Detailed analytics and logging
 
-## Requirements
+## 📋 Requirements
 
-In order to run this project, you will need to have Node.js and NPM installed on your system.
+- Node.js 14 or higher
+- npm or yarn
+- A WhatsApp account
+- Various API keys (see configuration)
 
-## Installation
+## 🚀 Quick Start
 
-To install the required dependencies, run the following command in your terminal:
-
+1. **Clone the repository**
 ```bash
-npm install
+git clone https://github.com/idlanyor/kanata-v2.git
+cd kanata-v2
 ```
 
-## Usage
+2. **Install dependencies**
+```bash
+npm install
+# or using yarn
+yarn install
+```
 
-To use this project, you will need to set up a Various API key. You can do this by renaming a file called `globalThis.example.js` to `globalThis.js` in the root directory of the project and adding the following code to it:
+3. **Configure the bot**
+   - Rename `global.example.js` to `global.js`
+   - Fill in your API keys and configuration
+
+4. **Start the bot**
+```bash
+npm start
+# or using yarn
+yarn start
+```
+
+## ⚙️ Configuration
+
+Copy `globalThis.example.js` to `globalThis.js` and configure your settings:
 
 ```javascript
-// variabel dasar
-globalThis.owner = "Roynaldi";
-globalThis.ownerNumber = ["62895395590009","62"]
+// Basic configuration
+globalThis.owner = "YOUR_NAME";
+globalThis.ownerNumber = ["YOUR_NUMBER","SECOND_NUMBER"]
 globalThis.botNumber = ""
 globalThis.botName = "Kanata"
 globalThis.sessionName = 'kanata-bot'
@@ -43,7 +73,7 @@ globalThis.newsLetterUrl = 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1
 globalThis.kanataThumb = 'https://s6.imgcdn.dev/YYoFZh.jpg'
 
 
-// fungsi dasar
+// Basic functions
 globalThis.isOwner = (notel) => {
     return globalThis.ownerNumber.includes(notel)
 }
@@ -56,7 +86,7 @@ globalThis.isGroup = async (jid) => {
     return jid.endsWith('@g.us')
 }
 
-// variabel apikey
+// API keys
 globalThis.apiKey = {
     gemini: '',
     removeBG: '',
@@ -69,7 +99,7 @@ globalThis.apiKey = {
 }
 globalThis.hikaru = 'https://fastrestapis.fasturl.cloud/'
 
-// variabel paired apikey with baseurl
+// Paired API keys with baseurl
 globalThis.apiHelper = {
     medanpedia: {
         baseurl: 'https://api.medanpedia.co.id/',
@@ -129,31 +159,52 @@ globalThis.apiHelper = {
 
 ```
 
-Replace all value wit your own.
+## 🔌 API Integration
 
-After that, you can start the project by running the following command in your terminal:
+Kanata integrates with multiple powerful APIs to provide enhanced functionality:
 
-```bash
-npm start
-```
+### AI Services
+- 🧠 Google Generative AI - Advanced language processing
+- ⚡ Groq - Fast AI inference
+- 🤖 Llama - Open-source AI model
+- 🚀 Hikaru AI LLM
 
+### Image & Media
+- 🖼️ RemoveBG - Background removal
+- 📑 ILovePDF - PDF manipulation
+- 🎨 Hikaru - AI Media conversion
 
-## License
+### Additional Services
+- 🚀 Hikaru FastURL
+- ⚡ Ryzen Api
+- 🛠️ BetaBotz
+- 🔧 SkizoTech
+
+## 👥 Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/idlanyor">
+        <img src="https://github.com/idlanyor.png" width="100px;" alt="Roynaldi"/><br />
+        <sub><b>Roynaldi</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/puanmahalini">
+        <img src="https://github.com/puanmahalini.png" width="100px;" alt="Puan Mahalini"/><br />
+        <sub><b>Puan Mahalini</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Api Used
+---
 
-- [Google Generative AI](https://github.com/GoogleCloudPlatform/generative-ai)
-- [Groq](https://groq.com/)
-- Hikaru FastURL
-- Ryzen Api
-- [RemoveBG](https://www.remove.bg/id/api)
-- [ILovePDF](https://www.iloveapi.com/)
-- [BetaBotz](https://api.betabotz.eu.org/)
-- [SkizoTech](https://skizo.tech/)
-- [LolHuman](https://api.lolhuman.xyz/)
-
-## Contributors
-- [Roynaldi](https://github.com/idlanyor)
-- [Puan Mahalini](https://github.com/puanmahalini)
+<div align="center">
+Made with ❤️ by <a href="https://github.com/idlanyor">Roy</a>
+</div>
