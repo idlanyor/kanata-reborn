@@ -25,7 +25,10 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
-        const response = await axios.get(url, { headers, responseType: 'arraybuffer' });
+        const response = await axios.get(url, { 
+            headers, 
+            responseType: contentType === 'application/json' ? 'json' : 'arraybuffer' 
+        });
         const contentType = response.headers['content-type'];
         const fileName = url.split('/').pop() || 'file';
 
@@ -55,6 +58,10 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 mimetype: 'audio/mp4',
                 fileName: `${fileName}.mp3`,
             });
+        } else if (contentType.includes('application/json')) {
+            await sock.sendMessage(id, { 
+                text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(response.data, null, 2)}` 
+            });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {
             await sock.sendMessage(id, {
                 document: Buffer.from(response.data),
@@ -63,14 +70,9 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 caption: `🛜 *GET Request - Document*\n📃 *Type:* ${contentType}`,
             });
         } else {
-            // Jika bukan file media, kirim sebagai teks atau JSON
+            // Jika bukan file media atau json, kirim sebagai teks
             const textData = response.data.toString('utf-8');
-            try {
-                const jsonData = JSON.parse(textData);
-                await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(jsonData, null, 2)}` });
-            } catch {
-                await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${textData}` });
-            }
+            await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${textData}` });
         }
 
         // Kirim reaction sukses
