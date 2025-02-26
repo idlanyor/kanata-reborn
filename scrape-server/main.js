@@ -15,6 +15,7 @@ import {
     tiktokDl,
     igDl
 } from './src/index.js';
+import { ytMp3 } from './src/ytmp3.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -206,6 +207,19 @@ app.get('/', (req, res) => {
                     <p><b>Parameter:</b></p>
                     <ul>
                         <li>url (required) - URL Instagram</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2>Youtube MP3</h2>
+            <div class="endpoint">
+                <span class="method">GET</span>
+                <span class="path">/api/ytmp3?url={url}</span>
+                <p>Download MP3 from Youtube</p>
+                <div class="params">
+                    <p><b>Parameter:</b></p>
+                    <ul>
+                        <li>url (required) - URL Youtube</li>
                     </ul>
                 </div>
             </div>
@@ -468,6 +482,26 @@ app.get('/api/surahNames', async (req, res) => {
     }
 });
 
+// Youtube MP3 endpoint
+app.get('/api/ytmp3', async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url) {
+            return res.status(400).json({
+                status: false,
+                message: 'URL parameter is required'
+            });
+        }
+
+        const result = await ytMp3(url);
+        res.json({
+            status: true,
+            result
+        });
+    } catch (error) {
+        handleError(res, error);
+    }
+});
 
 // Handle 404 Not Found
 app.use((req, res) => {
