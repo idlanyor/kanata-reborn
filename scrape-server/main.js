@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import {
     ytShorts,
     spotifyDownload,
@@ -24,6 +25,9 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from public directory
+app.use('/downloads', express.static(path.join(process.cwd(), 'public/downloads')));
 
 // API Documentation HTML
 app.get('/', (req, res) => {
@@ -500,6 +504,29 @@ app.get('/api/ytmp3', async (req, res) => {
         });
     } catch (error) {
         handleError(res, error);
+    }
+});
+
+app.get('/api/youtube/mp3', async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url) {
+            return res.status(400).json({
+                success: false,
+                message: 'URL parameter is required'
+            });
+        }
+
+        const result = await ytMp3(url);
+        res.json({
+            success: true,
+            result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 });
 
