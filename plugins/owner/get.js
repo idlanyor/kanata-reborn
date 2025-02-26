@@ -25,11 +25,12 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
-        const response = await axios.get(url, { 
-            headers, 
-            responseType: contentType === 'application/json' ? 'json' : 'arraybuffer' 
+        let contentType = ''
+        const response = await axios.get(url, {
+            headers,
+            responseType: contentType === 'application/json' ? 'json' : 'arraybuffer'
         });
-        const contentType = response.headers['content-type'];
+        contentType = response.headers['content-type'];
         const fileName = url.split('/').pop() || 'file';
 
         if (contentType.includes('image')) {
@@ -59,8 +60,8 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 fileName: `${fileName}.mp3`,
             });
         } else if (contentType.includes('application/json')) {
-            await sock.sendMessage(id, { 
-                text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(response.data, null, 2)}` 
+            await sock.sendMessage(id, {
+                text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(response.data, null, 2)}`
             });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {
             await sock.sendMessage(id, {
