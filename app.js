@@ -342,19 +342,20 @@ export async function startBot() {
                     image: {
                         buffer: m.message?.imageMessage || m.quoted?.imageMessage,
                         caption: m.message?.imageMessage?.caption || m.body,
-                        mime: m.message?.imageMessage?.mime || m.quoted?.imageMessage?.mime,
+                        mime: m.message?.imageMessage?.mime || m.quoted?.imageMessage?.mimetype,
                     },
                     video: {
                         buffer: m.message?.videoMessage || m.quoted?.videoMessage,
                         caption: m.message?.videoMessage?.caption || m.body,
-                        mime: m.message?.videoMessage?.mime || m.quoted?.videoMessage?.mime,
+                        mime: m.message?.videoMessage?.mime || m.quoted?.videoMessage?.mimetype,
                     },
                     audio: {
                         buffer: m.message?.audioMessage || m.quoted?.audioMessage,
                         caption: m.message?.audioMessage?.caption || m.body,
-                        mime: m.message?.audioMessage?.mime || m.quoted?.audioMessage?.mime,
+                        mime: m.message?.audioMessage?.mime || m.quoted?.audioMessage?.mimetype,
                     }
                 }
+                console.log(mediaType.image.mime)
                 if (mediaType.image.buffer) {
                     const imageBuffer = await getMedia({ message: { imageMessage: mediaType.image.buffer } });
                     await prosesPerintah({ command: mediaType.image.caption, sock, m, id, sender, noTel, attf: imageBuffer, mime: mediaType.image.mime });

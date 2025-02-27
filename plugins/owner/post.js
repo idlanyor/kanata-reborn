@@ -41,36 +41,61 @@ export default async ({ sock, m, id, noTel, psn }) => {
             body = parts[1]; // Use raw string if not valid JSON
         }
 
-        // Kirim loading message
-        await sock.sendMessage(id, { text: '⏳ Sending request...' });
+        // Kirim loading reaction
+        await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
         const response = await axios.post(url, body, { headers });
-        
-        // Format response
-        let result = `🌐 *POST ${url}*\n\n`;
-        result += `📊 Status: ${response.status}\n`;
-        result += `⏱️ Time: ${response.headers['x-response-time'] || 'N/A'}\n\n`;
-        
-        // Format request
-        result += `📤 Request:\n${JSON.stringify(body, null, 2)}\n\n`;
-        
-        // Format response
-        if (typeof response.data === 'object') {
-            result += `📥 Response:\n${JSON.stringify(response.data, null, 2)}`;
+        const contentType = response.headers['content-type'];
+        const fileName = url.split('/').pop() || 'file';
+
+        if (contentType.includes('application/json')) {
+            // Tangani JSON response
+            let jsonString = JSON.stringify(response.data, null, 2);
+            await sock.sendMessage(id, {
+                text: `🛜 *POST Request*\n\n📃 *Response:*\n${jsonString}`
+            });
+        } else if (contentType.includes('image')) {
+            await sock.sendMessage(id, {
+                image: Buffer.from(response.data),
+                caption: '☑️ Response 200 OK ☑️',
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: url,
+                        thumbnailUrl: `${globalThis.ppUrl}`,
+                        sourceUrl: url,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            });
+        } else if (contentType.includes('video')) {
+            await sock.sendMessage(id, {
+                video: Buffer.from(response.data),
+                caption: '☑️ Response 200 OK ☑️',
+            });
+        } else if (contentType.includes('audio')) {
+            await sock.sendMessage(id, {
+                audio: Buffer.from(response.data),
+                mimetype: 'audio/mp4',
+                fileName: `${fileName}.mp3`,
+            });
+        } else if (contentType.includes('application') || contentType.includes('text/csv')) {
+            await sock.sendMessage(id, {
+                document: Buffer.from(response.data),
+                mimetype: contentType,
+                fileName: fileName,
+                caption: `🛜 *POST Request - Document*\n📃 *Type:* ${contentType}`,
+            });
         } else {
-            result += `📥 Response:\n${response.data}`;
+            // Jika bukan file media atau json, kirim sebagai teks
+            const textData = response.data.toString('utf-8');
+            await sock.sendMessage(id, { text: `🛜 *POST Request*\n\n📃 *Response:*\n${textData}` });
         }
 
-        // Split response jika terlalu panjang
-        if (result.length > 4096) {
-            const chunks = result.match(/.{1,4096}/g);
-            for (const chunk of chunks) {
-                await sock.sendMessage(id, { text: chunk });
-            }
-        } else {
-            await sock.sendMessage(id, { text: result });
-        }
+        // Kirim reaction sukses
+        await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
     } catch (error) {
         let errorMessage = `❌ *ERROR*\n\n`;
         if (error.response) {
@@ -80,6 +105,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
             errorMessage += error.message;
         }
         await sock.sendMessage(id, { text: errorMessage });
+        await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
 };
 

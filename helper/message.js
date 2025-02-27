@@ -1,4 +1,5 @@
 import pkg, { downloadContentFromMessage } from '@seaavey/baileys'
+import { getMedia } from './mediaMsg.js'
 
 export function addMessageHandler(m, sock) {
     // Basic message info
@@ -12,6 +13,77 @@ export function addMessageHandler(m, sock) {
     // Message type detection
     m.type = getContentType(m.message);
     m.body = m.message?.conversation || m.message?.[m.type]?.text || m.message?.[m.type]?.caption || '';
+    
+    // Enhanced mime type detection
+    m.getMimetype = () => {
+        // Direct message mime type
+        const mime = m.message?.[m.type]?.mimetype;
+        if (mime) return mime;
+
+        // View once message mime type
+        if (m.message?.viewOnceMessageV2?.message?.imageMessage?.mimetype) {
+            return m.message.viewOnceMessageV2.message.imageMessage.mimetype;
+        }
+        if (m.message?.viewOnceMessageV2?.message?.videoMessage?.mimetype) {
+            return m.message.viewOnceMessageV2.message.videoMessage.mimetype;
+        }
+
+        // Infer mime type from message type
+        switch (m.type) {
+            case 'imageMessage':
+                return 'image/jpeg';
+            case 'videoMessage':
+                return 'video/mp4';
+            case 'audioMessage':
+                return m.message?.audioMessage?.ptt ? 'audio/ogg' : 'audio/mp4';
+            case 'stickerMessage':
+                return 'image/webp';
+            case 'documentMessage':
+                return m.message?.documentMessage?.mimetype || 'application/octet-stream';
+            default:
+                return null;
+        }
+    };
+
+    // Get file extension from mime
+    m.getExtension = () => {
+        const mime = m.getMimetype();
+        if (!mime) return null;
+
+        const extensions = {
+            'image/jpeg': 'jpg',
+            'image/png': 'png',
+            'image/webp': 'webp',
+            'video/mp4': 'mp4',
+            'video/gif': 'gif',
+            'audio/mpeg': 'mp3',
+            'audio/mp4': 'm4a',
+            'audio/ogg': 'ogg',
+            'audio/wav': 'wav',
+            'application/pdf': 'pdf',
+            'application/msword': 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+            'application/vnd.ms-excel': 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+            'application/zip': 'zip',
+            'application/x-zip-compressed': 'zip',
+            'application/octet-stream': 'bin'
+        };
+
+        return extensions[mime] || mime.split('/')[1] || 'bin';
+    };
+
+    // Get media type category
+    m.getMediaType = () => {
+        const mime = m.getMimetype();
+        if (!mime) return null;
+
+        if (mime.startsWith('image/')) return 'image';
+        if (mime.startsWith('video/')) return 'video';
+        if (mime.startsWith('audio/')) return 'audio';
+        if (mime.startsWith('application/')) return 'document';
+        return 'file';
+    };
     
     // Quoted message
     const quotedM = m.message?.[m.type]?.contextInfo?.quotedMessage;
@@ -31,13 +103,13 @@ export function addMessageHandler(m, sock) {
             download: async () => {
                 // Handle view once message
                 if (quotedM?.viewOnceMessageV2?.message?.imageMessage) {
-                    return await downloadMedia(quotedM.viewOnceMessageV2.message.imageMessage);
+                    return await getMedia({ message: { imageMessage: quotedM.viewOnceMessageV2.message.imageMessage } });
                 }
                 if (quotedM?.viewOnceMessageV2?.message?.videoMessage) {
-                    return await downloadMedia(quotedM.viewOnceMessageV2.message.videoMessage);
+                    return await getMedia({ message: { videoMessage: quotedM.viewOnceMessageV2.message.videoMessage } });
                 }
                 // Handle normal message
-                return await downloadMedia(quotedM[quotedType]);
+                return await getMedia({ message: { [quotedType]: quotedM[quotedType] } });
             }
         };
     } else {
@@ -61,8 +133,50 @@ export function addMessageHandler(m, sock) {
 
     // Media download helpers
     m.download = async () => {
-        if (!m.message?.[m.type]) return null;
-        return await downloadMedia(m.message?.[m.type]);
+        try {
+            // Handle view once message
+            if (m.message?.viewOnceMessageV2?.message?.imageMessage) {
+                return await getMedia({ message: { imageMessage: m.message.viewOnceMessageV2.message.imageMessage } });
+            }
+            if (m.message?.viewOnceMessageV2?.message?.videoMessage) {
+                return await getMedia({ message: { videoMessage: m.message.viewOnceMessageV2.message.videoMessage } });
+            }
+
+            // Handle direct media message
+            if (m.message?.imageMessage) {
+                return await getMedia({ message: { imageMessage: m.message.imageMessage } });
+            }
+            if (m.message?.videoMessage) {
+                return await getMedia({ message: { videoMessage: m.message.videoMessage } });
+            }
+            if (m.message?.audioMessage) {
+                return await getMedia({ message: { audioMessage: m.message.audioMessage } });
+            }
+
+            // Handle quoted media
+            if (m.quoted) {
+                if (m.quoted.viewOnceMessageV2?.message?.imageMessage) {
+                    return await getMedia({ message: { imageMessage: m.quoted.viewOnceMessageV2.message.imageMessage } });
+                }
+                if (m.quoted.viewOnceMessageV2?.message?.videoMessage) {
+                    return await getMedia({ message: { videoMessage: m.quoted.viewOnceMessageV2.message.videoMessage } });
+                }
+                if (m.quoted.imageMessage) {
+                    return await getMedia({ message: { imageMessage: m.quoted.imageMessage } });
+                }
+                if (m.quoted.videoMessage) {
+                    return await getMedia({ message: { videoMessage: m.quoted.videoMessage } });
+                }
+                if (m.quoted.audioMessage) {
+                    return await getMedia({ message: { audioMessage: m.quoted.audioMessage } });
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error downloading media:', error);
+            return null;
+        }
     };
 
     // Reply helper with context
@@ -146,23 +260,10 @@ function getContentType(message) {
         'extendedTextMessage', 'audioMessage', 'stickerMessage',
         'documentMessage', 'contactMessage', 'locationMessage'
     ];
-    return types.find(type => message[type]) || null;
-}
-
-// Helper function untuk download media
-async function downloadMedia(message) {
-    if (!message) return null;
-    let buffer = Buffer.from([]);
-    try {
-        const stream = await downloadContentFromMessage(message);
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk]);
-        }
-    } catch (error) {
-        console.error('Error downloading media:', error);
-        return null;
+    if (message.extendedTextMessage?.contextInfo?.quotedMessage) {
+        return getContentType(message.extendedTextMessage.contextInfo.quotedMessage);
     }
-    return buffer;
+    return types.find(type => message[type]) || null;
 }
 
 function getMessageType(message) {
@@ -214,5 +315,3 @@ function getQuotedText(message) {
 
     return null;
 }
-
-import { getMedia } from './mediaMsg.js';   

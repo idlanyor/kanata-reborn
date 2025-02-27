@@ -25,15 +25,19 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
-        let contentType = ''
         const response = await axios.get(url, {
             headers,
-            responseType: contentType === 'application/json' ? 'json' : 'arraybuffer'
         });
-        contentType = response.headers['content-type'];
+        const contentType = response.headers['content-type'];
         const fileName = url.split('/').pop() || 'file';
 
-        if (contentType.includes('image')) {
+        if (contentType.includes('application/json')) {
+            // Tangani JSON response terlebih dahulu
+            let jsonString = JSON.stringify(response.data, null, 2);
+            await sock.sendMessage(id, {
+                text: `🛜 *GET Request*\n\n📃 *Response:*\n${jsonString}`
+            });
+        } else if (contentType.includes('image')) {
             await sock.sendMessage(id, {
                 image: Buffer.from(response.data),
                 caption: '☑️ Response 200 OK ☑️',
@@ -58,10 +62,6 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 audio: Buffer.from(response.data),
                 mimetype: 'audio/mp4',
                 fileName: `${fileName}.mp3`,
-            });
-        } else if (contentType.includes('application/json')) {
-            await sock.sendMessage(id, {
-                text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(response.data, null, 2)}`
             });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {
             await sock.sendMessage(id, {

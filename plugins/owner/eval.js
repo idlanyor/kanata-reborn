@@ -1,8 +1,8 @@
 import { checkOwner } from '../../helper/permission.js';
 import util from 'util';
 
-export default async ({ sock, m, id, noTel, psn,sender }) => {
-    if (!await checkOwner(sock, id, noTel)) //return;
+export default async ({ sock, m, id, noTel, psn, sender }) => {
+    if (!await checkOwner(sock, id, noTel)) return;
     
     if (!psn) {
         await sock.sendMessage(id, { text: '❌ Masukkan kode yang akan dieval!' });
@@ -42,6 +42,51 @@ export default async ({ sock, m, id, noTel, psn,sender }) => {
         // Format output
         if (result?.stack) {
             output = `❌ *ERROR*\n\n${result.stack}`;
+        } else if (Buffer.isBuffer(result)) {
+            const mime = m.getMimetype() || 'application/octet-stream';
+            const mediaType = m.getMediaType();
+            const ext = m.getExtension();
+            const fileName = `eval-${Date.now()}.${ext}`;
+
+            switch (mediaType) {
+                case 'image':
+                    await sock.sendMessage(id, { 
+                        image: result,
+                        caption: '📷 *Image from Eval*',
+                        mimetype: mime
+                    }, { quoted: m });
+                    break;
+                case 'video':
+                    await sock.sendMessage(id, { 
+                        video: result,
+                        caption: '🎥 *Video from Eval*',
+                        mimetype: mime
+                    }, { quoted: m });
+                    break;
+                case 'audio':
+                    await sock.sendMessage(id, { 
+                        audio: result,
+                        mimetype: mime,
+                        fileName: fileName
+                    }, { quoted: m });
+                    break;
+                case 'document':
+                    await sock.sendMessage(id, { 
+                        document: result,
+                        mimetype: mime,
+                        fileName: fileName,
+                        caption: '📄 *Document from Eval*'
+                    }, { quoted: m });
+                    break;
+                default:
+                    await sock.sendMessage(id, { 
+                        document: result,
+                        mimetype: 'application/octet-stream',
+                        fileName: `eval-${Date.now()}.bin`,
+                        caption: '📁 *File from Eval*'
+                    }, { quoted: m });
+            }
+            return;
         } else {
             output = `✅ *RESULT*\n\n`;
             if (typeof result === 'string') output += result;
