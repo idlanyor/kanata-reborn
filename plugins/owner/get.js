@@ -35,7 +35,13 @@ export default async ({ sock, m, id, noTel, psn }) => {
             // Tangani JSON response terlebih dahulu
             let jsonString = JSON.stringify(response.data, null, 2);
             await sock.sendMessage(id, {
-                text: `🛜 *GET Request*\n\n📃 *Response:*\n${jsonString}`
+                text: `🛜 *GET Request*\n\n📃 *Response:*\n${jsonString}`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: url,
+                    }
+                }
             });
         } else if (contentType.includes('image')) {
             await sock.sendMessage(id, {
@@ -56,12 +62,32 @@ export default async ({ sock, m, id, noTel, psn }) => {
             await sock.sendMessage(id, {
                 video: Buffer.from(response.data),
                 caption: '☑️ Response 200 OK ☑️',
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: url,
+                        thumbnailUrl: `${globalThis.ppUrl}`,
+                        sourceUrl: url,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
             });
         } else if (contentType.includes('audio')) {
             await sock.sendMessage(id, {
                 audio: Buffer.from(response.data),
-                mimetype: 'audio/mp4',
+                mimetype: 'audio/mpeg',
                 fileName: `${fileName}.mp3`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: url,
+                        thumbnailUrl: `${globalThis.ppUrl}`,
+                        sourceUrl: url,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
             });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {
             await sock.sendMessage(id, {
@@ -93,3 +119,4 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
 export const handler = 'get';
 export const description = 'Melakukan HTTP GET request';
+

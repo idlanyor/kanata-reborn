@@ -4,7 +4,7 @@ export const handler = 'bratnimevid'
 export const description = 'Anime Brat Video Generator'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-    const { url } = await fetch(`https://fastrestapis.fasturl.cloud/maker/animbrat?text=${encodeURIComponent(psn)}&mode=animated&position=center`)
+    const { url } = await fetch(`https://fastrestapis.fasturl.link/maker/animbrat?text=${encodeURIComponent(psn)}&mode=animated&position=center`)
     const stickerOption = {
         pack: "KanataBot",
         author: "Roy",
