@@ -414,7 +414,9 @@ export async function startBot() {
                 logger.error('Error handling message:', error);
             }
         });
-        // schedulePrayerReminders(sock, globalThis.groupJid);
+        // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
+        schedulePrayerReminders(sock, globalThis.newsLetterJid);
+        schedulePrayerReminders(sock, globalThis.groupJid);
 
 
         sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
