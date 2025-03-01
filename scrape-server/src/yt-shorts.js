@@ -57,7 +57,7 @@ export const ytShorts = async (url) => {
 
 
     await browser.close();
-    // console.log(result)
+    console.log(result)
     return result;
     // } catch (error) {
     //     throw new Error('Terjadi error saat scraping:', error)
