@@ -40,17 +40,17 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             caption += `\n⏱️ *Durasi:* ${result.duration.timestamp}`;
             caption += `\n👁️ *Views:* ${result.views.toLocaleString()}`;
             caption += `\n🔗 *URL:* ${result.url}`;
-            caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
+            // caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
+
+            // await sock.sendMessage(id, {
+            //     image: { url: result.thumbnail },
+            //     caption
+            // });
 
             await sock.sendMessage(id, {
-                image: { url: result.thumbnail },
-                caption
-            });
-
-            await sock.sendMessage(id, {
-                video: { url: data.result.videoSrc },
+                video: await fetch(data.result.videoSrc),
                 mimetype: 'video/mp4',
-                caption: `*${result.title}*\n\nBerhasil diunduh menggunakan Kanata V3`
+                caption
             }, { quoted: m });
         }
 
