@@ -2,7 +2,7 @@ import axios from 'axios';
 import { checkOwner } from '../../helper/permission.js';
 
 export default async ({ sock, m, id, noTel, psn }) => {
-    if (!await checkOwner(sock, id, noTel)) return;
+    // if (!await checkOwner(sock, id, noTel)) return;
 
     if (!psn) {
         await sock.sendMessage(id, { 

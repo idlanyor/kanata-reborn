@@ -2,8 +2,8 @@ import { checkOwner } from '../../helper/permission.js';
 import util from 'util';
 
 export default async ({ sock, m, id, noTel, psn, sender }) => {
-    if (!await checkOwner(sock, id, noTel)) return;
-    
+    if (!globalThis.isOwner(noTel)) return;
+
     if (!psn) {
         await sock.sendMessage(id, { text: '❌ Masukkan kode yang akan dieval!' });
         return;
@@ -21,7 +21,7 @@ export default async ({ sock, m, id, noTel, psn, sender }) => {
             console: {
                 ...console,
                 log: (...args) => {
-                    sock.sendMessage(id, { 
+                    sock.sendMessage(id, {
                         text: `📤 *CONSOLE.LOG*\n\n${args.join(' ')}`
                     });
                 }
@@ -50,28 +50,28 @@ export default async ({ sock, m, id, noTel, psn, sender }) => {
 
             switch (mediaType) {
                 case 'image':
-                    await sock.sendMessage(id, { 
+                    await sock.sendMessage(id, {
                         image: result,
                         caption: '📷 *Image from Eval*',
                         mimetype: mime
                     }, { quoted: m });
                     break;
                 case 'video':
-                    await sock.sendMessage(id, { 
+                    await sock.sendMessage(id, {
                         video: result,
                         caption: '🎥 *Video from Eval*',
                         mimetype: mime
                     }, { quoted: m });
                     break;
                 case 'audio':
-                    await sock.sendMessage(id, { 
+                    await sock.sendMessage(id, {
                         audio: result,
                         mimetype: mime,
                         fileName: fileName
                     }, { quoted: m });
                     break;
                 case 'document':
-                    await sock.sendMessage(id, { 
+                    await sock.sendMessage(id, {
                         document: result,
                         mimetype: mime,
                         fileName: fileName,
@@ -79,7 +79,7 @@ export default async ({ sock, m, id, noTel, psn, sender }) => {
                     }, { quoted: m });
                     break;
                 default:
-                    await sock.sendMessage(id, { 
+                    await sock.sendMessage(id, {
                         document: result,
                         mimetype: 'application/octet-stream',
                         fileName: `eval-${Date.now()}.bin`,
@@ -100,13 +100,13 @@ export default async ({ sock, m, id, noTel, psn, sender }) => {
 
         await sock.sendMessage(id, { text: output });
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ *ERROR*\n\n${error.stack}`
         });
     }
 };
 
-export const handler = ['>','eval'];
+export const handler = ['>', 'eval'];
 export const tags = ['owner'];
 export const command = ['>', 'eval'];
 export const help = 'Mengevaluasi kode JavaScript'; 

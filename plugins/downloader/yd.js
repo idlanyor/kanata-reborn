@@ -9,7 +9,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         return;
     }
     try {
-        await sock.sendMessage(id, { text: '🔄 *Processing...* Mohon tunggu sebentar...' });
+        await m.react('wait')
         let { data } = await axios.get('https://roy.sirandu.icu/api/ytshorts', {
             params: {
                 url: psn
@@ -19,13 +19,18 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         // caption = '*🎬 Hasil Video YouTube:*'
         // caption += '\n📛 *Title:* ' + `*${result.title}*`;
         // caption += '\n📺 *Channel:* ' + `*${result.channel}*`;
+        // console.log(data)
+        // return
         await sock.sendMessage(id, {
             document: { url: data.result.videoSrc },
             mimetype: 'video/mp4',
             fileName: `YTDL by Kanata-${Math.floor(Math.random(2 * 5))}.mp4`
         }, { quoted: m });
+        await m.react('success')
         // await sock.sendMessage(id, { video: { url: video } });
     } catch (error) {
+        await m.react('error')
         await sock.sendMessage(id, { text: '❌ *Terjadi kesalahan:* \n' + error.message });
+        throw error
     }
 };

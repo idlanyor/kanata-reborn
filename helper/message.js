@@ -225,9 +225,26 @@ export function addMessageHandler(m, sock) {
 
     // React to message
     m.react = async (emoji) => {
+        if (!emoji) emoji = '❌';
+        
+        const reactions = {
+            success: '✅',
+            fail: '❌', 
+            wait: '⏳',
+            ping: '🏓',
+            done: '✔️',
+            error: '⚠️',
+            warning: '⚠️',
+            info: 'ℹ️',
+            loading: '🔄',
+            question: '❓'
+        };
+
+        const reactionEmoji = reactions[emoji.toLowerCase()] || emoji;
+
         await sock.sendMessage(m.chat, {
             react: {
-                text: emoji,
+                text: reactionEmoji,
                 key: m.key
             }
         });

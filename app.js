@@ -287,11 +287,11 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         const expResult = await User.addExp(noTel, expGained);
 
         // Jika naik level, kirim notifikasi
-        if (expResult.levelUp) {
-            await sock.sendMessage(id, {
-                text: `🎉 Selamat! Level kamu naik ke level ${expResult.newLevel}!`
-            }, { quoted: m });
-        }
+        // if (expResult.levelUp) {
+        //     await sock.sendMessage(id, {
+        //         text: `🎉 Selamat! Level kamu naik ke level ${expResult.newLevel}!`
+        //     }, { quoted: m });
+        // }
 
         // Jika ada command, increment counter command
         if (command.startsWith('!') || command.startsWith('.')) {

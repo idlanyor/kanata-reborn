@@ -7,7 +7,7 @@ import fs from 'fs';
 
 export default async ({ sock, m, id, noTel }) => {
     try {
-        if (!await checkOwner(sock, id, noTel)) return;
+        if (!globalThis.isOwner(noTel)) return;
 
         // Buat folder backup jika belum ada
         const backupDir = './backups';
