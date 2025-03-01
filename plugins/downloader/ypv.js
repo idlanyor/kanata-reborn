@@ -1,5 +1,31 @@
-import ytSearch from 'yt-search';
 import axios from 'axios';
+import { Buffer } from 'buffer';
+import yts from 'yt-search';
+
+// Fungsi untuk mengunduh video dengan retry
+async function downloadWithRetry(url, maxRetries = 3) {
+    let lastError;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await axios.get(url, {
+                responseType: 'arraybuffer',
+                timeout: 60000, // 60 detik timeout
+                maxContentLength: 100 * 1024 * 1024, // 100MB max
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            });
+            
+            return Buffer.from(response.data);
+        } catch (error) {
+            console.error(`Percobaan ${i + 1} gagal:`, error.message);
+            lastError = error;
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Tunggu 2 detik sebelum retry
+        }
+    }
+    throw new Error(`Gagal mengunduh setelah ${maxRetries} percobaan: ${lastError.message}`);
+}
 
 export const description = 'Putar dan Download Video dari *YouTube*';
 export const handler = "ypv"
@@ -12,50 +38,62 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 
         await sock.sendMessage(id, { text: '🔍 Sedang memproses... Mohon tunggu sebentar.' });
 
-        // Cek apakah input adalah URL YouTube
-        if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const { data } = await axios.get(`https://roy.sirandu.icu/api/ytshorts?url=${psn}`);
+        // if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
+        //     try {
+        //         const { data } = await axios.get(`https://roy.sirandu.icu/api/ytshorts?url=${psn}`);
+                
+        //         if (!data?.result?.videoSrc) {
+        //             throw new Error('URL video tidak ditemukan');
+        //         }
 
-            caption = '*YouTube Video Downloader*';
-            caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
+        //         const videoBuffer = await downloadWithRetry(data.result.videoSrc);
+                
+        //         await sock.sendMessage(id, {
+        //             video: videoBuffer,
+        //             mimetype: 'video/mp4',
+        //             caption: '*YouTube Video Downloader*\n\n✅ Video berhasil diunduh!'
+        //         }, { quoted: m });
+        //     } catch (error) {
+        //         console.error('Error saat mengunduh video:', error);
+        //         await sock.sendMessage(id, { text: '❌ Gagal mengunduh video: ' + error.message });
+        //     }
+        // } else {
+            try {
+                const results = await yts(psn);
+                if (!results?.videos?.length) {
+                    throw new Error('Video tidak ditemukan di yt Search');
+                }
+                
+                const video = results.videos[0];
+                const uri = `https://roy.sirandu.icu/api/ytshorts?url=${video.url}`
+                const { data } = await axios.get(uri);
+                console.log(uri)
+                console.log(data.result)
+                return
+                if (!data?.result?.videoSrc) {
+                    throw new Error('URL video tidak ditemukan di API');
+                }
 
-            await sock.sendMessage(id, {
-                video: { url: data.result.videoSrc },
-                mimetype: 'video/mp4',
-                caption
-            }, { quoted: m });
-        } else {
-            // Jika bukan URL, lakukan pencarian video
-            const results = await ytSearch(psn);
-            const result = results.videos[0]; // Ambil hasil pertama
+                const videoBuffer = await downloadWithRetry(data.result.videoSrc);
+                
+                const caption = '*Hasil Pencarian Video YouTube*\n' +
+                    `\n📹 *Judul:* ${video.title}` +
+                    `\n📺 *Channel:* ${video.author.name}` +
+                    `\n⏱️ *Durasi:* ${video.duration.timestamp}` +
+                    `\n👁️ *Views:* ${video.views.toLocaleString()}` +
+                    `\n🔗 *URL:* ${video.url}`;
 
-            // Download video hasil pencarian
-            console.log(result.url)
-            const { data } = await axios.get(`https://roy.sirandu.icu/api/ytshorts?url=${result.url}`);
-            // console.log(data)
-
-            caption = '*Hasil Pencarian Video YouTube*';
-            caption += `\n\n📹 *Judul:* ${result.title}`;
-            caption += `\n📺 *Channel:* ${result.author.name}`;
-            caption += `\n⏱️ *Durasi:* ${result.duration.timestamp}`;
-            caption += `\n👁️ *Views:* ${result.views.toLocaleString()}`;
-            caption += `\n🔗 *URL:* ${result.url}`;
-            // caption += `\n\n⏳ _Video sedang dikirim. Mohon bersabar..._`;
-
-            // await sock.sendMessage(id, {
-            //     image: { url: result.thumbnail },
-            //     caption
-            // });
-
-            await sock.sendMessage(id, {
-                video: await fetch(data.result.videoSrc),
-                mimetype: 'video/mp4',
-                caption
-            }, { quoted: m });
-        }
-
+                await sock.sendMessage(id, {
+                    video: videoBuffer,
+                    caption
+                }, { quoted: m });
+            } catch (error) {
+                console.error('Error saat mencari/mengunduh video:', error);
+                await sock.sendMessage(id, { text: '❌ Gagal memproses video: ' + error.message });
+            }
+        // }
     } catch (error) {
         await sock.sendMessage(id, { text: '❌ Ups, terjadi kesalahan: ' + error.message });
-        throw error
+        throw error;
     }
 };
