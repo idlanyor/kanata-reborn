@@ -38,7 +38,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
     psn = words.join(" ");
 
-    let profilePic = await sock.profilePictureUrl(id, "image").catch(() => "https://fastrestapis.fasturl.link/file/v2/CYOz4sa.jpg");
+    let profilePic = await sock.profilePictureUrl(id, "image").catch(() => "https://fastrestapis.fasturl.cloud/file/v2/CYOz4sa.jpg");
     const payload = {
         type: "quote",
         format: "png",

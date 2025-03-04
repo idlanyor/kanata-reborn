@@ -97,7 +97,7 @@ globalThis.apiKey = {
         public: ''
     }
 }
-globalThis.hikaru = 'https://fastrestapis.fasturl.link/'
+globalThis.hikaru = 'https://fastrestapis.fasturl.cloud/'
 
 // Paired API keys with baseurl
 globalThis.apiHelper = {
@@ -131,7 +131,7 @@ globalThis.apiHelper = {
 
         apikey: '',
 
-        baseUrl: 'https://fastrestapis.fasturl.link/'
+        baseUrl: 'https://fastrestapis.fasturl.cloud/'
 
     },
 

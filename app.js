@@ -415,7 +415,7 @@ export async function startBot() {
             }
         });
         // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
-        schedulePrayerReminders(sock, globalThis.newsLetterJid);
+        // schedulePrayerReminders(sock, globalThis.newsLetterJid);
         schedulePrayerReminders(sock, globalThis.groupJid);
 
 

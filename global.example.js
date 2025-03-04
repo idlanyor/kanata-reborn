@@ -1,6 +1,6 @@
 // variabel dasar
 globalThis.owner = "Roynaldi";
-globalThis.ownerNumber = ["62895395590009","62"]
+globalThis.ownerNumber = ["62895395590009", "62"]
 globalThis.botNumber = ""
 globalThis.botMode = "self"
 globalThis.botName = "Kanata"
@@ -36,7 +36,7 @@ globalThis.apiKey = {
         public: ''
     }
 }
-globalThis.hikaru = 'https://fastrestapis.fasturl.link/'
+globalThis.hikaru = 'https://fastrestapis.fasturl.cloud/'
 
 // variabel paired apikey with baseurl
 globalThis.apiHelper = {
@@ -70,7 +70,7 @@ globalThis.apiHelper = {
 
         apikey: '',
 
-        baseUrl: 'https://fastrestapis.fasturl.link/'
+        baseUrl: 'https://fastrestapis.fasturl.cloud/'
 
     },
 
