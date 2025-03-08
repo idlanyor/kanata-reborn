@@ -1,4 +1,4 @@
-import { meta } from "../../lib/downloader.js";
+import { ig } from "../../lib/downloader.js";
 export const description = "Downloader Instagram Video provided by *Roy*";
 export const handler = "igv"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -10,7 +10,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-        let result = await meta(psn);
+        let result = await ig(psn);
         if (Array.isArray(result)) {
             result.forEach(async (res) => {
                 await sock.sendMessage(id, { video: { url: res.videoLink }, caption: '🎥 *Video berhasil diunduh!*' });
