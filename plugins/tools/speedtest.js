@@ -46,7 +46,7 @@ export default async ({ sock, m, id }) => {
                     orderTitle: "Speed Test",
                     sellerJid: '0@s.whatsapp.net',
                     token: '1',
-                    totalAmount1000: 50000,
+                    totalAmount1000: 500000000000000,
                     totalCurrencyCode: "IDR",
                 }
             },
