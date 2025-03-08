@@ -78,7 +78,9 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     previewType: 0,
                     renderLargerThumbnail: true,
                     thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    showAdAttribution: true,
+                    description: `Klik iklan untuk mengirim pesan!`
                 },
                 mentionedJid: [m.sender]
             }
