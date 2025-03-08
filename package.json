@@ -41,6 +41,7 @@
     "puppeteer": "latest",
     "remove.bg": "latest",
     "socket.io": "latest",
+    "speedtest-net": "latest",
     "sqlite3": "latest",
     "systeminformation": "latest",
     "wa-sticker-formatter": "latest",
