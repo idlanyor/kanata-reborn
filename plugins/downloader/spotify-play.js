@@ -16,15 +16,15 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         caption += `\n\n🎶 *Judul:* ${title}`;
         caption += `\n\n🎶 *Author:* ${author}`;
         caption += `\n _⏳ Bentar yaa, audio lagi dikirim ⏳_`;
-        let image = spotifyCanvas({
-            artist: author || 'Kanata',
-            album: title || 'Hinamizawa',
-            img: thumbnail,
-            timeStart: 0,
-            timeEnd: moment.duration(3000).asSeconds,
-            title: title
-        })
-        await sock.sendMessage(id, { image, caption }, { quoted: m });
+        // let image = spotifyCanvas({
+        //     artist: author || 'Kanata',
+        //     album: title || 'Hinamizawa',
+        //     img: thumbnail,
+        //     timeStart: 0,
+        //     timeEnd: moment.duration(3000).asSeconds,
+        //     title: title
+        // })
+        await sock.sendMessage(id, { image: { url: thumbnail }, caption }, { quoted: m });
 
         await sock.sendMessage(id, { audio: { url: audio }, mimetype: 'audio/mpeg', fileName: title }, { quoted: m });
 
