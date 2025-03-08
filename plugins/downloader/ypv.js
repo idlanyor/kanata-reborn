@@ -40,7 +40,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 
         // if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
         //     try {
-        //         const { data } = await axios.get(`https://roy.sirandu.icu/api/ytshorts?url=${psn}`);
+        //         const { data } = await axios.get(`https://api.roidev.my.id/api/ytshorts?url=${psn}`);
                 
         //         if (!data?.result?.videoSrc) {
         //             throw new Error('URL video tidak ditemukan');
@@ -65,7 +65,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 }
                 
                 const video = results.videos[0];
-                const uri = `https://roy.sirandu.icu/api/ytshorts?url=${video.url}`
+                const uri = `https://api.roidev.my.id/api/ytvideo?url=${video.url}`
                 const { data } = await axios.get(uri);
                 console.log(uri)
                 console.log(data.result)

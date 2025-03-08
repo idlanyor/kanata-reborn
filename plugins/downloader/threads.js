@@ -1,4 +1,4 @@
-import { threads } from "../../lib/scraper/threads.js";
+import { threadsDl } from "../../lib/downloader.js";
 
 export const handler = 'tdd'
 export const description = 'Threads Video Downloader'
@@ -9,11 +9,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     }
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
     try {
-        const { downloadUrl: url, author, title } = await threads(psn)
+        const { downloadUrl: url, author, title } = await threadsDl(psn)
         caption = `${title} By : ${author}`
         await sock.sendMessage(id, { video: { url, caption } })
     } catch (error) {
-        await sock.sendMessage(id, { text: 'Cek lagi url nya,Gabisa download ini' })
+        await sock.sendMessage(id, { text: 'Gangguan jir,lapor owner biar dibenerin' })
 
     }
 };

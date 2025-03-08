@@ -1,6 +1,6 @@
 import { fb } from "../../lib/downloader.js";
-export const description = "Downloader Facebook Reels provided by *Roy*";
-export const handler = "fd"
+export const description = "Downloader Capcut Reels provided by *Roy*";
+export const handler = "cd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {
         await sock.sendMessage(id, {
@@ -14,9 +14,9 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     serverMessageId: -1
                 },
                 externalAdReply: {
-                    title: '乂 Facebook Downloader 乂',
-                    body: 'Download Video From Facebook',
-                    thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/600px-Facebook_f_logo_%282019%29.svg.png',
+                    title: '乂 Capcut Downloader 乂',
+                    body: 'Download Video From Capcut',
+                    thumbnailUrl: 'https://logos-world.net/wp-content/uploads/2024/01/CapCut-Logo.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true

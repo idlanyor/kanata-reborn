@@ -16,7 +16,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const result = await axios.get('https://roy.sirandu.icu/api/ytshorts',{
+            const result = await axios.get('https://api.roidev.my.id/api/ytvideo',{
                 params:{
                     url:psn
                 }
