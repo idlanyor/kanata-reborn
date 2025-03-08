@@ -6,7 +6,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏱️ tunggu Bentar,Bot sedang berimajinasi` });
         try {
             const imageUrl = await uploadGambar2(attf);
-            let url = `https://fastrestapis.fasturl.cloud/aiimage/imgreconstruction-v1?url=${imageUrl}&style=Pixar`
+            let url = `https://fastrestapis.fasturl.link/aiimage/imgreconstruction-v1?url=${imageUrl}&style=Pixar`
             console.log(url)
             const response = await fetch(url);
             await sock.sendMessage(id, {
