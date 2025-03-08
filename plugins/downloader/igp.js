@@ -1,4 +1,4 @@
-import { meta } from "../../lib/downloader.js";
+import { ig } from "../../lib/downloader.js";
 export const description = "Downloader Instagram Picture provided by *Roy*";
 export const handler = "igp"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -10,7 +10,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await sock.sendMessage(id, { text: '🔄 *Processing...* Mohon tunggu sebentar...' });
-        let result = await meta(psn);
+        let result = await ig(psn);
         if (Array.isArray(result)) {
             result.forEach(async (res) => {
                 await sock.sendMessage(id, { image: { url: res.url }, caption: '🎥 *Video berhasil diunduh!*' });
