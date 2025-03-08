@@ -10,7 +10,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await m.react('wait')
-        let { data } = await axios.get('https://api.roidev.my.id/api/ytvideo', {
+        let { data } = await axios.get('https://kanata.roidev.my.id/api/ytvideo', {
             params: {
                 url: psn
             }

@@ -17,22 +17,22 @@ export default async ({ sock, m, id, psn }) => {
 
         if (Array.isArray(result)) {
             for (const res of result) {
-                await sock.sendMessage(id, { 
-                    video: { url: res.videoLink }, 
-                    caption: '🎥 *Video berhasil diunduh!*' 
+                await sock.sendMessage(id, {
+                    video: { url: res.videoLink },
+                    caption: '🎥 *Video berhasil diunduh!*'
                 });
             }
             return;
         }
 
-        await sock.sendMessage(id, { 
-            video: { url: result.videoLink }, 
-            caption: '🎥 *Video berhasil diunduh!*' 
+        await sock.sendMessage(id, {
+            video: { url: result.videoLink },
+            caption: '🎥 *Video berhasil diunduh!*'
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
-            text: '❌ *Terjadi kesalahan:* \n' + error.message 
+        await sock.sendMessage(id, {
+            text: '❌ *Terjadi kesalahan:* \n' + error.message
         });
     }
 };
