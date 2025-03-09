@@ -1,5 +1,4 @@
-import axios from "axios";
-import { ytVideo } from "../../lib/scraper";
+import { ytVideo } from "../../lib/scraper/ytmp4.js";
 export const description = "YouTube Video Downloader provided by *Roy*";
 export const handler = "yd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
