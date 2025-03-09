@@ -24,7 +24,7 @@ export default async ({ sock, m, id, psn }) => {
 
         if (Array.isArray(result?.data)) {
             for (const item of result?.data) {
-                if (item?.imageUrl) {
+                if (item?.thumbnail) {
                     await sock.sendMessage(id, {
                         image: { url: item?.thumbnail },
                         caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
