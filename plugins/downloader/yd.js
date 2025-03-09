@@ -18,9 +18,9 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         // console.log(data)
         // return
         await sock.sendMessage(id, {
-            document: { url: data.result.videoSrc },
+            document: { url: data.videoUrl },
             mimetype: 'video/mp4',
-            fileName: `YTDL by Kanata-${Math.floor(Math.random(2 * 5))}.mp4`
+            fileName: `${data.title}-${Math.floor(Math.random(2 * 5))}.mp4`
         }, { quoted: m });
         await m.react('success')
         // await sock.sendMessage(id, { video: { url: video } });
