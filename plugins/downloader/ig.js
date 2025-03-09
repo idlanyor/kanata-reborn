@@ -13,26 +13,26 @@ export default async ({ sock, m, id, psn }) => {
 
     try {
         await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
-        const { data } = await igDl(psn);
+        const result = await igDl(psn);
 
-        if (!data.status) {
+        if (!result?.status) {
             await sock.sendMessage(id, {
-                text: `❌ *Gagal:* ${data.message}`
+                text: `❌ *Gagal:* ${result?.message}`
             });
             return;
         }
 
-        if (Array.isArray(result.data)) {
-            for (const item of result.data) {
-                if (item.imageUrl) {
+        if (Array.isArray(result?.data)) {
+            for (const item of result?.data) {
+                if (item?.imageUrl) {
                     await sock.sendMessage(id, {
-                        image: { url: item.thumbnail },
+                        image: { url: item?.thumbnail },
                         caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
                     });
                 }
-                if (item.videoUrl) {
+                if (item?.videoUrl) {
                     await sock.sendMessage(id, {
-                        video: { url: item.videoUrl },
+                        video: { url: item?.videoUrl },
                         caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
                     });
                 }
@@ -42,13 +42,13 @@ export default async ({ sock, m, id, psn }) => {
 
         if (result?.data?.thumbnail) {
             await sock.sendMessage(id, {
-                image: { url: result.data.thumbnail },
+                image: { url: result?.data?.thumbnail },
                 caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
             });
         }
         if (result?.data?.videoUrl) {
             await sock.sendMessage(id, {
-                video: { url: result.data.videoUrl },
+                video: { url: result?.data?.videoUrl },
                 caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
             });
         }
