@@ -1,7 +1,5 @@
-import { ytShorts } from "../../lib/scraper/yt-shorts.js";
 import { ytVideo } from "../../lib/scraper/ytmp4.js";
 import { ytsearch } from "../../lib/youtube.js";
-import axios from 'axios'
 
 export const description = "YouTube Short Downloader provided by *Roy*";
 export const handler = ['ysd', 'yd2']

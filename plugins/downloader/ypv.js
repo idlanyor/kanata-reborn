@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Buffer } from 'buffer';
 import yts from 'yt-search';
-import { ytVideo } from '../../lib/scraper';
+import { ytVideo } from '../../lib/scraper/ytmp4.js';
 
 // Fungsi untuk mengunduh video dengan retry
 async function downloadWithRetry(url, maxRetries = 3) {
