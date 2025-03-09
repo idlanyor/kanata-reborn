@@ -1,48 +1,55 @@
-import { ig } from "../../lib/downloader.js";
+import { igDl } from "../../lib/scraper/igdl.js";
 
-export const description = "Downloader Instagram Video provided by *Roy*";
-export const handler = "igv";
+export const description = "✨ Downloader Instagram Video & Image provided by *Roy*";
+export const handler = "ig";
 
 export default async ({ sock, m, id, psn }) => {
     if (psn === '') {
         await sock.sendMessage(id, {
-            text: '📹 *Gunakan format:* \n\n`igv <url>`\n\nContoh:\n`igv https://www.instagram.com/reels/CMd5Hr5Dx-7/?igshid=1jg9b5j7qk7t7`'
+            text: '📹 *Gunakan format:* \n\n`ig <url>`\n\nContoh:\n`ig https://www.instagram.com/reel/DF4oOlavxSq/`'
         });
         return;
     }
 
     try {
         await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
-        const result = await ig(psn);
+        const { data } = await igDl(psn);
 
-        if (Array.isArray(result)) {
-            for (const res of result) {
-                if (res.imageUrl) {
+        if (!data.status) {
+            await sock.sendMessage(id, {
+                text: `❌ *Gagal:* ${data.message}`
+            });
+            return;
+        }
+
+        if (Array.isArray(result.data)) {
+            for (const item of result.data) {
+                if (item.imageUrl) {
                     await sock.sendMessage(id, {
-                        image: { url: res.imageUrl },
-                        caption: '🖼️ *Gambar berhasil diunduh!*'
+                        image: { url: item.thumbnail },
+                        caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
                     });
                 }
-                if (res.videoUrl) {
+                if (item.videoUrl) {
                     await sock.sendMessage(id, {
-                        video: { url: res.videoUrl },
-                        caption: '🎥 *Video berhasil diunduh!*'
+                        video: { url: item.videoUrl },
+                        caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
                     });
                 }
             }
             return;
         }
 
-        if (result.imageUrl) {
+        if (result?.data?.thumbnail) {
             await sock.sendMessage(id, {
-                image: { url: result.imageUrl },
-                caption: '🖼️ *Gambar berhasil diunduh!*'
+                image: { url: result.data.thumbnail },
+                caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
             });
         }
-        if (result.videoUrl) {
+        if (result?.data?.videoUrl) {
             await sock.sendMessage(id, {
-                video: { url: result.videoUrl },
-                caption: '🎥 *Video berhasil diunduh!*'
+                video: { url: result.data.videoUrl },
+                caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
             });
         }
 
@@ -50,5 +57,6 @@ export default async ({ sock, m, id, psn }) => {
         await sock.sendMessage(id, {
             text: '❌ *Terjadi kesalahan:* \n' + error.message
         });
+        await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
 };
