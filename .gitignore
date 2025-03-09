@@ -10,3 +10,4 @@ db.*
 *.rar
 global.js
 *.db
+temp/*

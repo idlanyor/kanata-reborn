@@ -20,9 +20,9 @@ export default async ({ sock, m, id, psn, attf }) => {
         }
 
         // Cek format teks
-        let topText = '', bottomText = '';
+        let topText = ' ', bottomText = ' ';
         if (psn) {
-            const texts = psn.split('|').map(t => t.trim());
+            const texts = psn.split('.').map(t => t.trim());
             if (texts.length === 1) {
                 // Jika hanya 1 teks, jadikan bottom text
                 bottomText = texts[0];
@@ -33,7 +33,7 @@ export default async ({ sock, m, id, psn, attf }) => {
         }
 
         if (!topText && !bottomText) {
-            await m.reply('❌ Masukkan teks untuk meme! Format: .smeme text1|text2');
+            await m.reply('❌ Masukkan teks untuk meme! Format: .smeme text1.text2');
             return;
         }
 
@@ -45,12 +45,12 @@ export default async ({ sock, m, id, psn, attf }) => {
         }
 
         // Generate meme menggunakan memegen.link API
-        const memeUrl = `https://api.memegen.link/images/custom/${encodeURIComponent(topText)}/${encodeURIComponent(bottomText)}.png?background=${encodeURIComponent(imageUrl)}`;
+        const memeUrl = `https://api.memegen.link/images/custom/${encodeURIComponent(topText)}/${encodeURIComponent(bottomText || ' ')}.png?background=${encodeURIComponent(imageUrl)}`;
 
         // Buat sticker
         const stickerOptions = {
-            pack: "Kanata",
-            author: "KanataBot",
+            pack: "Kanata sMeme",
+            author: "Roy~404~",
             type: StickerTypes.FULL,
             quality: 100
         };
