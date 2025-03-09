@@ -29,7 +29,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             // });
 
             await sock.sendMessage(id, {
-                video: { url: result.videoSrc },
+                video: { url: result.data.videoUrl },
                 caption: `*${videoInfo[0].title}*\n\nBerhasil diunduh menggunakan Kanata V3`
             });
         } else {

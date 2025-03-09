@@ -68,8 +68,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 const video = results.videos[0];
                 // const uri = `https://kanata.roidev.my.id/api/ytvideo?url=${video.url}`
                 const { data } = await ytVideo(video.url);
-                console.log(uri)
-                console.log(data.result)
+                // console.log(uri)
+                // console.log(data.result)
                 return
                 if (!data?.result?.videoSrc) {
                     throw new Error('URL video tidak ditemukan di API');
