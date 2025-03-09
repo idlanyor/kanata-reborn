@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Buffer } from 'buffer';
 import yts from 'yt-search';
+import { ytVideo } from '../../lib/scraper';
 
 // Fungsi untuk mengunduh video dengan retry
 async function downloadWithRetry(url, maxRetries = 3) {
@@ -65,8 +66,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 }
                 
                 const video = results.videos[0];
-                const uri = `https://kanata.roidev.my.id/api/ytvideo?url=${video.url}`
-                const { data } = await axios.get(uri);
+                // const uri = `https://kanata.roidev.my.id/api/ytvideo?url=${video.url}`
+                const { data } = await ytVideo(video.url);
                 console.log(uri)
                 console.log(data.result)
                 return

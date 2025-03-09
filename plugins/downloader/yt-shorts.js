@@ -1,4 +1,5 @@
 import { ytShorts } from "../../lib/scraper/yt-shorts.js";
+import { ytVideo } from "../../lib/scraper/ytmp4.js";
 import { ytsearch } from "../../lib/youtube.js";
 import axios from 'axios'
 
@@ -13,27 +14,23 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await sock.sendMessage(id, { text: '🔄 *Sedang diproses...* \n_Mohon tunggu sebentar_ ...' });
-        
+
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const result = await axios.get('https://kanata.roidev.my.id/api/ytvideo',{
-                params:{
-                    url:psn
-                }
-            });
+            const result = await ytVideo(psn)
             const videoInfo = await ytsearch(psn);
-            
+
             caption = '*YouTube Shorts Downloader*';
             caption += `\n\n📹 *Judul:* ${videoInfo[0].title}`;
             caption += `\n📺 *Channel:* ${videoInfo[0].author}`;
             caption += `\n🔗 *URL:* ${videoInfo[0].url}`;
-            
-            await sock.sendMessage(id, {
-                image: { url: videoInfo[0].image },
-                caption
-            });
 
-            await sock.sendMessage(id, { 
+            // await sock.sendMessage(id, {
+            //     image: { url: videoInfo[0].image },
+            //     caption
+            // });
+
+            await sock.sendMessage(id, {
                 video: { url: result.videoSrc },
                 caption: `*${videoInfo[0].title}*\n\nBerhasil diunduh menggunakan Kanata V3`
             });

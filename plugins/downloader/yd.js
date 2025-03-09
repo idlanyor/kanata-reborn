@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ytVideo } from "../../lib/scraper";
 export const description = "YouTube Video Downloader provided by *Roy*";
 export const handler = "yd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -10,11 +11,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await m.react('wait')
-        let { data } = await axios.get('https://kanata.roidev.my.id/api/ytvideo', {
-            params: {
-                url: psn
-            }
-        });
+        let { data } = await ytVideo(psn)
         // console.log(data)
         // caption = '*🎬 Hasil Video YouTube:*'
         // caption += '\n📛 *Title:* ' + `*${result.title}*`;

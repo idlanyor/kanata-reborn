@@ -266,7 +266,7 @@ export async function startBot() {
                     logger.error('Error handling message:', error);
                 }
             });
-            // schedulePrayerReminders(sock, globalThis.groupJid);
+            schedulePrayerReminders(sock, globalThis.groupJid);
 
 
             sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
