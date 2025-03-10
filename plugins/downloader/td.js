@@ -1,4 +1,3 @@
-import { tiktok } from "../../lib/downloader.js";
 import pkg from '@seaavey/baileys';
 import { tiktokDl } from "../../lib/scraper/tiktok.js";
 const { proto, generateWAMessageFromContent } = pkg;
