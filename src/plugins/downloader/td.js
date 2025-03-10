@@ -35,7 +35,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
                 text: `📹 *TIKTOK DOWNLOADER*\n\n` +
-                    `📝 *Title:* ${result.title}\n` +
+                    `📝 *Title:* ${data.caption}\n` +
                     `🔗 *URL:* ${psn}\n\n` +
                     `_Video sedang dikirim..._`,
                 contextInfo: {
