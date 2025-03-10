@@ -8,7 +8,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     const stickerOption = {
       pack: "Kanata",
       author: "KanataBot",
-      type: StickerTypes.FULL,
+      type: StickerTypes.ROUNDED,
       quality: 100
     }
 

@@ -74,7 +74,7 @@ export const tiktokDl = async (url) => {
     }
 };
 
-// (async () => {
-//     console.log(await tiktokDl('https://www.tiktok.com/@tewut_ba/video/7466835019667885317?q=kusangatsuka&t=1738897907485'))
-// })()
+(async () => {
+    console.log(await tiktokDl('https://www.tiktok.com/@tewut_ba/video/7466835019667885317?q=kusangatsuka&t=1738897907485'))
+})()
 

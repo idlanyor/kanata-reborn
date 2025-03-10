@@ -24,7 +24,7 @@ let isStarting = false;
 // Helper functions
 async function getPhoneNumber() {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    
+
     try {
         // Selalu minta nomor telepon untuk pairing code
         const phoneNumber = await new Promise(resolve => {
@@ -71,9 +71,9 @@ export async function startBot() {
 
     try {
         const phoneNumber = fs.existsSync(`./${globalThis.sessionName}`) ? null : await getPhoneNumber();
-        
+
         logger.info(`Starting bot with phone number: ${phoneNumber}`);
-        
+
         bot = new Kanata({
             phoneNumber,
             sessionId: globalThis.sessionName,
@@ -81,11 +81,12 @@ export async function startBot() {
         });
 
         const sock = await bot.start();
+
         logger.success('Bot started successfully!');
         logger.divider();
 
         setupEventHandlers(sock);
-        
+
         if (globalThis.groupJid) {
             schedulePrayerReminders(sock, globalThis.groupJid);
         }
@@ -132,15 +133,15 @@ async function handleMessage({ m, sock, sender, id, noTel }) {
         if (buffer) {
             const mediaBuffer = await getMedia({ message: { [`${type}Message`]: buffer } });
             const caption = buffer.caption || m.body;
-            await prosesPerintah({ 
-                command: caption, 
-                sock, 
-                m, 
-                id, 
-                sender, 
-                noTel, 
-                attf: mediaBuffer, 
-                mime: buffer.mimetype 
+            await prosesPerintah({
+                command: caption,
+                sock,
+                m,
+                id,
+                sender,
+                noTel,
+                attf: mediaBuffer,
+                mime: buffer.mimetype
             });
         }
     }
@@ -153,16 +154,16 @@ async function handleMessage({ m, sock, sender, id, noTel }) {
 
     // Handle button responses
     if (m.message?.templateButtonReplyMessage) {
-        await prosesPerintah({ 
-            command: `!${m.message.templateButtonReplyMessage.selectedId}`, 
-            sock, m, id, sender, noTel 
+        await prosesPerintah({
+            command: `!${m.message.templateButtonReplyMessage.selectedId}`,
+            sock, m, id, sender, noTel
         });
     }
 
     if (m.message?.buttonsResponseMessage) {
-        await prosesPerintah({ 
-            command: `!${m.message.buttonsResponseMessage.selectedButtonId}`, 
-            sock, m, id, sender, noTel 
+        await prosesPerintah({
+            command: `!${m.message.buttonsResponseMessage.selectedButtonId}`,
+            sock, m, id, sender, noTel
         });
     }
 
@@ -177,8 +178,8 @@ async function handleMessage({ m, sock, sender, id, noTel }) {
             if (settings.autoai === 1) {
                 const fullmessage = m.body;
                 const ctx = m.quoted?.text || '';
-                await sock.sendMessage(id, { 
-                    text: await gpt4Hika({ prompt: `${fullmessage} ${ctx}`, id }) 
+                await sock.sendMessage(id, {
+                    text: await gpt4Hika({ prompt: `${fullmessage} ${ctx}`, id })
                 }, { quoted: m });
             }
         } catch (error) {
@@ -210,7 +211,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
 
     const chatType = id.endsWith('@g.us') ? 'Group' : 'Private';
     const time = new Date().toLocaleTimeString();
-    
+
     logger.divider();
     logger.info(chalk.cyan(`📩 New Message Received`));
     logger.info(chalk.yellow(`⏰ Time     : ${time}`));

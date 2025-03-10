@@ -1,7 +1,5 @@
 import Pixnova from "../../lib/scraper/pixnova.js";
-import { join } from "path";
-import { writeFile } from "fs/promises";
-import { tmpdir } from "os";
+import { uploadGambar2 } from "../../helper/uploader.js";
 
 export const handler = "toanime";
 export const description = "✨ Convert gambarmu menjadi anime style menggunakan Pixnova AI! 📸";
@@ -12,12 +10,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏳ Sedang mengkonversi gambar menjadi anime...` });
         try {
             // Simpan buffer ke file temporary
-            const tempFile = join(tmpdir(), `pixnova_${Date.now()}.jpg`);
-            await writeFile(tempFile, attf);
+            const fileGambar = await uploadGambar2(attf)
 
             // Proses konversi dengan Pixnova
             const prompt = psn?.replace(handler, "").trim() || "Convert this image into an anime style resembling Ghibli";
-            const converter = new Pixnova(prompt, tempFile);
+            const converter = new Pixnova(prompt, fileGambar);
             const result = await converter.convert();
 
             if (!result.status) {
@@ -49,10 +46,10 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     }
 
     // Kirim petunjuk penggunaan
-    await sock.sendMessage(id, {
-        text: 'Kirim atau balas gambar dengan caption *toanime* untuk mengkonversi gambar menjadi Anime.\n\n' +
-            'Contoh:\n' +
-            '1. Kirim gambar dengan caption: *toanime*\n' +
-            '2. Atau tambahkan prompt: *toanime make it look like ghibli style*'
-    });
+    // await sock.sendMessage(id, {
+    //     text: 'Kirim atau balas gambar dengan caption *toanime* untuk mengkonversi gambar menjadi Anime.\n\n' +
+    //         'Contoh:\n' +
+    //         '1. Kirim gambar dengan caption: *toanime*\n' +
+    //         '2. Atau tambahkan prompt: *toanime make it look like ghibli style*'
+    // });
 };

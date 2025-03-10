@@ -27,5 +27,5 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (!m.message?.conversation && !m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
         return
     }
-    await sock.sendMessage(id, { text: `Kirim atau balas gambar dengan caption *removebg* untuk mengubah latar belakang.\n ` });
+    // await sock.sendMessage(id, { text: `Kirim atau balas gambar dengan caption *removebg* untuk mengubah latar belakang.\n ` });
 };

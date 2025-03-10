@@ -23,5 +23,5 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (!m.message?.conversation && !m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
         return
     }
-    await sock.sendMessage(id, { text: 'Kirim atau balas gambar burik dengan caption *hd* untuk mengonversi gambar menjadi Kartun.' });
+    // await sock.sendMessage(id, { text: 'Kirim atau balas gambar burik dengan caption *hd* untuk mengonversi gambar menjadi Kartun.' });
 };
