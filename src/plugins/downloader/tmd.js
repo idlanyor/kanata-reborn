@@ -15,7 +15,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         let { data } = await tiktokDl(psn);
         await sock.sendMessage(id, {
             audio: { url: data.audio },
-            caption: '🎧 *Audio TikTok berhasil diunduh!*'
+            mimetype: 'audio/mpeg',
+            // caption: '🎧 *Audio TikTok berhasil diunduh!*'
         });
 
     } catch (error) {
