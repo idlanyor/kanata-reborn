@@ -2,35 +2,15 @@ import { readFileSync, writeFileSync } from 'fs';
 import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
-const LINK_PATTERNS = [
-    'http://',
-    'https://',
-    'wa.me',
-    'whatsapp.com', 
-    't.me',
-    'discord.gg',
-    'chat.whatsapp.com'
-];
+const SPAM_INTERVAL = 3000; // 3 detik
+const SPAM_LIMIT = 5; // Jumlah pesan maksimal dalam interval
+const WARNING_FILE = 'src/lib/database/spam_warnings.json';
 
-// Link yang diperbolehkan
-const ALLOWED_LINKS = [
-    'facebook.com',
-    'fb.com',
-    'tiktok.com',
-    'youtube.com',
-    'youtu.be',
-    'instagram.com',
-    'threads.net',
-    'snackvideo.com',
-    'spotify.com',
-    'pddikti.kemdikbud.go.id',
-    'xiaohongshu.com'
-];
-
-const WARNING_FILE = 'lib/database/link_warnings.json';
-
+// Track pesan user
+const userMessages = new Map();
 // Load existing warnings
 let warnings = {};
+
 try {
     warnings = JSON.parse(readFileSync(WARNING_FILE, 'utf8'));
 } catch (error) {
@@ -38,19 +18,26 @@ try {
 }
 
 export default async ({ sock, m, id, psn, sender }) => {
-    if (!psn) return;
+    const now = Date.now();
     
-    const lowercaseMsg = psn.toLowerCase();
-    
-    // Cek apakah pesan mengandung link yang dilarang
-    const containsLink = LINK_PATTERNS.some(pattern => lowercaseMsg.includes(pattern));
-    
-    // Cek apakah pesan mengandung link yang diperbolehkan
-    const containsAllowedLink = ALLOWED_LINKS.some(pattern => lowercaseMsg.includes(pattern));
-    
-    // Jika mengandung link yang dilarang dan bukan link yang diperbolehkan
-    if (containsLink && !containsAllowedLink) {
-        // Initialize or increment warning count
+    if (!userMessages.has(sender)) {
+        userMessages.set(sender, {
+            timestamps: [now],
+            count: 1
+        });
+        return;
+    }
+
+    const userData = userMessages.get(sender);
+    userData.timestamps = userData.timestamps.filter(time => now - time < SPAM_INTERVAL);
+    userData.timestamps.push(now);
+    userData.count = userData.timestamps.length;
+
+    if (userData.count > SPAM_LIMIT) {
+        // Reset spam counter
+        userMessages.delete(sender);
+        
+        // Increment warning
         warnings[sender] = (warnings[sender] || 0) + 1;
         writeFileSync(WARNING_FILE, JSON.stringify(warnings, null, 2));
 
@@ -58,27 +45,24 @@ export default async ({ sock, m, id, psn, sender }) => {
         let action = '';
         
         if (warningCount >= 3) {
-            // Reset warnings after kick
             delete warnings[sender];
             writeFileSync(WARNING_FILE, JSON.stringify(warnings, null, 2));
-            
-            // Kick user
             await sock.groupParticipantsUpdate(id, [sender], "remove");
-            action = '🚫 *Anda telah dikick dari grup karena mencapai 3 peringatan link!*';
+            action = '🚫 *Anda telah dikick dari grup karena mencapai 3 peringatan spam!*';
         } else {
             action = `⚠️ *Peringatan ${warningCount}/3*\nJika mencapai 3x akan dikick dari grup!`;
         }
 
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
-                text: `╭─「 *ANTI LINK* 」\n` +
+                text: `╭─「 *ANTI SPAM* 」\n` +
                       `├ 👤 *User:* @${sender.split('@')[0]}\n` +
-                      `├ ⚠️ *Pesan:* ${psn}\n` +
+                      `├ ⚠️ *Spam Count:* ${userData.count} pesan/${SPAM_INTERVAL/1000}s\n` +
                       `├ 📊 *Warning:* ${warningCount}/3\n` +
                       `├ ${action}\n` +
                       `├ \n` +
-                      `├ *Note:* Dilarang mengirim link\n` +
-                      `├ kecuali link download yang diizinkan!\n` +
+                      `├ *Note:* Jangan spam dalam grup!\n` +
+                      `├ Max ${SPAM_LIMIT} pesan/${SPAM_INTERVAL/1000}s\n` +
                       `╰──────────────────`,
                 contextInfo: {
                     mentionedJid: [sender],
@@ -86,12 +70,12 @@ export default async ({ sock, m, id, psn, sender }) => {
                     forwardingScore: 999,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '120363305152329358@newsletter',
-                        newsletterName: 'Kanata Anti-Link',
+                        newsletterName: 'Kanata Anti-Spam',
                         serverMessageId: -1
                     },
                     externalAdReply: {
-                        title: '⚠️ Anti-Link Warning',
-                        body: 'No links allowed!',
+                        title: '⚠️ Anti-Spam Warning',
+                        body: 'No spamming allowed!',
                         thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
@@ -103,7 +87,7 @@ export default async ({ sock, m, id, psn, sender }) => {
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
         
-        // Delete message containing link
+        // Delete spam messages
         await sock.sendMessage(id, { delete: m.key });
     }
 }; 

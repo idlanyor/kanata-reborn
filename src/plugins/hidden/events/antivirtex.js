@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
-const WARNING_FILE = 'lib/database/virtex_warnings.json';
+const WARNING_FILE = 'src/lib/database/virtex_warnings.json';
 
 // Patterns untuk mendeteksi virtex
 const VIRTEX_PATTERNS = [

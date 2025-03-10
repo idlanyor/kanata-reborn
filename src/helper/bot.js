@@ -10,7 +10,7 @@ import {
 import pino from "pino";
 import NodeCache from "node-cache";
 import fs from 'fs-extra';
-import { startBot } from "../app.js";
+import { startBot } from "../services/botService.js";
 import { logger } from './logger.js';
 
 

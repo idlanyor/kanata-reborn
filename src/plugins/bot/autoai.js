@@ -5,12 +5,13 @@ export const handler = "autoai";
 
 export default async ({ sock, m, id, psn }) => {
     try {
-        if (!id.endsWith('@g.us')) {
-            await sock.sendMessage(id, {
-                text: '❌ Perintah ini hanya bisa digunakan di grup!'
-            });
-            return;
-        }
+        if (!globalThis.isOwner(noTel)) return;
+        // if (!id.endsWith('@g.us')) {
+        //     await sock.sendMessage(id, {
+        //         text: '❌ Perintah ini hanya bisa digunakan di grup!'
+        //     });
+        //     return;
+        // }
 
         // Inisialisasi pengaturan grup jika belum ada
         await Group.initGroup(id);

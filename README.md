@@ -1,36 +1,42 @@
 <div align="center">
-<h1>🤖 Kanata V3</h1>
-<p><i>A powerful WhatsApp bot with modular plugin architecture</i></p>
+  
+# 🌟 Kanata V3 - WhatsApp Bot
+### _Powerful, Modular, Intelligent_
 
-[![GitHub repo size](https://img.shields.io/github/repo-size/idlanyor/kanata-v2)](https://github.com/idlanyor/kanata-v2)
-[![GitHub stars](https://img.shields.io/github/stars/idlanyor/kanata-v2?style=social)](https://github.com/idlanyor/kanata-v2)
-[![GitHub license](https://img.shields.io/github/license/idlanyor/kanata-v2)](https://github.com/idlanyor/kanata-v2)
-[![Node.js Version](https://img.shields.io/badge/Node.js-14+-43853D?logo=node.js)](https://nodejs.org/)
-[![Baileys](https://img.shields.io/badge/Baileys-Latest-blue)](https://github.com/whiskeysockets/baileys)
+[![GitHub repo size](https://img.shields.io/github/repo-size/idlanyor/kanata-reborn?style=for-the-badge)](https://github.com/idlanyor/kanata-reborn)
+[![GitHub stars](https://img.shields.io/github/stars/idlanyor/kanata-reborn?style=for-the-badge)](https://github.com/idlanyor/kanata-reborn)
+[![GitHub license](https://img.shields.io/github/license/idlanyor/kanata-reborn?style=for-the-badge)](https://github.com/idlanyor/kanata-reborn)
+[![Node.js Version](https://img.shields.io/badge/Node.js-14+-43853D?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![Baileys](https://img.shields.io/badge/Baileys-Latest-blue?style=for-the-badge)](https://github.com/whiskeysockets/baileys)
 
-![Kanata](https://s6.imgcdn.dev/YYoFZh.jpg)
+<img src="https://s6.imgcdn.dev/YYoFZh.jpg" width="400px" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 
 </div>
 
-## ✨ Features
+<div align="center">
+  <h3>🌈 Fitur Unggulan</h3>
+</div>
 
-- 🔌 Modular plugin architecture
-- 🤖 AI-powered responses using multiple models
-- 🖼️ Image manipulation and generation
-- 📝 PDF manipulation and conversion
-- 🎮 Fun games and interactive commands
-- 🔒 Advanced group management
-- 📊 Detailed analytics and logging
+<div align="center">
+  
+| 🔌 Modular | 🤖 AI-Powered | 🖼️ Media Tools | 🎮 Fun & Games |
+|------------|---------------|----------------|----------------|
+| Plugin Architecture | Multi-Model AI | Image Processing | Interactive Games |
+| Easy Integration | Smart Responses | PDF Conversion | Group Management |
+| Custom Commands | Context Aware | Media Generation | Analytics & Logs |
 
-## 📋 Requirements
+</div>
 
-- Node.js 14 or higher
-- npm or yarn
-- A WhatsApp account
-- Various API keys (see configuration)
+## 📋 `
 
-## 🚀 Quick Start
+| Kebutuhan | Versi |
+|-----------|-------|
+| Node.js | v14 atau lebih tinggi |
+| NPM/Yarn | Versi terbaru |
+| WhatsApp | Akun aktif |
+| API Keys | Lihat konfigurasi |
 
+## 👌 How to install
 1. **Clone the repository**
 ```bash
 git clone https://github.com/idlanyor/kanata-v2.git

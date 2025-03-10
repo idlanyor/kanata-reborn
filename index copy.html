@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baileys x Websocket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes rgb-border {
+            0% { border-color: #ff0000; }
+            16.666% { border-color: #ff8000; }
+            33.333% { border-color: #ffff00; }
+            50% { border-color: #00ff00; }
+            66.666% { border-color: #00ffff; }
+            83.333% { border-color: #0000ff; }
+            100% { border-color: #ff0000; }
+        }
+
+        @keyframes neon-glow {
+            0% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0ff, 0 0 20px #0ff, 0 0 25px #0ff; }
+            50% { text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 7px #0ff, 0 0 10px #0ff, 0 0 12px #0ff; }
+            100% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0ff, 0 0 20px #0ff, 0 0 25px #0ff; }
+        }
+
+        @keyframes rgb-text {
+            0% { color: #ff0000; }
+            16.666% { color: #ff8000; }
+            33.333% { color: #ffff00; }
+            50% { color: #00ff00; }
+            66.666% { color: #00ffff; }
+            83.333% { color: #0000ff; }
+            100% { color: #ff0000; }
+        }
+
+        .neon-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #fff;
+            animation: rgb-border 5s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .neon-title {
+            animation: neon-glow 2s ease-in-out infinite;
+            color: #fff;
+        }
+
+        .neon-text {
+            animation: rgb-text 5s linear infinite;
+        }
+
+        .neon-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .neon-button::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            z-index: -1;
+            animation: rgb-border 5s linear infinite;
+            border-radius: 0.5rem;
+        }
+
+        .neon-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+
+        .neon-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #fff;
+            color: #fff;
+            animation: rgb-border 5s linear infinite;
+        }
+
+        .neon-input:focus {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body class="flex justify-center items-center h-screen bg-black">
+    <div class="neon-container rounded-2xl p-8 w-96 text-center">
+        <h1 class="text-3xl font-bold neon-title mb-8">Baileys x Websocket</h1>
+
+        <form id="formSocket" class="mt-5 flex flex-col space-y-3">
+            <label class="text-white font-medium neon-text">Masukkan nomor telepon (62...)</label>
+            <input type="number" id="inputNumber"
+                class="neon-input p-3 rounded-lg focus:outline-none"
+                placeholder="628XXXXXXXXX">
+            <button type="submit"
+                class="neon-button bg-transparent text-white py-2 px-4 rounded-lg font-semibold">
+                Generate Code
+            </button>
+        </form>
+
+        <div id="broadcastCtr" class="mt-5 hidden bg-black bg-opacity-50 text-white py-3 px-4 rounded-lg">
+            <span></span>
+        </div>
+
+        <div id="pairingContainer" class="mt-5 hidden bg-black bg-opacity-50 text-white py-3 px-4 rounded-lg">
+            <strong class="neon-text">Kode Pairing:</strong> 
+            <span id="codeContainer" class="font-bold neon-text"></span>
+        </div>
+
+        <p class="mt-5 text-white">Created by: <span class="font-semibold neon-text">Roy</span></p>
+    </div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('formSocket');
+        const input = document.getElementById('inputNumber');
+        const bctr = document.getElementById('broadcastCtr');
+        const cctr = document.getElementById('codeContainer');
+        const pairingContainer = document.getElementById('pairingContainer');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const phoneNumber = input.value.trim();
+
+            if (/^62\d{9,15}$/.test(phoneNumber)) {
+                socket.emit('generateQR', phoneNumber);
+
+                bctr.classList.remove('hidden');
+                bctr.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span class="neon-text">Memulai bot untuk ${phoneNumber}...</span>
+                    </div>
+                `;
+
+                input.value = "";
+            } else {
+                bctr.classList.remove('hidden');
+                bctr.innerHTML = `<span class="text-red-500 neon-text">Nomor telepon tidak valid!</span>`;
+            }
+        });
+
+        socket.on("broadcastMessage", message => {
+            bctr.classList.remove('hidden');
+            bctr.innerHTML = `<span class="neon-text">${message}</span>`;
+
+            if (message === 'Soket terhubung') {
+                form.classList.add('hidden');
+            }
+        });
+
+        socket.on("pairCode", message => {
+            pairingContainer.classList.remove('hidden');
+            cctr.innerText = message;
+        });
+    </script>
+</body>
+</html>

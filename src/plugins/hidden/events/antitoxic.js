@@ -2,32 +2,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
-const PROMO_PATTERNS = [
-    'join grup',
-    'open member',
-    'open slot',
-    'join sekarang',
-    'wa.me/',
-    'whatsapp.com/group',
-    'member gratis',
-    'click link',
-    'klik link',
-    'masuk grup',
-    'masuk group',
-    'jual followers',
-    'followers murah',
-    'paid promote',
-    'open endorse',
-    'endorse murah',
-    'promo murah',
-    'bisnis modal',
-    'modal kecil',
-    'penghasilan tambahan',
-    'cari uang',
-    'gabung sekarang'
-];
-
-const WARNING_FILE = 'lib/database/promo_warnings.json';
+const TOXIC_WORDS = ['anjing', 'bangsat', 'kontol', 'memek', 'jembut', 'ngentot', 'goblok', 'tolol', 'babi', 'monyet', 'lonte', 'bejat', 'keparat', 'biadab', 'bajingan', 'bacot', 'tai', 'jancok', 'perek', 'bencong', 'banci', 'fuck', 'shit', 'bitch', 'pussy', 'asshole', 'bastard'];
+const WARNING_FILE = 'src/lib/database/toxic_warnings.json';
 
 // Load existing warnings
 let warnings = {};
@@ -41,9 +17,9 @@ export default async ({ sock, m, id, psn, sender }) => {
     if (!psn) return;
     
     const lowercaseMsg = psn.toLowerCase();
-    const containsPromo = PROMO_PATTERNS.some(pattern => lowercaseMsg.includes(pattern));
+    const containsToxic = TOXIC_WORDS.some(word => lowercaseMsg.includes(word));
     
-    if (containsPromo) {
+    if (containsToxic) {
         // Initialize or increment warning count
         warnings[sender] = (warnings[sender] || 0) + 1;
         writeFileSync(WARNING_FILE, JSON.stringify(warnings, null, 2));
@@ -51,28 +27,25 @@ export default async ({ sock, m, id, psn, sender }) => {
         const warningCount = warnings[sender];
         let action = '';
         
-        if (warningCount >= 3) {
+        if (warningCount >= 5) {
             // Reset warnings after kick
             delete warnings[sender];
             writeFileSync(WARNING_FILE, JSON.stringify(warnings, null, 2));
             
             // Kick user
             await sock.groupParticipantsUpdate(id, [sender], "remove");
-            action = '🚫 *Anda telah dikick dari grup karena mencapai 3 peringatan promosi!*';
+            action = '🚫 *Anda telah dikick dari grup karena mencapai 5 peringatan!*';
         } else {
-            action = `⚠️ *Peringatan ${warningCount}/3*\nJika mencapai 3x akan dikick dari grup!`;
+            action = `⚠️ *Peringatan ${warningCount}/5*\nJika mencapai 5x akan dikick dari grup!`;
         }
 
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
-                text: `╭─「 *ANTI PROMOSI* 」\n` +
+                text: `╭─「 *ANTI TOXIC* 」\n` +
                       `├ 👤 *User:* @${sender.split('@')[0]}\n` +
                       `├ ⚠️ *Pesan:* ${psn}\n` +
-                      `├ 📊 *Warning:* ${warningCount}/3\n` +
+                      `├ 📊 *Warning:* ${warningCount}/5\n` +
                       `├ ${action}\n` +
-                      `├ \n` +
-                      `├ *Note:* Dilarang promosi dalam\n` +
-                      `├ bentuk apapun di grup ini!\n` +
                       `╰──────────────────`,
                 contextInfo: {
                     mentionedJid: [sender],
@@ -80,12 +53,12 @@ export default async ({ sock, m, id, psn, sender }) => {
                     forwardingScore: 999,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '120363305152329358@newsletter',
-                        newsletterName: 'Kanata Anti-Promo',
+                        newsletterName: 'Kanata Anti-Toxic',
                         serverMessageId: -1
                     },
                     externalAdReply: {
-                        title: '⚠️ Anti-Promosi Warning',
-                        body: 'No promotion allowed!',
+                        title: '⚠️ Anti-Toxic Warning',
+                        body: 'Keep the chat clean!',
                         thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
@@ -97,7 +70,7 @@ export default async ({ sock, m, id, psn, sender }) => {
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
         
-        // Delete promo message
+        // Delete toxic message
         await sock.sendMessage(id, { delete: m.key });
     }
 }; 

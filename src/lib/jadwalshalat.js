@@ -11,11 +11,10 @@ import fetch from 'node-fetch';
 import cron from 'node-cron';
 import { setTimeout } from 'timers';
 import pkg from '@seaavey/baileys';
-import loadAssets from '../helper/loadAssets.js';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const URL = 'https://fastrestapis.fasturl.cloud/religious/prayerschedule?city=Purbalingga';
-const FILE_PATH = 'lib/services/jadwalshalat.json';
+const FILE_PATH = 'src/lib/services/jadwalshalat.json';
 
 const data = await readFile(FILE_PATH, 'utf-8');
 const jsh = JSON.parse(data);
