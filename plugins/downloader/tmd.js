@@ -1,4 +1,4 @@
-import { tiktok } from "../../lib/downloader.js";
+import { tiktokDl } from "../../lib/scraper/tiktok.js";
 export const description = "Downloader TikTok Audio provided by *Roy*";
 export const handler = "tmd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -11,9 +11,9 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
 
-        let result = await tiktok(psn);
+        let { data } = await tiktokDl(psn);
         await sock.sendMessage(id, {
-            audio: { url: result.audio },
+            audio: { url: data.audio },
             caption: '🎧 *Audio TikTok berhasil diunduh!*'
         });
 

@@ -1,19 +1,20 @@
 import { tiktok } from "../../lib/downloader.js";
 import pkg from '@seaavey/baileys';
+import { tiktokDl } from "../../lib/scraper/tiktok.js";
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const description = "Downloader TikTok provided by *Roy*";
 export const handler = "td"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: "🎬 *Gunakan format:* \n\n`td <url>`\n\nContoh:\n`td https://vt.tiktok.com/ZSgQX6/`",
             contextInfo: {
                 isForwarded: true,
                 forwardingScore: 9999999,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363305152329358@newsletter',
-                    newsletterName: 'Kanata Downloader',
+                    newsletterName: 'Tiktok Downloader',
                     serverMessageId: -1
                 },
                 externalAdReply: {
@@ -31,13 +32,13 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
 
-        let result = await tiktok(psn);
+        let { data } = await tiktokDl(psn);
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
                 text: `📹 *TIKTOK DOWNLOADER*\n\n` +
-                      `📝 *Title:* ${result.title}\n` +
-                      `🔗 *URL:* ${psn}\n\n` +
-                      `_Video sedang dikirim..._`,
+                    `📝 *Title:* ${result.title}\n` +
+                    `🔗 *URL:* ${psn}\n\n` +
+                    `_Video sedang dikirim..._`,
                 contextInfo: {
                     isForwarded: true,
                     forwardingScore: 9999999,
@@ -48,8 +49,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     },
                     externalAdReply: {
                         title: 'TikTok Downloader',
-                        body: result.title,
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        body: data.caption,
+                        thumbnailUrl: 'https://static.vecteezy.com/system/resources/thumbnails/016/716/485/small/tiktok-icon-free-png.png',
                         sourceUrl: psn,
                         mediaType: 1,
                         renderLargerThumbnail: true
@@ -59,30 +60,30 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
-        await sock.sendMessage(id, { 
-            video: { url: result.video },
-            caption: `📹 *Video TikTok berhasil diunduh!*\n\n📄 *Title:* ${result.title}`,
+
+        await sock.sendMessage(id, {
+            video: { url: data.video },
+            caption: `📹 *Video TikTok berhasil diunduh!*\n\n📄 *Title:* ${data.caption}`,
             contextInfo: {
                 isForwarded: true,
                 forwardingScore: 9999999,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363305152329358@newsletter',
-                    newsletterName: 'Kanata Downloader',
+                    newsletterName: data.author || 'Tiktok Downloader',
                     serverMessageId: -1
                 }
             }
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: '❌ *Terjadi kesalahan:* \n' + error.message,
             contextInfo: {
                 isForwarded: true,
                 forwardingScore: 9999999,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363305152329358@newsletter',
-                    newsletterName: 'Kanata Downloader',
+                    newsletterName: 'Tiktok Downloader',
                     serverMessageId: -1
                 },
                 externalAdReply: {
