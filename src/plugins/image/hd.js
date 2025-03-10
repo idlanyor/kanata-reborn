@@ -7,7 +7,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏱️ tunggu bentar,Gambar burikmu lagi diproses` });
         try {
             const imageUrl = await uploadGambar2(attf);
-            const { url } = await fetch(`https://fastrestapis.fasturl.link/aiimage/imgenlarger?url=${imageUrl}`);
+            const { url } = await fetch(`https://fastrestapis.fasturl.cloud/aiimage/imgenlarger?url=${imageUrl}`);
             await sock.sendMessage(id, {
                 image: { url },
                 caption: '📷 HD Image berhasil, Gambar burikmu telah dikonversi ke kualitas HD 🎉'
