@@ -1,27 +1,73 @@
-import { ytPlay } from '../../lib/youtube.js';
+import { yutubAudio } from '../../lib/downloader.js';
 
-export const description = 'Putar dan Download Audio dari *YouTube*';
-export const handler = "yp"
+export const description = "YouTube Music Downloader (URL Only)";
+export const handler = "ymd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
+    if (psn === '') {
+        await sock.sendMessage(id, {
+            text: `🎵 *YouTube Playlist Downloader*\n\n` +
+                  `*Cara Penggunaan:*\n` +
+                  `- Ketik: yp <url youtube playlist>\n\n` +
+                  `*Contoh:*\n` +
+                  `yp jkt48 sanjou\n\n` +
+                  `*Fitur:*\n` +
+                  `- Audio MP3 128kbps\n` +
+                  `- Proses Cepat\n\n`
+        });
+        return;
+    }
+
+    // if (!psn.match(/youtu/gi)) {
+    //     await sock.sendMessage(id, { 
+    //         text: `❌ *URL Tidak Valid*\n\nHanya menerima URL YouTube!` 
+    //     });
+    //     return;
+    // }
+
     try {
-        if (psn === '') {
-            await sock.sendMessage(id, { text: '🎵 Masukkan judul lagu yang ingin diputar atau dicari.' });
-            return;
+        // Kirim reaction mulai
+        await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
+        
+        await sock.sendMessage(id, { 
+            text: `🎵 *Memproses Audio*\n\n` +
+                  `Link: ${psn}\n` +
+                  `Status: Mengunduh & Converting...\n` +
+                  `Estimasi: 1-2 menit`
+        });
+
+        const result = await yutubAudio(psn);
+        
+        if (result.error) {
+            throw new Error(result.error);
         }
 
-        await sock.sendMessage(id, { text: `🔍 Sedang mencari *${psn}* di Youtube...` });
-        let result = await ytPlay(psn);
-        // console.log(result)
-        caption = '*Hasil Pencarian YouTube Play*';
-        caption += `\n\n🎶 *Judul:* ${result.title}`;
-        caption += `\n\n🎶 *Artist:* ${result.channel}`;
-        caption += `\n _⏳ Bentar yaa, audio lagi dikirim ⏳_`;
-        await sock.sendMessage(id, { image: { url: result.thumbnail }, caption }, { quoted: m });
+        // Kirim info sebelum audio
+        await sock.sendMessage(id, { 
+            text: `✅ *Audio Siap Dikirim*\n\n` +
+                  `📝 Judul: ${result.title}\n` +
+                  `👤 Channel: ${result.channel}\n` +
+                  `🎵 Format: MP3\n` +
+                  `🔊 Bitrate: 128kbps`
+        });
 
-
-        await sock.sendMessage(id, { audio: result.audio ,mimetype: 'audio/mpeg',  fileName: result.title }, { quoted: m });
+        // Kirim audio
+        await sock.sendMessage(id, { 
+            audio: { url: result.audio }, 
+            mimetype: 'audio/mpeg',
+            fileName: `${result.title}.mp3`
+        }, { quoted: m });
+        
+        // Kirim reaction selesai
+        await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
 
     } catch (error) {
-        await sock.sendMessage(id, { text: '❌ Ups, terjadi kesalahan: ' + error.message });
+        await sock.sendMessage(id, { 
+            text: `❌ *GAGAL MEMPROSES*\n\n` +
+                  `*Pesan Error:* ${error.message}\n\n` +
+                  `*Solusi:*\n` +
+                  `- Coba playlist lain\n` +
+                  `- Laporkan ke owner jika masih error`
+        });
+        await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
 };
