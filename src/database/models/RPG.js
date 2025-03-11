@@ -1811,7 +1811,7 @@ class RPG {
                         console.error('Error finalizing statement:', err);
                         reject(err);
                     } else {
-                        console.log('Default items initialized successfully');
+                        // console.log('Default items initialized successfully');
                         resolve();
                     }
                 });

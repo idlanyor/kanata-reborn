@@ -10,7 +10,7 @@ import {
 import pino from "pino";
 import NodeCache from "node-cache";
 import fs from 'fs-extra';
-import { startBot } from "../services/botService.js";
+import { startBot } from "../../app.js";
 import { logger } from './logger.js';
 
 
@@ -69,6 +69,12 @@ class Kanata {
                 connectOptions: {
                     maxRetries: 5,
                     keepAlive: true,
+                    // Menambahkan opsi untuk mencegah koneksi idle
+                    connectTimeout: 30000, // waktu timeout koneksi dalam milidetik
+                    onConnectionLost: () => {
+                        logger.error("Koneksi hilang, mencoba untuk menyambung kembali...");
+                        this.io?.emit("broadcastMessage", "Koneksi hilang, mencoba untuk menyambung kembali...");
+                    },
                 },
             });
 

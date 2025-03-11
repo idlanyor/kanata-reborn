@@ -122,7 +122,7 @@ export const checkAndInitDatabase = () => {
                 )`);
             });
 
-            console.log('✅ Database checked and initialized successfully');
+            // console.log('✅ Database checked and initialized successfully');
             resolve();
         } catch (error) {
             console.error('❌ Error initializing database:', error);
@@ -188,7 +188,7 @@ export const initializeDefaultData = () => {
                 });
             });
 
-            console.log('✅ Default data initialized successfully');
+            // console.log('✅ Default data initialized successfully');
             resolve();
         } catch (error) {
             console.error('❌ Error initializing default data:', error);

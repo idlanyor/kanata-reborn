@@ -2,7 +2,7 @@
   "name": "bot-wa",
   "version": "1.0.5",
   "description": "",
-  "main": "src/app.js",
+  "main": "app.js",
   "type": "module",
   "private": "true",
   "scripts": {

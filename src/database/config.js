@@ -441,7 +441,7 @@ function initializeTables() {
             // Initialize default items
             try {
                 await RPG.initializeDefaultItems();
-                console.log('Items initialized successfully');
+                // console.log('Items initialized successfully');
             } catch (error) {
                 console.error('Error initializing items:', error);
             }
