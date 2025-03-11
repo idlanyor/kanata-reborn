@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { checkOwner } from '../../helper/permission.js';
 
 export default async ({ sock, m, id, noTel, psn }) => {
@@ -11,13 +10,13 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
     try {
         let [url, ...headerStrings] = psn.split('\n');
-        let headers = {};
+        let headers = new Headers();
 
         // Parse headers jika ada
         if (headerStrings.length > 0) {
             headerStrings.forEach(header => {
                 const [key, value] = header.split(':').map(s => s.trim());
-                if (key && value) headers[key] = value;
+                if (key && value) headers.append(key, value);
             });
         }
 
@@ -25,15 +24,19 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
         // Lakukan request
-        const response = await axios.get(url, {
+        const response = await fetch(url, {
+            method: 'GET',
             headers,
         });
-        const contentType = response.headers['content-type'];
+
+        const contentType = response.headers.get('content-type');
         const fileName = url.split('/').pop() || 'file';
+        // let data = await response.text(); // Ambil response sebagai teks
 
         if (contentType.includes('application/json')) {
             // Tangani JSON response terlebih dahulu
-            let jsonString = JSON.stringify(response.data, null, 2);
+            const json = await response.json(); // Mengambil JSON dari response
+            let jsonString = JSON.stringify(json, null, 2);
             await sock.sendMessage(id, {
                 text: `🛜 *GET Request*\n\n📃 *Response:*\n${jsonString}`,
                 contextInfo: {
@@ -44,31 +47,32 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 }
             });
         } else if (contentType.includes('image')) {
+            const imageUrl = response.url; // Mengambil URL gambar dari response
             await sock.sendMessage(id, {
-                image: Buffer.from(response.data),
+                image: { url: imageUrl }, // Menggunakan URL gambar
                 caption: '☑️ Response 200 OK ☑️',
                 contextInfo: {
                     externalAdReply: {
                         title: '乂 API Request 乂',
-                        body: url,
+                        body: imageUrl,
                         thumbnailUrl: `${globalThis.ppUrl}`,
-                        sourceUrl: url,
+                        sourceUrl: imageUrl,
                         mediaType: 1,
                         renderLargerThumbnail: true
                     }
                 }
             });
         } else if (contentType.includes('video')) {
-            const videoBuffer = Buffer.from(response.data);
+            const videoUrl = response.url; // Mengambil URL video dari response
             await sock.sendMessage(id, {
-                video: videoBuffer,
+                video: { url: videoUrl }, // Menggunakan URL video
                 caption: '☑️ Response 200 OK ☑️',
                 contextInfo: {
                     externalAdReply: {
                         title: '乂 API Request 乂',
-                        body: url,
+                        body: videoUrl,
                         thumbnailUrl: `${globalThis.ppUrl}`,
-                        sourceUrl: url,
+                        sourceUrl: videoUrl,
                         mediaType: 2, // Mengubah mediaType menjadi 2 untuk video
                         renderLargerThumbnail: true
                     }
@@ -76,43 +80,44 @@ export default async ({ sock, m, id, noTel, psn }) => {
             });
         } else if (contentType.includes('audio')) {
             await sock.sendMessage(id, {
-                audio: Buffer.from(response.data),
+                audio: { url: audioUrl }, // Menggunakan URL audio
                 mimetype: 'audio/mpeg',
                 fileName: `${fileName}.mp3`,
                 contextInfo: {
                     externalAdReply: {
                         title: '乂 API Request 乂',
-                        body: url,
+                        body: audioUrl,
                         thumbnailUrl: `${globalThis.ppUrl}`,
-                        sourceUrl: url,
+                        sourceUrl: audioUrl,
                         mediaType: 1,
                         renderLargerThumbnail: true
                     }
                 }
             });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {
+            const documentUrl = response.url; // Mengambil URL dokumen dari response
             await sock.sendMessage(id, {
-                document: Buffer.from(response.data),
+                document: { url: documentUrl }, // Menggunakan URL dokumen
                 mimetype: contentType,
                 fileName: fileName,
                 caption: `🛜 *GET Request - Document*\n📃 *Type:* ${contentType}`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '乂 API Request 乂',
+                        body: documentUrl,
+                    }
+                }
             });
         } else {
             // Jika bukan file media atau json, kirim sebagai teks
-            const textData = response.data.toString('utf-8');
-            await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${textData}` });
+            await sock.sendMessage(id, { text: `🛜 *GET Request*\n\n📃 *Response:*\n${JSON.stringify(data, null, 2)}` });
         }
 
         // Kirim reaction sukses
         await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
     } catch (error) {
         let errorMessage = `❌ *ERROR*\n\n`;
-        if (error.response) {
-            errorMessage += `Status: ${error.response.status}\n`;
-            errorMessage += `Data: ${JSON.stringify(error.response.data, null, 2)}`;
-        } else {
-            errorMessage += error.message;
-        }
+        errorMessage += error.message;
         await sock.sendMessage(id, { text: errorMessage });
         await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
@@ -120,4 +125,5 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
 export const handler = 'get';
 export const description = 'Melakukan HTTP GET request';
+
 
