@@ -1,7 +1,7 @@
 import { yutubAudio } from '../../lib/downloader.js';
 
-export const description = "YouTube Music Downloader (URL Only)";
-export const handler = "ymd"
+export const description = "YouTube Player";
+export const handler = "yp"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn === '') {
         await sock.sendMessage(id, {
