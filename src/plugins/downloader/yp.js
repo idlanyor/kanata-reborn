@@ -29,8 +29,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
         
         await sock.sendMessage(id, { 
-            text: `🎵 *Memproses Audio*\n\n` +
-                  `Link: ${psn}\n` +
+            text: ` *Memproses Audio*\n\n` +
+                  `Query: ${psn}\n` +
                   `Status: Mengunduh & Converting...\n` +
                   `Estimasi: 1-2 menit`
         });

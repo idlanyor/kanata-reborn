@@ -59,8 +59,9 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 }
             });
         } else if (contentType.includes('video')) {
+            const videoBuffer = Buffer.from(response.data);
             await sock.sendMessage(id, {
-                video: Buffer.from(response.data),
+                video: videoBuffer,
                 caption: '☑️ Response 200 OK ☑️',
                 contextInfo: {
                     externalAdReply: {
@@ -68,7 +69,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
                         body: url,
                         thumbnailUrl: `${globalThis.ppUrl}`,
                         sourceUrl: url,
-                        mediaType: 1,
+                        mediaType: 2, // Mengubah mediaType menjadi 2 untuk video
                         renderLargerThumbnail: true
                     }
                 }
