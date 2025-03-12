@@ -38,18 +38,16 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             });
         }
         return;
-    }
-
-    // Handle jika tidak ada gambar yang dikirim
-    if (!m.message?.conversation && !m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
-        return;
+    } else {
+        // return;
+        await sock.sendMessage(id, {
+            text: 'Kirim atau balas gambar dengan caption *toanime* untuk mengkonversi gambar menjadi Anime.\n\n' +
+                'Contoh:\n' +
+                '1. Kirim gambar dengan caption: *toanime*\n' +
+                '2. Atau tambahkan prompt: *toanime make it look like ghibli style*'
+        });
     }
 
     // Kirim petunjuk penggunaan
-    // await sock.sendMessage(id, {
-    //     text: 'Kirim atau balas gambar dengan caption *toanime* untuk mengkonversi gambar menjadi Anime.\n\n' +
-    //         'Contoh:\n' +
-    //         '1. Kirim gambar dengan caption: *toanime*\n' +
-    //         '2. Atau tambahkan prompt: *toanime make it look like ghibli style*'
-    // });
+
 };

@@ -78,7 +78,7 @@ export async function groupParticipants(ev, sock) {
                     title: 'Kanata-V3',
                     body: groupName,
                     mediaType: 1,
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     renderLargerThumbnail: true
                 },

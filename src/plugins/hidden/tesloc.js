@@ -1,28 +1,24 @@
 import { getBuffer } from "../../helper/mediaMsg.js";
-export const handler = 'poll'
+export const handler = 'tesloc'
 export const description = ''
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
-    await sock.sendMessage(id, {
-        caption:'Lorem',
+    sock.sendMessage(m.chat, {
         location: {
-            degreesLatitude: -7.2263672241412324,
-            degreesLongitude: 109.36419066123185,
-            name: 'Lorem Ipsum',
-            address: 'Kanata V3',
-            // jpegThumbnail: 'https://telegra.ph/file/a6f3ef42e42efcf542950.jpg',
-            url: 'https://roidev.my.id',
+            degreesLatitude: -6.2088, // Ganti dengan latitude lokasi
+            degreesLongitude: 106.8456, // Ganti dengan longitude lokasi
         },
-        // thumbnail: 'https://telegra.ph/file/a6f3ef42e42efcf542950.jpg',
+        caption: "Ini adalah lokasi yang dikirim.",
+        footer: "© Kanata",
         buttons: [
             {
-                buttonId: 'owner',
+                buttonId: `🚀`,
                 buttonText: {
-                    displayText: 'Owner Contact'
+                    displayText: '🗿'
                 },
-                type: 1,
+                type: 1
             }
-        ],
-        headerType: 1,
+        ], // isi buttons nya
+        headerType: 6,
         viewOnce: true
-    })
+    }, { quoted: m });
 };

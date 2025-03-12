@@ -1,4 +1,4 @@
-import { downloadContentFromMessage } from "@seaavey/baileys"
+import { downloadContentFromMessage } from "@fizzxydev/baileys-pro"
 
 export async function streamToBuffer(readableStream) {
     const reader = readableStream.getReader();

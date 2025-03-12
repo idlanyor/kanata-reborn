@@ -1,5 +1,5 @@
 import { unixToDate } from "../../helper/date.js";
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = 'stalkch'
@@ -12,7 +12,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '乂 Channel Stalker 乂',
                     body: 'Please provide a valid WhatsApp channel link',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -29,7 +29,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '❌ Invalid Link',
                     body: 'Please check your channel link format',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }
@@ -47,7 +47,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                     externalAdReply: {
                         title: '❌ Invalid Code',
                         body: 'Channel code not found in the link',
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
@@ -81,7 +81,7 @@ _Powered by Kanata-V2_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: metadata.pictureUrl || 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: metadata.pictureUrl || 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: `https://whatsapp.com/channel/${metadata.invite}`
                     }
                 }
@@ -105,7 +105,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ Stalking Failed',
                     body: 'An error occurred while fetching channel info',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

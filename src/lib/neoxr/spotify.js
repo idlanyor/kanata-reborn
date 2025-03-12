@@ -25,7 +25,7 @@ export const spotifySong = async (q) => {
         const { data } = await spotifyDownload(url)
         // console.log(data);
         return {
-            thumbnail: data?.coverImage || 'https://s6.imgcdn.dev/YYoFZh.jpg',
+            thumbnail: data?.coverImage || 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
             title: data?.title || 'GTW Judulnya',
             author: data?.artist || 'YNTKTS',
             audio: data?.downloadUrl

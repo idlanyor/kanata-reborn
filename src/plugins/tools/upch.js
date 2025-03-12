@@ -45,7 +45,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 title: '乂 Kanata-V3 乂',
                 body: m.pushName || sender,
                 mediaType: 1,
-                thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                 sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                 renderLargerThumbnail: true
             }
@@ -61,7 +61,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '乂 Channel Update 乂',
                     body: 'Message sent successfully!',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -85,7 +85,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '❌ Upload Failed',
                     body: 'An error occurred while uploading',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

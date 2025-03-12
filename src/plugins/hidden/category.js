@@ -1,5 +1,5 @@
 // import { helpMessage } from '../../helper/help.js'
-// import pkg from '@seaavey/baileys';
+// import pkg from '@fizzxydev/baileys-pro';
 // const { proto, generateWAMessageFromContent } = pkg;
 // import loadAssets from '../../helper/loadAssets.js';
 
@@ -79,7 +79,7 @@
 //             externalAdReply: {
 //                 title: '乂 Kanata Bot Menu 乂',
 //                 body: 'Click here to join our channel!',
-//                 thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+//                 thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
 //                 sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
 //                 mediaType: 1,
 //                 renderLargerThumbnail: true

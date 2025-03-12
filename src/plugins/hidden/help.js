@@ -70,8 +70,9 @@ export default async ({ sock, id, m, noTel, sender }) => {
 │
 ├ *Bot Info:*
 ├ Version: 3.0
-├ Library: @seeavey/baileys
+├ Library: @fizzxydev/baileys-pro
 ├ Platform: NodeJS
+├ Type : ES6 Module
 │
 ├ *Command Info:*
 ├ Prefix: Multi
@@ -130,7 +131,7 @@ ${caption}
             externalAdReply: {
                 title: '乂 Kanata Bot Menu 乂',
                 body: 'Click here to join our channel!',
-                thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                 sourceUrl:'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                 mediaType: 2,
                 renderLargerThumbnail: true

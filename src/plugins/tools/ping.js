@@ -1,4 +1,4 @@
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg
 import moment from 'moment';
 import { getBuffer } from '../../helper/mediaMsg.js';
@@ -77,7 +77,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     mediaType: 1,
                     previewType: 0,
                     renderLargerThumbnail: true,
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     showAdAttribution: true,
                     description: `Klik iklan untuk mengirim pesan!`

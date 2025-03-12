@@ -1,5 +1,5 @@
 import User from '../../database/models/User.js';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ['profile', 'me'];
@@ -15,7 +15,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
                     externalAdReply: {
                         title: '❌ Profile Error',
                         body: 'User not found in database',
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
@@ -56,7 +56,7 @@ _Powered by Kanata-V2_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
                     }
                 }
@@ -80,7 +80,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ Profile Error',
                     body: 'An error occurred while fetching profile',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

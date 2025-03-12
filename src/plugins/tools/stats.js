@@ -1,4 +1,4 @@
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 import { getBuffer } from '../../helper/mediaMsg.js';
 const { proto, generateWAMessageFromContent } = pkg
 import os from 'os';
@@ -95,7 +95,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 currencyCode: "IDR",
                 message: await systemSpec(),
                 priceAmount1000: "91000",
-                thumbnail: await getBuffer('https://s6.imgcdn.dev/YYoFZh.jpg'),
+                thumbnail: await getBuffer('https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg'),
                 surface: "Kanata Bot",
                 contextInfo: { mentionedJid: [id] },
             },

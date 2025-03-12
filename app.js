@@ -336,26 +336,27 @@ export async function startBot() {
                 m = addMessageHandler(m, sock);
                 const sender = m.pushName;
                 const id = m.chat;
+                // if(id.endsWith('@g.us')) return
                 const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
-
+                console.log()
                 const mediaType = {
                     image: {
-                        buffer: m.message?.imageMessage || m.quoted?.imageMessage,
-                        caption: m.message?.imageMessage?.caption || m.body,
-                        mime: m.message?.imageMessage?.mime || m.quoted?.imageMessage?.mimetype,
+                        buffer: m.message?.imageMessage || m.quoted?.message?.imageMessage,
+                        caption: m.message?.imageMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.imageMessage?.mimetype || m.quoted?.message.imageMessage?.mimetype,
                     },
                     video: {
                         buffer: m.message?.videoMessage || m.quoted?.videoMessage,
-                        caption: m.message?.videoMessage?.caption || m.body,
-                        mime: m.message?.videoMessage?.mime || m.quoted?.videoMessage?.mimetype,
+                        caption: m.message?.videoMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.videoMessage?.mimetype || m.quoted?.message?.videoMessage?.mimetype,
                     },
                     audio: {
-                        buffer: m.message?.audioMessage || m.quoted?.audioMessage,
-                        caption: m.message?.audioMessage?.caption || m.body,
-                        mime: m.message?.audioMessage?.mime || m.quoted?.audioMessage?.mimetype,
+                        buffer: m.message?.audioMessage || m.quoted?.message?.audioMessage,
+                        caption: m.message?.audioMessage?.caption || m.message?.extendedTextMessage?.text,
+                        mime: m.message?.audioMessage?.mimetype || m.quoted?.message?.audioMessage?.mimetype,
                     }
                 }
-                console.log(mediaType.image.mime)
+                // console.log(mediaType.image.buffer)
                 if (mediaType.image.buffer) {
                     const imageBuffer = await getMedia({ message: { imageMessage: mediaType.image.buffer } });
                     await prosesPerintah({ command: mediaType.image.caption, sock, m, id, sender, noTel, attf: imageBuffer, mime: mediaType.image.mime });

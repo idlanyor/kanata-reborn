@@ -1,286 +1,276 @@
-import pkg, { downloadContentFromMessage } from '@seaavey/baileys'
-import { getMedia } from './mediaMsg.js'
+import pkg from '@fizzxydev/baileys-pro'
+const { generateWAMessageFromContent, proto } = pkg
 
 export function addMessageHandler(m, sock) {
-    // Basic message info
     m.chat = m.key.remoteJid;
-    m.fromMe = m.key.fromMe;
-    m.id = m.key.id;
+    m.sender = m.key.fromMe ? sock.user.id : (m.key.participant || m.key.remoteJid);
+    m.senderNumber = m.sender.split('@')[0];
+    m.pushName = m.pushName || 'No Name';
     m.isGroup = m.chat.endsWith('@g.us');
-    m.sender = m.fromMe ? sock.user.id : m.isGroup ? m.key.participant : m.chat;
-    m.pushName = m.pushName || 'User';
+    m.type = getMessageType(m.message);
 
-    // Message type detection
-    m.type = getContentType(m.message);
-    m.body = m.message?.conversation || m.message?.[m.type]?.text || m.message?.[m.type]?.caption || '';
-    
-    // Enhanced mime type detection
-    m.getMimetype = () => {
-        // Direct message mime type
-        const mime = m.message?.[m.type]?.mimetype;
-        if (mime) return mime;
+    m.groupMetadata = m.isGroup ? sock.groupMetadata(m.chat) : null;
 
-        // View once message mime type
-        if (m.message?.viewOnceMessageV2?.message?.imageMessage?.mimetype) {
-            return m.message.viewOnceMessageV2.message.imageMessage.mimetype;
+    m.isOwner = () => {
+        const number = m.sender.split('@')[0]
+        return globalThis.ownerNumber.includes(number)
+    }
+    m.download = (m.type === 'image' || m.type === 'video' || m.type === 'audio' || m.type === 'document' || m.type === 'sticker')? async () => {
+        return await getMedia({
+            message: m.message,
+            key: m.key
+        });
+    } : null;
+
+    m.isBotAdmin = m.isGroup ? (
+        async () => {
+            const metadata = await m.groupMetadata;
+            return metadata?.participants?.find(p => p.id === sock.user.id)?.admin !== null;
         }
-        if (m.message?.viewOnceMessageV2?.message?.videoMessage?.mimetype) {
-            return m.message.viewOnceMessageV2.message.videoMessage.mimetype;
+    )() : false;
+
+    m.isAdmin = m.isGroup ? (
+        async () => {
+            const metadata = await m.groupMetadata;
+            return metadata?.participants?.find(p => p.id === m.sender)?.admin !== null;
         }
+    )() : false;
 
-        // Infer mime type from message type
-        switch (m.type) {
-            case 'imageMessage':
-                return 'image/jpeg';
-            case 'videoMessage':
-                return 'video/mp4';
-            case 'audioMessage':
-                return m.message?.audioMessage?.ptt ? 'audio/ogg' : 'audio/mp4';
-            case 'stickerMessage':
-                return 'image/webp';
-            case 'documentMessage':
-                return m.message?.documentMessage?.mimetype || 'application/octet-stream';
-            default:
-                return null;
-        }
-    };
+    m.quoted = null;
+    if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
+        const quotedMsg = m.message.extendedTextMessage.contextInfo.quotedMessage;
 
-    // Get file extension from mime
-    m.getExtension = () => {
-        const mime = m.getMimetype();
-        if (!mime) return null;
+        // Cek jika quoted message adalah view once
+        const viewOnceMsg = quotedMsg?.viewOnceMessageV2?.message;
+        const actualMsg = viewOnceMsg || quotedMsg;
 
-        const extensions = {
-            'image/jpeg': 'jpg',
-            'image/png': 'png',
-            'image/webp': 'webp',
-            'video/mp4': 'mp4',
-            'video/gif': 'gif',
-            'audio/mpeg': 'mp3',
-            'audio/mp4': 'm4a',
-            'audio/ogg': 'ogg',
-            'audio/wav': 'wav',
-            'application/pdf': 'pdf',
-            'application/msword': 'doc',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-            'application/vnd.ms-excel': 'xls',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-            'application/zip': 'zip',
-            'application/x-zip-compressed': 'zip',
-            'application/octet-stream': 'bin'
-        };
-
-        return extensions[mime] || mime.split('/')[1] || 'bin';
-    };
-
-    // Get media type category
-    m.getMediaType = () => {
-        const mime = m.getMimetype();
-        if (!mime) return null;
-
-        if (mime.startsWith('image/')) return 'image';
-        if (mime.startsWith('video/')) return 'video';
-        if (mime.startsWith('audio/')) return 'audio';
-        if (mime.startsWith('application/')) return 'document';
-        return 'file';
-    };
-    
-    // Quoted message
-    const quotedM = m.message?.[m.type]?.contextInfo?.quotedMessage;
-    m.quoted = quotedM;
-    
-    if (quotedM) {
-        const quotedType = getContentType(quotedM);
-        m.quotedMsg = {
-            type: quotedType,
-            body: quotedM?.conversation || 
-                  quotedM?.[quotedType]?.text || 
-                  quotedM?.[quotedType]?.caption || 
-                  quotedM?.viewOnceMessageV2?.message?.imageMessage?.caption ||
-                  quotedM?.viewOnceMessageV2?.message?.videoMessage?.caption || '',
-            sender: m.message?.[m.type]?.contextInfo?.participant,
-            id: m.message?.[m.type]?.contextInfo?.stanzaId,
+        m.quoted = {
+            message: actualMsg,
+            key: {
+                remoteJid: m.chat,
+                fromMe: m.message.extendedTextMessage.contextInfo.participant === sock.user.id,
+                id: m.message.extendedTextMessage.contextInfo.stanzaId,
+                participant: m.message.extendedTextMessage.contextInfo.participant
+            },
+            type: getMessageType(actualMsg),
+            sender: m.message.extendedTextMessage.contextInfo.participant,
+            senderNumber: m.message.extendedTextMessage.contextInfo.participant.split('@')[0],
+            text: getQuotedText(actualMsg),
             download: async () => {
-                // Handle view once message
-                if (quotedM?.viewOnceMessageV2?.message?.imageMessage) {
-                    return await getMedia({ message: { imageMessage: quotedM.viewOnceMessageV2.message.imageMessage } });
-                }
-                if (quotedM?.viewOnceMessageV2?.message?.videoMessage) {
-                    return await getMedia({ message: { videoMessage: quotedM.viewOnceMessageV2.message.videoMessage } });
-                }
-                // Handle normal message
-                return await getMedia({ message: { [quotedType]: quotedM[quotedType] } });
+                return await getMedia({
+                    message: quotedMsg,
+                    key: m.quoted.key
+                });
             }
         };
-    } else {
-        m.quotedMsg = null;
     }
 
-    // Permission checks
-    m.isOwner = globalThis.isOwner(m.sender.split('@')[0]);
-    m.isAdmin = async () => {
-        if (!m.isGroup) return false;
-        const groupMetadata = await sock.groupMetadata(m.chat);
-        const participant = groupMetadata.participants.find(p => p.id === m.sender);
-        return participant?.admin === 'admin' || participant?.admin === 'superadmin';
-    };
-    m.isBotAdmin = async () => {
-        if (!m.isGroup) return false;
-        const groupMetadata = await sock.groupMetadata(m.chat);
-        const botParticipant = groupMetadata.participants.find(p => p.id === sock.user.id);
-        return botParticipant?.admin === 'admin' || botParticipant?.admin === 'superadmin';
-    };
-
-    // Media download helpers
     m.download = async () => {
-        try {
-            // Handle view once message
-            if (m.message?.viewOnceMessageV2?.message?.imageMessage) {
-                return await getMedia({ message: { imageMessage: m.message.viewOnceMessageV2.message.imageMessage } });
-            }
-            if (m.message?.viewOnceMessageV2?.message?.videoMessage) {
-                return await getMedia({ message: { videoMessage: m.message.viewOnceMessageV2.message.videoMessage } });
-            }
-
-            // Handle direct media message
-            if (m.message?.imageMessage) {
-                return await getMedia({ message: { imageMessage: m.message.imageMessage } });
-            }
-            if (m.message?.videoMessage) {
-                return await getMedia({ message: { videoMessage: m.message.videoMessage } });
-            }
-            if (m.message?.audioMessage) {
-                return await getMedia({ message: { audioMessage: m.message.audioMessage } });
-            }
-
-            // Handle quoted media
-            if (m.quoted) {
-                if (m.quoted.viewOnceMessageV2?.message?.imageMessage) {
-                    return await getMedia({ message: { imageMessage: m.quoted.viewOnceMessageV2.message.imageMessage } });
-                }
-                if (m.quoted.viewOnceMessageV2?.message?.videoMessage) {
-                    return await getMedia({ message: { videoMessage: m.quoted.viewOnceMessageV2.message.videoMessage } });
-                }
-                if (m.quoted.imageMessage) {
-                    return await getMedia({ message: { imageMessage: m.quoted.imageMessage } });
-                }
-                if (m.quoted.videoMessage) {
-                    return await getMedia({ message: { videoMessage: m.quoted.videoMessage } });
-                }
-                if (m.quoted.audioMessage) {
-                    return await getMedia({ message: { audioMessage: m.quoted.audioMessage } });
-                }
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Error downloading media:', error);
-            return null;
-        }
+        return await getMedia({
+            message: m.message,
+            key: m.key
+        });
     };
 
-    // Reply helper with context
-    m.reply = async (text, quoted = true, useContext = true) => {
+    m.reply = async (text, quoted = true, useContext = true, newsletterName = `${globalThis.botName}`) => {
         const defaultContext = {
             isForwarded: true,
-            forwardingScore: 999,
+            forwardingScore: 9999999,
             forwardedNewsletterMessageInfo: {
-                newsletterJid: globalThis.newsLetterJid,
-                newsletterName: globalThis.botName,
+                newsletterJid: '120363305152329358@newsletter',
+                newsletterName: newsletterName,
                 serverMessageId: -1
             },
             externalAdReply: {
                 title: `乂 ${globalThis.botName} 乂`,
-                body: m.pushName,
-                thumbnailUrl: globalThis.kanataThumb,
-                sourceUrl: globalThis.newsLetterUrl,
+                body: globalThis.owner,
+                thumbnailUrl: `${globalThis.ppUrl}`,
+                sourceUrl: "https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m",
                 mediaType: 1,
                 renderLargerThumbnail: true
             }
-        };
+        }
 
         if (typeof text === 'string') {
             return await sock.sendMessage(m.chat, {
-                text,
+                text: text,
                 contextInfo: useContext ? defaultContext : undefined
             }, {
                 quoted: quoted ? m : null
-            });
+            })
         }
 
         if (typeof text === 'object') {
+            if (text.newsletterName) {
+                defaultContext.forwardedNewsletterMessageInfo.newsletterName = text.newsletterName
+                delete text.newsletterName
+            }
+
+            // Jika text.contextInfo ada dan useContext true, gabungkan dengan defaultContext
             const contextInfo = useContext ? {
                 ...defaultContext,
                 ...(text.contextInfo || {})
-            } : text.contextInfo;
+            } : text.contextInfo
 
             return await sock.sendMessage(m.chat, {
                 ...text,
-                contextInfo
+                contextInfo: contextInfo
             }, {
                 quoted: quoted ? m : null
-            });
+            })
         }
     };
 
-    // React to message
-    m.react = async (emoji) => {
-        if (!emoji) emoji = '❌';
-        
-        const reactions = {
-            success: '✅',
-            fail: '❌', 
-            wait: '⏳',
-            ping: '🏓',
-            done: '✔️',
-            error: '⚠️',
-            warning: '⚠️',
-            info: 'ℹ️',
-            loading: '🔄',
-            question: '❓'
-        };
 
-        const reactionEmoji = reactions[emoji.toLowerCase()] || emoji;
+    // Method untuk button biasa
+    m.sendButton = async (text, sections = [], opts = {}) => {
+        const defaultOpts = {
+            header: 'Kanata Bot',
+            footer: '© 2024 Kanata',
+            viewOnce: true,
+            quoted: true
+        }
 
-        await sock.sendMessage(m.chat, {
-            react: {
-                text: reactionEmoji,
-                key: m.key
+        opts = { ...defaultOpts, ...opts }
+
+        return await sock.sendMessage(m.chat, {
+            text: text,
+            footer: opts.footer,
+            buttons: [
+                {
+                    buttonId: 'action',
+                    buttonText: {
+                        displayText: 'List Menu'
+                    },
+                    type: 4,
+                    nativeFlowInfo: {
+                        name: 'single_select',
+                        paramsJson: JSON.stringify({
+                            title: opts.header,
+                            sections: sections
+                        })
+                    }
+                }
+            ],
+            headerType: 1,
+            viewOnce: true
+        }, {
+            quoted: opts.quoted ? m : null
+        })
+    }
+
+    // Method buat interactive button
+    m.sendInteractiveButton = async (text, buttons = [], opts = {}) => {
+        const defaultOpts = {
+            header: 'Kanata Bot',
+            footer: '© 2024 Kanata',
+            media: null,
+            mediaType: 'image',
+            newsletterName: 'Kanata Bot',
+            sections: [], // Buat list sections
+            buttonText: 'Pilih Menu', // Text buat list button
+            externalAdReply: {
+                showAdAttribution: true,
+                title: `乂 ${globalThis.botName} 乂`,
+                body: `${globalThis.owner}`,
+                previewType: 0,
+                renderLargerThumbnail: true,
+                thumbnailUrl: globalThis.ppUrl,
+                sourceUrl: `${globalThis.ppUrl}`,
+                mediaType: 1
             }
-        });
-    };
+        }
 
-    // Group helpers
-    m.groupMetadata = async () => {
-        if (!m.isGroup) return null;
-        return await sock.groupMetadata(m.chat);
-    };
+        opts = { ...defaultOpts, ...opts }
 
-    m.participants = async () => {
-        const metadata = await m.groupMetadata();
-        return metadata?.participants || [];
-    };
+        let messageContent = {
+            viewOnceMessage: {
+                message: {
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        body: proto.Message.InteractiveMessage.Body.create({
+                            text: text
+                        }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({
+                            text: opts.footer
+                        }),
+                        header: proto.Message.InteractiveMessage.Header.create({
+                            title: opts.header,
+                            subtitle: 'Created by Roynaldi',
+                            hasMediaAttachment: !!opts.media
+                        }),
+                        contextInfo: {
+                            isForwarded: true,
+                            forwardingScore: 9999999
+                        },
+                        externalAdReply: opts.externalAdReply,
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                            buttons: opts.sections.length > 0 ? [{
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: opts.header,
+                                    buttonText: opts.buttonText,
+                                    sections: opts.sections
+                                })
+                            }] : buttons
+                        })
+                    })
+                }
+            }
+        }
 
-    m.admins = async () => {
-        const participants = await m.participants();
-        return participants.filter(p => p.admin);
-    };
+        let msg = await generateWAMessageFromContent(m.chat, messageContent, {
+            quoted: m
+        })
+
+        return await sock.relayMessage(msg.key.remoteJid, msg.message, {
+            messageId: msg.key.id
+        })
+    }
+
+    m.sendListMessage = async (text, sections = [], opts = {}) => {
+        const defaultOpts = {
+            header: 'Kanata Bot',
+            footer: '© 2024 Kanata',
+            buttonText: 'Pilih Menu',
+            quoted: true,
+            newsletterName: 'Kanata Bot',
+            externalAdReply: {
+                title: "Kanata Bot",
+                body: "Simple WhatsApp Bot",
+                thumbnailUrl: globalThis.ppUrl,
+                sourceUrl: "https://github.com/base-kanata",
+                mediaType: 1,
+                renderLargerThumbnail: true
+            }
+        }
+
+        opts = { ...defaultOpts, ...opts }
+
+        const listMessage = {
+            text: text,
+            footer: opts.footer,
+            title: opts.header,
+            buttonText: opts.buttonText,
+            sections: sections,
+            viewOnce: true,
+            contextInfo: {
+                isForwarded: true,
+                forwardingScore: 9999999,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: '120363305152329358@newsletter',
+                    newsletterName: opts.newsletterName,
+                    serverMessageId: -1
+                },
+                externalAdReply: opts.externalAdReply
+            }
+        }
+
+        return await sock.sendMessage(m.chat, listMessage, {
+            quoted: opts.quoted ? m : null
+        })
+    }
 
     return m;
-}
-
-// Helper function untuk mendapatkan tipe konten pesan
-function getContentType(message) {
-    if (!message) return null;
-    const types = [
-        'conversation', 'imageMessage', 'videoMessage', 
-        'extendedTextMessage', 'audioMessage', 'stickerMessage',
-        'documentMessage', 'contactMessage', 'locationMessage'
-    ];
-    if (message.extendedTextMessage?.contextInfo?.quotedMessage) {
-        return getContentType(message.extendedTextMessage.contextInfo.quotedMessage);
-    }
-    return types.find(type => message[type]) || null;
 }
 
 function getMessageType(message) {
@@ -332,3 +322,5 @@ function getQuotedText(message) {
 
     return null;
 }
+
+import { getMedia } from './mediaMsg.js';   

@@ -8,7 +8,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '乂 Group Manager 乂',
                     body: 'Promote member to admin',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -26,7 +26,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '✅ Member Promoted',
                     body: 'Successfully promoted to admin',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }
@@ -47,7 +47,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '❌ Failed to Promote',
                     body: 'An error occurred',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

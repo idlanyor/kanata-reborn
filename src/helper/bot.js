@@ -6,7 +6,7 @@ import {
     useMultiFileAuthState,
     DisconnectReason,
     Browsers
-} from '@seaavey/baileys';
+} from '@fizzxydev/baileys-pro';
 import pino from "pino";
 import NodeCache from "node-cache";
 import fs from 'fs-extra';

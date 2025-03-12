@@ -1,5 +1,5 @@
 import Bot from '../../database/models/Bot.js';
-import { Browsers, makeWASocket, useMultiFileAuthState } from '@seaavey/baileys';
+import { Browsers, makeWASocket, useMultiFileAuthState } from '@fizzxydev/baileys-pro';
 import { checkOwner } from '../../helper/permission.js';
 import path from 'path';
 import fs from 'fs';

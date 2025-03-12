@@ -1,4 +1,4 @@
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 import { tiktokDl } from "../../lib/scraper/tiktok.js";
 const { proto, generateWAMessageFromContent } = pkg;
 
@@ -19,7 +19,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 externalAdReply: {
                     title: '乂 TikTok Downloader 乂',
                     body: 'Download TikTok Videos',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -88,7 +88,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 externalAdReply: {
                     title: '❌ Download Error',
                     body: 'An error occurred',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1
                 }

@@ -1,4 +1,4 @@
- import pkg from '@seaavey/baileys';
+ import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ['groupinfo', 'gcinfo'];
@@ -7,7 +7,7 @@ export const description = 'Menampilkan informasi grup';
 export default async ({ sock, m, id }) => {
     try {
         const groupMetadata = await sock.groupMetadata(id);
-        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://s6.imgcdn.dev/YYoFZh.jpg');
+        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg');
         
         // Hitung jumlah admin
         const adminCount = groupMetadata.participants.filter(p => p.admin).length;
@@ -69,7 +69,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ Group Info Error',
                     body: 'An error occurred while fetching group info',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

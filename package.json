@@ -16,10 +16,11 @@
   "author": "Roynaldi",
   "license": "MIT",
   "dependencies": {
+    "@fizzxydev/baileys-pro": "latest",
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
-    "@seaavey/baileys": "latest",
+    "@fizzxydev/baileys-pro": "latest",
     "@vreden/youtube_scraper": "latest",
     "axios": "latest",
     "chalk": "latest",

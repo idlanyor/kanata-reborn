@@ -1,4 +1,4 @@
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ['listadmin', 'adminlist'];
@@ -8,7 +8,7 @@ export default async ({ sock, m, id }) => {
     try {
         const groupMetadata = await sock.groupMetadata(id);
         const admins = groupMetadata.participants.filter(p => p.admin);
-        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://s6.imgcdn.dev/YYoFZh.jpg');
+        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg');
         
         let adminList = admins.map((admin, i) => {
             const adminName = admin.admin === 'superadmin' ? '👑' : '👮‍♂️';
@@ -59,7 +59,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ Admin List Error',
                     body: 'An error occurred while fetching admin list',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

@@ -1,5 +1,5 @@
 import Group from '../../database/models/Group.js';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = 'settings';
@@ -42,7 +42,7 @@ _Powered by Kanata-V2_`,
                             mediaType: 1,
                             previewType: 0,
                             renderLargerThumbnail: true,
-                            thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                            thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                             sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
                         }
                     }
@@ -61,7 +61,7 @@ _Powered by Kanata-V2_`,
                     externalAdReply: {
                         title: '❌ Invalid Feature',
                         body: 'Feature not found',
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
@@ -78,7 +78,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '✅ Settings Updated',
                     body: 'Successfully updated group settings',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }
@@ -99,7 +99,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ Settings Error',
                     body: 'An error occurred',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

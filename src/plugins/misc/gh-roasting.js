@@ -1,6 +1,6 @@
 import { hikaru } from "../../helper/hikaru.js";
 import loadAssets from "../../helper/loadAssets.js";
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = "roast";
@@ -14,7 +14,7 @@ export default async ({ sock, m, id, psn }) => {
                 externalAdReply: {
                     title: '乂 GitHub Roast 乂',
                     body: 'Please provide a GitHub username',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -57,7 +57,7 @@ _Powered by Kanata-V2_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: profile.avatar_url || 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: profile.avatar_url || 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: `https://github.com/${psn}`
                     }
                 }
@@ -81,7 +81,7 @@ _Powered by Kanata-V2_`,
                 externalAdReply: {
                     title: '❌ GitHub Error',
                     body: 'Username not found',
-                    thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

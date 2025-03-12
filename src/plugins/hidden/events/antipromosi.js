@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const PROMO_PATTERNS = [
@@ -86,7 +86,7 @@ export default async ({ sock, m, id, psn, sender }) => {
                     externalAdReply: {
                         title: '⚠️ Anti-Promosi Warning',
                         body: 'No promotion allowed!',
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                         renderLargerThumbnail: true

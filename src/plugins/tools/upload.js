@@ -8,19 +8,19 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (Buffer.isBuffer(attf)) {
         try {
             const linkGambar = await uploadGambar2(attf);
-            
+
             const btns = [
                 {
                     name: 'cta_copy',
                     buttonParamsJson: JSON.stringify({
-                        display_text: '📋 Copy Link',
+                        display_text: 'Copy Link',
                         copy_code: linkGambar,
                     }),
                 },
                 {
-                    name: 'cta_url', 
+                    name: 'cta_url',
                     buttonParamsJson: JSON.stringify({
-                        display_text: '🌐 Visit Link',
+                        display_text: 'Visit Link',
                         url: linkGambar,
                     }),
                 }
@@ -32,11 +32,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                         imageMessage: {
                             url: linkGambar,
                             caption: `*📤 UPLOAD BERHASIL!*\n\n` +
-                                   `🖼️ *Preview Gambar Berhasil Diupload*\n` +
-                                   `🔗 *Link:* ${linkGambar}\n\n` +
-                                   `📝 *Note:* Klik tombol Copy Link untuk menyalin URL\n` +
-                                   `atau gunakan tombol Visit Link untuk membuka gambar.\n\n` +
-                                   `_Powered by Kanata Bot_`,
+                                `🖼️ *Preview Gambar Berhasil Diupload*\n` +
+                                `🔗 *Link:* ${linkGambar}\n\n` +
+                                `📝 *Note:* Klik tombol Copy Link untuk menyalin URL\n` +
+                                `atau gunakan tombol Visit Link untuk membuka gambar.\n\n` +
+                                `_Powered by Kanata Bot_`,
                             mimetype: "image/jpeg",
                             jpegThumbnail: attf,
                         }
@@ -53,56 +53,56 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             }, sock);
 
             // Kirim reaksi sukses
-            await sock.sendMessage(id, { 
-                react: { 
-                    text: '✅', 
-                    key: m.key 
-                } 
+            await sock.sendMessage(id, {
+                react: {
+                    text: '✅',
+                    key: m.key
+                }
             });
 
         } catch (error) {
             console.log('❌ Error creating gambar:', error);
             await sock.sendMessage(id, {
                 text: `⚠️ *Terjadi Kesalahan!*\n\n` +
-                      `🚨 *Error:* ${error.message}\n\n` +
-                      `Silakan coba lagi nanti.`,
+                    `🚨 *Error:* ${error.message}\n\n` +
+                    `Silakan coba lagi nanti.`,
                 contextInfo: {
                     externalAdReply: {
                         title: '❌ Upload Failed',
                         body: 'An error occurred while uploading',
-                        thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
+                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
                 }
             });
-            
+
             // Kirim reaksi error
-            await sock.sendMessage(id, { 
-                react: { 
-                    text: '❌', 
-                    key: m.key 
-                } 
+            await sock.sendMessage(id, {
+                react: {
+                    text: '❌',
+                    key: m.key
+                }
             });
         }
         return;
     }
 
     // Pesan jika tidak ada gambar
-    // await sock.sendMessage(id, {
-    //     text: `⚠️ *Tidak ada gambar yang ditemukan!*\n\n` +
-    //           `📝 *Cara penggunaan:*\n` +
-    //           `• Kirim gambar dengan caption *!upload*\n` +
-    //           `• Reply gambar dengan *!upload*\n\n` +
-    //           `_Powered by Kanata Bot_`,
-    //     contextInfo: {
-    //         externalAdReply: {
-    //             title: 'Image Uploader',
-    //             body: 'Upload your images easily',
-    //             thumbnailUrl: 'https://s6.imgcdn.dev/YYoFZh.jpg',
-    //             sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-    //             mediaType: 1,
-    //         }
-    //     }
-    // });
+    await sock.sendMessage(id, {
+        text: `⚠️ *Tidak ada gambar yang ditemukan!*\n\n` +
+            `📝 *Cara penggunaan:*\n` +
+            `• Kirim gambar dengan caption *!upload*\n` +
+            `• Reply gambar dengan *!upload*\n\n` +
+            `_Powered by Kanata Bot_`,
+        contextInfo: {
+            externalAdReply: {
+                title: 'Image Uploader',
+                body: 'Upload your images easily',
+                thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                mediaType: 1,
+            }
+        }
+    });
 };
