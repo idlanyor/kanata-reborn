@@ -3,6 +3,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
+import ytdl from '@distube/ytdl-core';
+import ffmpeg from 'fluent-ffmpeg';
 import { capcutDl, fbdl, igDl, mediafire, rednote, threads, tiktokDl } from './scraper/index.js'
 
 const execAsync = promisify(exec);
@@ -225,29 +227,33 @@ export async function yutubVideo(query) {
         }
 
         // Dapatkan info video
-        const info = await runYtDlp(videoUrl, '--dump-json');
-        const videoInfo = JSON.parse(info);
-
+        const info = await ytdl.getInfo(videoUrl);
         const tempDir = path.join(process.cwd(), 'temp');
         await fs.mkdir(tempDir, { recursive: true });
 
-        const rawOutputPath = path.join(tempDir, `${videoInfo.id}.webm`);
-        const finalOutputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
+        const rawOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.webm`);
+        const finalOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.mp4`);
 
         // Download Video dalam format WebM
-        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" -o "${rawOutputPath}"`);
+        const videoStream = ytdl(videoUrl, { quality: 'highestvideo' });
+        const audioStream = ytdl(videoUrl, { quality: 'highestaudio' });
 
-        // Konversi WebM ke MP4 pakai FFmpeg
-        await execAsync(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -c:a aac -b:a 128k "${finalOutputPath}"`);
-
-        // Hapus file WebM setelah dikonversi
-        await fs.unlink(rawOutputPath);
+        await new Promise((resolve, reject) => {
+            ffmpeg()
+                .input(videoStream)
+                .videoCodec('libx264')
+                .input(audioStream)
+                .audioCodec('aac')
+                .save(finalOutputPath)
+                .on('end', resolve)
+                .on('error', reject);
+        });
 
         return {
-            thumbnail: videoInfo.thumbnail,
-            title: videoInfo.title,
-            channel: videoInfo.channel,
-            duration: videoInfo.duration,
+            thumbnail: info.videoDetails.thumbnails.pop().url,
+            title: info.videoDetails.title,
+            channel: info.videoDetails.author.name,
+            duration: info.videoDetails.lengthSeconds,
             video: finalOutputPath
         };
     } catch (error) {
