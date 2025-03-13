@@ -7,6 +7,7 @@ import { capcutDl, fbdl, igDl, mediafire, rednote, threads, tiktokDl } from './s
 
 const execAsync = promisify(exec);
 
+
 // export async function tiktok(url) {
 //     try {
 //         let { data } = await tiktokDl(url)
@@ -237,7 +238,7 @@ export async function yutubVideo(query) {
         await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" -o "${rawOutputPath}"`);
 
         // Konversi WebM ke MP4 pakai FFmpeg
-        await execPromise(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -c:a aac -b:a 128k "${finalOutputPath}"`);
+        await execAsync(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -c:a aac -b:a 128k "${finalOutputPath}"`);
 
         // Hapus file WebM setelah dikonversi
         await fs.unlink(rawOutputPath);
