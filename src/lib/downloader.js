@@ -233,7 +233,7 @@ export async function yutubVideo(query) {
         const outputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
 
         // Download video dengan resolusi 480p
-        await runYtDlp(videoUrl, `-f "bestvideo[height<=480]+bestaudio/best[height<=480]" -o "${outputPath}"`);
+        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" --merge-output-format mp4 -o "${outputPath}"`);
 
         return {
             thumbnail: videoInfo.thumbnail,
