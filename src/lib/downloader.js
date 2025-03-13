@@ -2,74 +2,10 @@ import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import path from 'path';
-import ytdl from '@distube/ytdl-core';
-import ffmpeg from 'fluent-ffmpeg';
 import { capcutDl, fbdl, igDl, mediafire, rednote, threads, tiktokDl } from './scraper/index.js'
 
 const execAsync = promisify(exec);
-
-export async function yutubVideo(query) {
-    try {
-        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
-        let videoUrl = query;
-
-        if (!isUrl) {
-            const searchResult = await ytsearch(query);
-            videoUrl = searchResult.url;
-        }
-
-        const info = await ytdl.getInfo(videoUrl);
-        const tempDir = path.join(process.cwd(), 'temp');
-        await fs.mkdir(tempDir, { recursive: true });
-
-        const videoPath = path.join(tempDir, `${info.videoDetails.videoId}_video.mp4`);
-        const audioPath = path.join(tempDir, `${info.videoDetails.videoId}_audio.mp4`);
-        const finalOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.mp4`);
-
-        // **Download Video**
-        await new Promise((resolve, reject) => {
-            ytdl(videoUrl, { quality: 'highestvideo' })
-                .pipe(fsSync.createWriteStream(videoPath))
-                .on('finish', resolve)
-                .on('error', reject);
-        });
-
-        // **Download Audio**
-        await new Promise((resolve, reject) => {
-            ytdl(videoUrl, { quality: 'highestaudio' })
-                .pipe(fsSync.createWriteStream(audioPath))
-                .on('finish', resolve)
-                .on('error', reject);
-        });
-
-        // **Gabungkan Video & Audio**
-        await new Promise((resolve, reject) => {
-            ffmpeg()
-                .input(videoPath)
-                .input(audioPath)
-                .outputOptions('-c:v copy -c:a aac')
-                .save(finalOutputPath)
-                .on('end', resolve)
-                .on('error', reject);
-        });
-
-        // **Hapus file sementara**
-        await fs.unlink(videoPath);
-        await fs.unlink(audioPath);
-
-        return {
-            thumbnail: info.videoDetails.thumbnails.pop().url,
-            title: info.videoDetails.title,
-            channel: info.videoDetails.author.name,
-            duration: info.videoDetails.lengthSeconds,
-            video: finalOutputPath
-        };
-    } catch (error) {
-        return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
-    }
-}
 
 // export async function tiktok(url) {
 //     try {
@@ -275,7 +211,7 @@ export async function yutubAudio(query) {
     }
 }
 
-export async function yutubVideoDoc(query) {
+export async function yutubVideo(query) {
     try {
         // Cek apakah input adalah URL atau query pencarian
         const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
@@ -294,24 +230,17 @@ export async function yutubVideoDoc(query) {
         const tempDir = path.join(process.cwd(), 'temp');
         await fs.mkdir(tempDir, { recursive: true });
 
-        const rawOutputPath = path.join(tempDir, `${videoInfo.id}.webm`);
-        const finalOutputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
+        const outputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
 
-        // Download Video dalam format WebM
-        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" -o "${rawOutputPath}"`);
-
-        // Konversi WebM ke MP4 pakai FFmpeg
-        await execAsync(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -preset ultrafast -c:a aac -b:a 128k "${finalOutputPath}"`);
-
-        // Hapus file WebM setelah dikonversi
-        await fs.unlink(rawOutputPath);
+        // Download video dengan resolusi 480p
+        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" --merge-output-format mp4 -o "${outputPath}"`);
 
         return {
             thumbnail: videoInfo.thumbnail,
             title: videoInfo.title,
             channel: videoInfo.channel,
             duration: videoInfo.duration,
-            video: finalOutputPath
+            video: outputPath
         };
     } catch (error) {
         return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };

@@ -1,4 +1,4 @@
-import { yutubVideoDoc } from "../../lib/downloader.js";
+import { ytVideo } from "../../lib/scraper/ytmp4.js";
 export const description = "YouTube Video Downloader provided by *Roy*";
 export const handler = "yd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -10,18 +10,20 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
     try {
         await m.react('wait')
-        const result = await yutubVideoDoc(psn);
-
-        if (result.error) {
-            throw new Error(result.error);
-        }
-
+        let { data } = await ytVideo(psn)
+        // console.log(data)
+        // caption = '*🎬 Hasil Video YouTube:*'
+        // caption += '\n📛 *Title:* ' + `*${result.title}*`;
+        // caption += '\n📺 *Channel:* ' + `*${result.channel}*`;
+        // console.log(data)
+        // return
         await sock.sendMessage(id, {
-            document: { url: result.video },
+            document: { url: data.videoUrl },
             mimetype: 'video/mp4',
-            fileName: `${result.title}.mp4`
+            fileName: `${data.title}-${Math.floor(Math.random(2 * 5))}.mp4`
         }, { quoted: m });
         await m.react('success')
+        // await sock.sendMessage(id, { video: { url: video } });
     } catch (error) {
         await m.react('error')
         await sock.sendMessage(id, { text: '❌ *Terjadi kesalahan:* \n' + error.message });
