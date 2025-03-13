@@ -230,17 +230,24 @@ export async function yutubVideo(query) {
         const tempDir = path.join(process.cwd(), 'temp');
         await fs.mkdir(tempDir, { recursive: true });
 
-        const outputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
+        const rawOutputPath = path.join(tempDir, `${videoInfo.id}.webm`);
+        const finalOutputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
 
-        // Download video dengan resolusi 480p
-        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" --merge-output-format mp4 -o "${outputPath}"`);
+        // Download Video dalam format WebM
+        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" -o "${rawOutputPath}"`);
+
+        // Konversi WebM ke MP4 pakai FFmpeg
+        await execPromise(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -c:a aac -b:a 128k "${finalOutputPath}"`);
+
+        // Hapus file WebM setelah dikonversi
+        await fs.unlink(rawOutputPath);
 
         return {
             thumbnail: videoInfo.thumbnail,
             title: videoInfo.title,
             channel: videoInfo.channel,
             duration: videoInfo.duration,
-            video: outputPath
+            video: finalOutputPath
         };
     } catch (error) {
         return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
