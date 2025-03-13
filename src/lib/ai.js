@@ -141,8 +141,7 @@ export async function copilotHika({ prompt, id }) {
         params: {
             ask: prompt,
             style,
-            sessionId: id,
-            accessToken: globalThis.accessToken
+            sessionId: id
         }
     })
     return data.result
