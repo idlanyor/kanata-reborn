@@ -175,56 +175,6 @@ async function ytsearch(query) {
     }
 }
 
-export async function yutubVideo(query) {
-    try {
-        // Cek apakah input adalah URL atau query pencarian
-        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
-        let videoUrl = query;
-
-        if (!isUrl) {
-            // Jika bukan URL, lakukan pencarian terlebih dahulu
-            const searchResult = await ytsearch(query);
-            videoUrl = searchResult.url;
-        }
-
-        // Dapatkan info video
-        const info = await runYtDlp(videoUrl, '--dump-json');
-        const videoInfo = JSON.parse(info);
-
-        // Buat direktori temp jika belum ada
-        const tempDir = path.join(process.cwd(), 'temp');
-        await fs.mkdir(tempDir, { recursive: true });
-
-        const outputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
-
-        // Download video dengan kualitas terbaik (max 720p)
-        await runYtDlp(videoUrl, `-f "bv*[height<=720]+ba/b[height<=720]/best" -o "${outputPath}"`);
-
-        // Verifikasi file telah terdownload
-        try {
-            await fs.access(outputPath);
-        } catch (error) {
-            throw new Error('Gagal mengunduh video. File tidak ditemukan.');
-        }
-
-        return {
-            thumbnail: videoInfo.thumbnail,
-            title: videoInfo.title,
-            channel: videoInfo.channel,
-            duration: videoInfo.duration,
-            filesize: (await fs.stat(outputPath)).size,
-            video: outputPath
-        };
-    } catch (error) {
-        // Tambahkan logging untuk debugging
-        console.error('Error in yutubVideo:', error);
-        return {
-            error: error.message || "Terjadi kesalahan saat memproses permintaan.",
-            details: error.stack
-        };
-    }
-}
-
 export async function yutubAudio(query) {
     try {
         // Cek apakah input adalah URL atau query pencarian
