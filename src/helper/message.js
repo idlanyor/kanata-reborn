@@ -8,14 +8,38 @@ export function addMessageHandler(m, sock) {
     m.pushName = m.pushName || 'No Name';
     m.isGroup = m.chat.endsWith('@g.us');
     m.type = getMessageType(m.message);
+    m.react = async (emoji) => {
+        if (!emoji) emoji = '❌';
 
+        const reactions = {
+            success: '✅',
+            fail: '❌',
+            wait: '⏳',
+            ping: '🏓',
+            done: '✔️',
+            error: '⚠️',
+            warning: '⚠️',
+            info: 'ℹ️',
+            loading: '🔄',
+            question: '❓'
+        };
+
+        const reactionEmoji = reactions[emoji.toLowerCase()] || emoji;
+
+        await sock.sendMessage(m.chat, {
+            react: {
+                text: reactionEmoji,
+                key: m.key
+            }
+        });
+    };
     m.groupMetadata = m.isGroup ? sock.groupMetadata(m.chat) : null;
 
     m.isOwner = () => {
         const number = m.sender.split('@')[0]
         return globalThis.ownerNumber.includes(number)
     }
-    m.download = (m.type === 'image' || m.type === 'video' || m.type === 'audio' || m.type === 'document' || m.type === 'sticker')? async () => {
+    m.download = (m.type === 'image' || m.type === 'video' || m.type === 'audio' || m.type === 'document' || m.type === 'sticker') ? async () => {
         return await getMedia({
             message: m.message,
             key: m.key
