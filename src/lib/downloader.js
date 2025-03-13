@@ -260,9 +260,6 @@ export async function yutubAudio(query) {
         return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
     }
 }
-import path from 'path';
-import fs from 'fs/promises';
-import { ytsearch, runYtDlp } from './utils.js';
 
 export async function yutubVideo(query) {
     try {
