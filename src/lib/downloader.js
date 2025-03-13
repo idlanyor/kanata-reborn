@@ -254,6 +254,48 @@ export async function yutubVideo(query) {
         return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
     }
 }
+export async function yutubVideoDoc(query) {
+    try {
+        // Cek apakah input adalah URL atau query pencarian
+        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
+        let videoUrl = query;
+
+        if (!isUrl) {
+            // Jika bukan URL, lakukan pencarian terlebih dahulu
+            const searchResult = await ytsearch(query);
+            videoUrl = searchResult.url;
+        }
+
+        // Dapatkan info video
+        const info = await runYtDlp(videoUrl, '--dump-json');
+        const videoInfo = JSON.parse(info);
+
+        const tempDir = path.join(process.cwd(), 'temp');
+        await fs.mkdir(tempDir, { recursive: true });
+
+        const rawOutputPath = path.join(tempDir, `${videoInfo.id}.webm`);
+        const finalOutputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
+
+        // Download Video dalam format WebM
+        await runYtDlp(videoUrl, `-f "bv*[height<=480]+ba/b[height<=480]" -o "${rawOutputPath}"`);
+
+        // Konversi WebM ke MP4 pakai FFmpeg
+        await execAsync(`ffmpeg -i "${rawOutputPath}" -c:v libx264 -preset ultrafast -c:a aac -b:a 128k "${finalOutputPath}"`);
+
+        // Hapus file WebM setelah dikonversi
+        await fs.unlink(rawOutputPath);
+
+        return {
+            thumbnail: videoInfo.thumbnail,
+            title: videoInfo.title,
+            channel: videoInfo.channel,
+            duration: videoInfo.duration,
+            video: finalOutputPath
+        };
+    } catch (error) {
+        return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
+    }
+}
 
 
 export async function spotify(url) {
