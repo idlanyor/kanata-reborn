@@ -20,7 +20,6 @@
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
-    "@fizzxydev/baileys-pro": "latest",
     "@vreden/youtube_scraper": "latest",
     "axios": "latest",
     "chalk": "latest",

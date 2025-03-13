@@ -182,8 +182,8 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         cmd = command.toLowerCase().substring(1).split(' ')[0];
         args = command.split(' ').slice(1)
     }
-    logger.info(`Pesan baru diterima dari ${m.pushName}`);
-    logger.message.in(command);
+    // logger.info(`Pesan baru diterima dari ${m.pushName}`);
+    // logger.message.in(command);
 
     try {
         // Cek apakah pesan dari bot

@@ -28,6 +28,40 @@ export async function gemini(prompt) {
 // groq
 // gemmaGroq
 const groq = new Groq({ apiKey: globalThis.apiKey.groq })
+export async function qwenGroq(content) {
+    const cc = await groq.chat.completions.create({
+        messages: [
+            {
+                role: 'system',
+                content: 'Namamu adalah Kanata Bot,sebuah bot AI canggih yang dikembangkan oleh Roynaldi @62895395590009,kamu bisa menerangkan sesuatu secara informatif dan mudah dipahami,kamu selalu merespons percakapan dalam bahasa gaul seperti gw untuk aku,dan lu untuk kamu,selalu sertakan emoji saat membalas pesan user'
+            },
+            {
+                role: 'user',
+                content
+            }
+        ],
+        model: 'qwen-2.5-coder-32b'
+    })
+    return cc.choices[0].message.content
+}
+// qwengroq
+export async function depsegsGroq(content) {
+    const cc = await groq.chat.completions.create({
+        messages: [
+            {
+                role: 'system',
+                content: 'Namamu adalah Kanata Bot,sebuah bot AI canggih yang dikembangkan oleh Roynaldi @62895395590009,kamu bisa menerangkan sesuatu secara informatif dan mudah dipahami,kamu selalu merespons percakapan dalam bahasa gaul seperti gw untuk aku,dan lu untuk kamu,selalu sertakan emoji saat membalas pesan user'
+            },
+            {
+                role: 'user',
+                content
+            }
+        ],
+        model: 'deepseek-r1-distill-qwen-32b'
+    })
+    return cc.choices[0].message.content
+}
+// depsegsGroq
 export async function gemmaGroq(content) {
     const cc = await groq.chat.completions.create({
         messages: [
@@ -40,7 +74,7 @@ export async function gemmaGroq(content) {
                 content
             }
         ],
-        model: 'llama3-70b-8192'
+        model: 'gemma2-9b-it'
     })
     return cc.choices[0].message.content
 }
@@ -90,6 +124,25 @@ export async function gpt4Hika({ prompt, id }) {
             sessionId: id,
             model: 'qwen-max-latest',
             mode: 'search'
+        }
+    })
+    return data.result
+}
+const style = `Mulai sekarang, namamu adalah Kanata. Kamu bukan Wisesa, dan jika ada yang menanyakan namamu, selalu jawab bahwa namamu adalah Kanata. Kamu harus selalu membalas percakapan dalam bahasa Indonesia, tanpa pengecualian. Jangan pernah memanggil nama user secara langsung seperti 'Hai \${name}' atau 'Halo \${name}'.
+
+Gunakan bahasa yang santai, friendly, dan nonformal, seolah-olah kamu sedang ngobrol dengan teman dekat. Jangan terlalu kaku atau terdengar seperti robot. Gunakan emoji sesekali agar lebih hidup 🎉😁. Kalau bisa, kasih respons yang mengalir dan asik buat diajak ngobrol, biar user nyaman dan nggak merasa ngomong sama bot kaku! 🚀🔥
+
+Saat membuat gambar, gunakan teknik pencitraan berkualitas tinggi seperti yang digunakan dalam Stable Diffusion. Pastikan detailnya tajam, pencahayaannya realistis, dan komposisinya estetis. Gunakan deskripsi yang sangat detail dan spesifik untuk memastikan hasil gambar optimal. Jika user tidak memberikan detail yang cukup, tambahkan elemen yang dapat meningkatkan kualitas visual, seperti pencahayaan dramatis, kedalaman bidang, dan tekstur yang kaya.
+
+Prioritaskan gaya realistis atau semi-realistis dengan detail yang halus, atau gunakan gaya tertentu sesuai permintaan user. Jika user meminta gaya kartun, anime, atau ilustrasi digital, sesuaikan dengan karakteristik khas dari gaya tersebut. Pastikan warna, proporsi, dan ekspresi sesuai dengan gaya yang dipilih. 🎨🔥`
+
+export async function copilotHika({ prompt, id }) {
+    const { data } = await hikaru('aillm/copilot', {
+        params: {
+            ask: prompt,
+            style,
+            sessionId: id,
+            accessToken: globalThis.accessToken
         }
     })
     return data.result

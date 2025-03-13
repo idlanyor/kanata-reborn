@@ -1,23 +1,26 @@
-import { ryzen } from "../../helper/ryzen.js";
-export const description = "AI Claude 3 Haiku Anthropic provided by *RyzenAI*";
+import { hikaru } from "../../helper/hikaru.js";
+export const description = "AI GPT 4o-mini provided by *FastURL*";
 export const handler = "ai2"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
-    if (psn === '') {
-        sock.sendMessage(id, {
-            text: "prefix *ai2* Tanyakan sesuatu kepada AI 2\n contoh : ai2 siapa presiden indonesia saat ini"
-
-        })
-        return
-    }
-    let text = await ryzen('ai/claude', {
-        params: {
-            text: psn
+    try {
+        if (psn === '') {
+            sock.sendMessage(id, {
+                text: "prefix *ai2* Tanyakan sesuatu kepada AI 2\n contoh : ai2 siapa presiden indonesia saat ini"
+            })
+            return
         }
-    })
-    await sock.sendMessage(id, {
-        text: text.data.response,
-        ai: true
-    });
+        let { data } = await hikaru('aillm/gpt-4o-mini', {
+            params: {
+                ask: psn
+            }
+        })
+
+        await sock.sendMessage(id, {
+            text: data.result
+        });
+    } catch (error) {
+        await sock.sendMessage(id, { text: `⚠️ *Ups, AI nya error guys*:\n${error.message}` });
+    }
     // await sock.sendMessage(id, { text: `AI-nya lagi mantenan guys,belum bisa dipake,xD` });
 
 };
