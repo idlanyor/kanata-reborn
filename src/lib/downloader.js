@@ -9,6 +9,66 @@ import { capcutDl, fbdl, igDl, mediafire, rednote, threads, tiktokDl } from './s
 
 const execAsync = promisify(exec);
 
+export async function yutubVideo(query) {
+    try {
+        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
+        let videoUrl = query;
+
+        if (!isUrl) {
+            const searchResult = await ytsearch(query);
+            videoUrl = searchResult.url;
+        }
+
+        const info = await ytdl.getInfo(videoUrl);
+        const tempDir = path.join(process.cwd(), 'temp');
+        await fs.mkdir(tempDir, { recursive: true });
+
+        const videoPath = path.join(tempDir, `${info.videoDetails.videoId}_video.mp4`);
+        const audioPath = path.join(tempDir, `${info.videoDetails.videoId}_audio.mp4`);
+        const finalOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.mp4`);
+
+        // **Download Video**
+        await new Promise((resolve, reject) => {
+            ytdl(videoUrl, { quality: 'highestvideo' })
+                .pipe(fs.createWriteStream(videoPath))
+                .on('finish', resolve)
+                .on('error', reject);
+        });
+
+        // **Download Audio**
+        await new Promise((resolve, reject) => {
+            ytdl(videoUrl, { quality: 'highestaudio' })
+                .pipe(fs.createWriteStream(audioPath))
+                .on('finish', resolve)
+                .on('error', reject);
+        });
+
+        // **Gabungkan Video & Audio**
+        await new Promise((resolve, reject) => {
+            ffmpeg()
+                .input(videoPath)
+                .input(audioPath)
+                .outputOptions('-c:v copy -c:a aac')
+                .save(finalOutputPath)
+                .on('end', resolve)
+                .on('error', reject);
+        });
+
+        // **Hapus file sementara**
+        await fs.unlink(videoPath);
+        await fs.unlink(audioPath);
+
+        return {
+            thumbnail: info.videoDetails.thumbnails.pop().url,
+            title: info.videoDetails.title,
+            channel: info.videoDetails.author.name,
+            duration: info.videoDetails.lengthSeconds,
+            video: finalOutputPath
+        };
+    } catch (error) {
+        return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
+    }
+}
 
 // export async function tiktok(url) {
 //     try {
@@ -214,52 +274,6 @@ export async function yutubAudio(query) {
     }
 }
 
-export async function yutubVideo(query) {
-    try {
-        // Cek apakah input adalah URL atau query pencarian
-        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
-        let videoUrl = query;
-
-        if (!isUrl) {
-            // Jika bukan URL, lakukan pencarian terlebih dahulu
-            const searchResult = await ytsearch(query);
-            videoUrl = searchResult.url;
-        }
-
-        // Dapatkan info video
-        const info = await ytdl.getInfo(videoUrl);
-        const tempDir = path.join(process.cwd(), 'temp');
-        await fs.mkdir(tempDir, { recursive: true });
-
-        const rawOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.webm`);
-        const finalOutputPath = path.join(tempDir, `${info.videoDetails.videoId}.mp4`);
-
-        // Download Video dalam format WebM
-        const videoStream = ytdl(videoUrl, { quality: 'highestvideo' });
-        const audioStream = ytdl(videoUrl, { quality: 'highestaudio' });
-
-        await new Promise((resolve, reject) => {
-            ffmpeg()
-                .input(videoStream)
-                .videoCodec('libx264')
-                .input(audioStream)
-                .audioCodec('aac')
-                .save(finalOutputPath)
-                .on('end', resolve)
-                .on('error', reject);
-        });
-
-        return {
-            thumbnail: info.videoDetails.thumbnails.pop().url,
-            title: info.videoDetails.title,
-            channel: info.videoDetails.author.name,
-            duration: info.videoDetails.lengthSeconds,
-            video: finalOutputPath
-        };
-    } catch (error) {
-        return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
-    }
-}
 export async function yutubVideoDoc(query) {
     try {
         // Cek apakah input adalah URL atau query pencarian
