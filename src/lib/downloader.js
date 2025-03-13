@@ -260,6 +260,46 @@ export async function yutubAudio(query) {
         return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
     }
 }
+import path from 'path';
+import fs from 'fs/promises';
+import { ytsearch, runYtDlp } from './utils.js';
+
+export async function yutubVideo(query) {
+    try {
+        // Cek apakah input adalah URL atau query pencarian
+        const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
+        let videoUrl = query;
+
+        if (!isUrl) {
+            // Jika bukan URL, lakukan pencarian terlebih dahulu
+            const searchResult = await ytsearch(query);
+            videoUrl = searchResult.url;
+        }
+
+        // Dapatkan info video
+        const info = await runYtDlp(videoUrl, '--dump-json');
+        const videoInfo = JSON.parse(info);
+
+        const tempDir = path.join(process.cwd(), 'temp');
+        await fs.mkdir(tempDir, { recursive: true });
+
+        const outputPath = path.join(tempDir, `${videoInfo.id}.mp4`);
+
+        // Download video dengan resolusi 480p
+        await runYtDlp(videoUrl, `-f "bestvideo[height<=480]+bestaudio/best[height<=480]" -o "${outputPath}"`);
+
+        return {
+            thumbnail: videoInfo.thumbnail,
+            title: videoInfo.title,
+            channel: videoInfo.channel,
+            duration: videoInfo.duration,
+            video: outputPath
+        };
+    } catch (error) {
+        return { error: error.message || "Terjadi kesalahan saat memproses permintaan." };
+    }
+}
+
 
 export async function spotify(url) {
     try {

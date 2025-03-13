@@ -17,13 +17,6 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         return;
     }
 
-    // if (!psn.match(/youtu/gi)) {
-    //     await sock.sendMessage(id, { 
-    //         text: `❌ *URL Tidak Valid*\n\nHanya menerima URL YouTube!` 
-    //     });
-    //     return;
-    // }
-
     try {
         // Kirim reaction mulai
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
