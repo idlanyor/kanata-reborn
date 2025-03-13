@@ -2,6 +2,7 @@ import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
@@ -30,7 +31,7 @@ export async function yutubVideo(query) {
         // **Download Video**
         await new Promise((resolve, reject) => {
             ytdl(videoUrl, { quality: 'highestvideo' })
-                .pipe(fs.createWriteStream(videoPath))
+                .pipe(fsSync.createWriteStream(videoPath))
                 .on('finish', resolve)
                 .on('error', reject);
         });
@@ -38,7 +39,7 @@ export async function yutubVideo(query) {
         // **Download Audio**
         await new Promise((resolve, reject) => {
             ytdl(videoUrl, { quality: 'highestaudio' })
-                .pipe(fs.createWriteStream(audioPath))
+                .pipe(fsSync.createWriteStream(audioPath))
                 .on('finish', resolve)
                 .on('error', reject);
         });
