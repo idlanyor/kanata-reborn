@@ -330,7 +330,7 @@ export async function startBot() {
     bot.start().then(sock => {
         logger.success('Bot started successfully!');
         logger.divider();
-        sock.ev.on('messages.upsert', async chatUpdate => {
+        sock.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
@@ -389,6 +389,7 @@ export async function startBot() {
                 let ctx = m.quoted?.text || ''
                 // auto AI mention
                 if (botMentioned) {
+                    if (m.key.fromMe) return
                     try {
                         if (!(await Group.getSettings(id)).autoai == 1) {
                             return
