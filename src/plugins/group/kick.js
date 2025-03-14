@@ -10,19 +10,19 @@ export default async ({ sock, m, id, psn }) => {
         }
 
         // Cek apakah bot admin
-        if (!await m.isBotAdmin()) {
+        if (!await m.isBotAdmin) {
             await m.reply('❌ Bot harus menjadi admin untuk mengeluarkan member!');
             return;
         }
 
         // Cek apakah pengirim adalah admin
-        if (!await m.isAdmin()) {
+        if (!await m.isAdmin) {
             await m.reply('❌ Perintah ini hanya untuk admin grup!');
             return;
         }
 
         if (!psn) {
-            await m.reply({ 
+            await m.reply({
                 text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.kick @user*\n\n📌 Contoh:\n*.kick @user*',
                 contextInfo: {
                     externalAdReply: {
@@ -40,8 +40,8 @@ export default async ({ sock, m, id, psn }) => {
 
         // Proses kick member
         await sock.groupParticipantsUpdate(id, [psn.replace('@', '') + '@s.whatsapp.net'], 'remove');
-        
-        await m.reply({ 
+
+        await m.reply({
             text: `✅ Berhasil mengeluarkan *${psn.trim()}* dari grup!`,
             contextInfo: {
                 externalAdReply: {
@@ -53,12 +53,12 @@ export default async ({ sock, m, id, psn }) => {
                 }
             }
         });
-        
+
         // Kirim reaksi sukses
         await m.react('👢');
 
     } catch (error) {
-        await m.reply({ 
+        await m.reply({
             text: `❌ *Gagal mengeluarkan member:*\n${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -70,7 +70,7 @@ export default async ({ sock, m, id, psn }) => {
                 }
             }
         });
-        
+
         // Kirim reaksi error
         await m.react('❌');
     }

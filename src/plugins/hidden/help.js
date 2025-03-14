@@ -1,3 +1,4 @@
+import { fetchLatestBaileysVersion } from '@fizzxydev/baileys-pro/lib/Utils/generics.js';
 import { helpMessage } from '../../helper/help.js'
 import loadAssets from '../../helper/loadAssets.js';
 
@@ -6,7 +7,7 @@ export const description = "List All Menu";
 
 export default async ({ sock, id, m, noTel, sender }) => {
     const { caption, plugins } = await helpMessage()
-    
+
     // Generate sections dengan format yang lebih menarik
     let sections = []
     const emojis = {
@@ -91,7 +92,7 @@ ${caption}
     await sock.sendMessage(id, {
         caption: menuMessage,
         image: {
-            url: await loadAssets('kanata-cover.jpg', 'image'),
+            url: globalThis.kanataCover,
         },
         buttons: [
             {
@@ -129,16 +130,28 @@ ${caption}
             },
             forwardingScore: 999,
             externalAdReply: {
-                title: '乂 Kanata Bot Menu 乂',
-                body: 'Click here to join our channel!',
-                thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
-                sourceUrl:'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                mediaType: 2,
-                renderLargerThumbnail: true
+                title: '乂 Kanata V3 Menu 乂',
+                body: 'Welcome to Kanata Universe!',
+                thumbnailUrl: globalThis.ppUrl,
+                sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                mediaType: 1,
+                renderLargerThumbnail: false
             }
         },
     }, {
-        quoted: m
+        quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        }
     })
 }
 

@@ -1,7 +1,6 @@
 import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg
 import moment from 'moment';
-import { getBuffer } from '../../helper/mediaMsg.js';
 import os from 'os';
 
 export const description = "Ping Bot & System Info";

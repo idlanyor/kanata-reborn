@@ -114,6 +114,7 @@ export function addMessageHandler(m, sock) {
                 renderLargerThumbnail: true
             }
         }
+        // console.log(defaultContext)
 
         if (typeof text === 'string') {
             return await sock.sendMessage(m.chat, {
@@ -293,10 +294,12 @@ export function addMessageHandler(m, sock) {
             quoted: opts.quoted ? m : null
         })
     }
+    m.isViewOnce = !!(m.message?.viewOnceMessageV2 || m.message?.viewOnceMessage);
 
     return m;
 }
-
+// Cek apakah pesan merupakan View Once
+// cek tipe message
 function getMessageType(message) {
     if (!message) return null;
 
