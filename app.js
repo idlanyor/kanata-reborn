@@ -338,7 +338,7 @@ export async function startBot() {
                 const id = m.chat;
                 // if(id.endsWith('@g.us')) return
                 const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
-                console.log()
+                // console.log()
                 const mediaType = {
                     image: {
                         buffer: m.message?.imageMessage || m.quoted?.message?.imageMessage,

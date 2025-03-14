@@ -3,7 +3,7 @@ import Group from '../../database/models/Group.js';
 export const description = "🤖 Pengaturan Auto AI untuk grup";
 export const handler = "autoai";
 
-export default async ({ sock, m, id, psn }) => {
+export default async ({ sock, m, id, psn,noTel }) => {
     try {
         if (!globalThis.isOwner(noTel)) return;
         // if (!id.endsWith('@g.us')) {
