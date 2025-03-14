@@ -31,7 +31,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
         const contentType = response.headers.get('content-type');
         const fileName = url.split('/').pop() || 'file';
-        // let data = await response.text(); // Ambil response sebagai teks
+        let data = await response.text(); // Ambil response sebagai teks
 
         if (contentType.includes('application/json')) {
             // Tangani JSON response terlebih dahulu
