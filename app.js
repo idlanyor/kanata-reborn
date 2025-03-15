@@ -318,7 +318,7 @@ export async function startBot() {
                 let ctx = m.quoted?.text || ''
                 // auto AI mention
                 if (botMentioned) {
-                    if (m.key.fromMe) return
+                    // if (m.key.fromMe) return
                     try {
                         if (!(await Group.getSettings(id)).autoai == 1) {
                             return
