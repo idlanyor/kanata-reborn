@@ -11,7 +11,7 @@ export const spotifySearch = async (name) => {
                 name
             }
         })
-        return data.result[0].url;
+        return data.result
     } catch (error) {
         throw error
     }
@@ -20,8 +20,24 @@ export const spotifySearch = async (name) => {
 export const spotifySong = async (q) => {
     try {
         // https://api.siputzx.my.id/api/s/spotify?query=serana
-        const url = await spotifySearch(q)
+        const result = await spotifySearch(q)
         // return
+        const { data } = await spotifyDownload(result[0].url)
+        // console.log(data);
+        return {
+            thumbnail: data?.coverImage || 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+            title: data?.title || 'GTW Judulnya',
+            author: data?.artist || 'YNTKTS',
+            audio: data?.downloadUrl
+        }
+
+    } catch (error) {
+        throw error
+    }
+}
+export const spotifyUrl = async (url) => {
+    try {
+
         const { data } = await spotifyDownload(url)
         // console.log(data);
         return {

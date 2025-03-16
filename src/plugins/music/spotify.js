@@ -1,4 +1,3 @@
-import { spotify } from "../../lib/downloader.js";
 import { spotifySong } from "../../lib/neoxr/spotify.js";
 export const description = "Spotify Downloader provided by *Roy*";
 export const handler = "spotify"

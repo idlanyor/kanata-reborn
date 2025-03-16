@@ -1,13 +1,13 @@
 import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 const { proto, prepareWAMessageMedia } = pkg
-import { ytsearch } from "../../lib/youtube.js";
-export const handler = "yts"
-export const description = "Cari Video dari *YouTube* khusus Grup";
+import { spotifySearch } from '../../lib/neoxr/spotify.js';
+export const handler = "spotifysearch"
+export const description = "Cari Musik dari *Spotify*";
 
-let image = 'https://files.catbox.moe/n9hro3.jpg';
+let image = 'https://files.catbox.moe/nf4pfq.jpg';
 
-const ytSearchResult = async (query) => {
-    const hasilPencarian = await ytsearch(query);
+const spotifySearchResult = async (query) => {
+    const hasilPencarian = await spotifySearch(query);
     let sections = [{
         title: "Kanata V3",
         highlight_label: 'Start Chats',
@@ -27,30 +27,20 @@ const ytSearchResult = async (query) => {
 
     hasilPencarian.forEach((hasil) => {
         sections.push({
-            title: hasil.title,
-
+            title: `${hasil.title} - ${hasil.artist || 'Various Artist'}`,
+            highlight_label: hasil.duration,
             rows: [
                 {
-                    title: "Get Video HD 🎬",
-                    description: `${hasil.title}`,
-                    id: `yd ${hasil.url}`
-                },
-                {
-                    title: "Get Video 🎥",
-                    description: `${hasil.title}`,
-                    id: `yd2 ${hasil.url}`
-                },
-                {
-                    title: "Get Audio 🎵",
-                    description: `${hasil.title}`,
-                    id: `ymd ${hasil.url}`
+                    title: `Download ${hasil.title}`,
+                    description: `${hasil.artist || 'Various Artist'}`,
+                    id: `spotify ${hasil.url}`
                 }
             ]
         });
     });
 
     let listMessage = {
-        title: '🔍 Hasil Pencarian YouTube',
+        title: '🔍 Hasil Pencarian Spotify',
         sections
     };
     return listMessage;
@@ -58,10 +48,10 @@ const ytSearchResult = async (query) => {
 
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (psn == "") {
-        return sock.sendMessage(id, { text: "🔎 Mau cari apa?\nKetik *yts <query>*\nContoh: *yts himawari*" });
+        return sock.sendMessage(id, { text: "🔎 Mau cari apa?\nKetik *ss <query>*\nContoh: *ss himawari*" });
     }
     if (id.endsWith('@g.us')) {
-        let roy = `*Powered By Kanata V3*\nMenampilkan hasil pencarian untuk: "${psn}", pilih di bawah ini sesuai format yang Kamu inginkan. 🍿`;
+        let roy = `*Powered By Kanata V3*\nMenampilkan hasil pencarian untuk: "${psn}", klik list untuk info selengkapnya. 🍿`;
 
         let msg = generateWAMessageFromContent(m.chat, {
             viewOnceMessage: {
@@ -86,7 +76,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             buttons: [
                                 {
                                     "name": "single_select",
-                                    "buttonParamsJson": JSON.stringify(await ytSearchResult(psn, sender))
+                                    "buttonParamsJson": JSON.stringify(await spotifySearchResult(psn, sender))
                                 },
                                 {
                                     "name": "quick_reply",
@@ -105,7 +95,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { react: { text: '✅', key: m.key } })
     } else {
         sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-        const hasilPencarian = await ytsearch(psn);
+        const hasilPencarian = await spotifySearch(psn);
         const cards = await Promise.all(hasilPencarian.map(async (result) => ({
             body: proto.Message.InteractiveMessage.Body.fromObject({
                 text: `*${result.url}*`
@@ -162,7 +152,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             }
                         },
                         body: proto.Message.InteractiveMessage.Body.fromObject({
-                            text: `*[Youtube Search Result]*`
+                            text: `*[Spotify Search Result]*`
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.fromObject({
                             text: ' © Copyright By KanataV3'
