@@ -165,7 +165,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             text: `*[Youtube Search Result]*`
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.fromObject({
-                            text: ' © Copyright By KanataV2'
+                            text: ' © Copyright By KanataV3'
                         }),
                         header: proto.Message.InteractiveMessage.Header.fromObject({
                             hasMediaAttachment: false

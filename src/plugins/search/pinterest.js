@@ -13,27 +13,27 @@ export const description = 'Search Images from Pinterest'
 
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (!psn) {
-        await sock.sendMessage(id, { 
-            text: '⚠️ Silakan masukkan kata kunci pencarian!\n\nContoh: !pinterest anime ghibli' 
+        await sock.sendMessage(id, {
+            text: '⚠️ Silakan masukkan kata kunci pencarian!\n\nContoh: !pinterest anime ghibli'
         });
         return;
     }
 
     await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-    
+
     try {
         const results = await pinSearch(psn);
-        
+
         if (!results.length) {
-            await sock.sendMessage(id, { 
-                text: '❌ Tidak ditemukan hasil untuk pencarian tersebut.' 
+            await sock.sendMessage(id, {
+                text: '❌ Tidak ditemukan hasil untuk pencarian tersebut.'
             });
             return;
         }
 
         // Filter hasil yang valid (memiliki gambar dan judul)
-        const validResults = results.filter(item => 
-            item.image !== 'No Image' && 
+        const validResults = results.filter(item =>
+            item.image !== 'No Image' &&
             item.title !== 'No Title' &&
             item.image.startsWith('http')
         ).slice(0, 12); // Batasi 12 hasil untuk performa
@@ -88,7 +88,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             text: `*[PINTEREST SEARCH RESULTS]*\n\n🔍 Kata kunci: "${psn}"\n📸 Total hasil: ${validResults.length}`
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.fromObject({
-                            text: ' © Copyright By KanataV2'
+                            text: ' © Copyright By KanataV3'
                         }),
                         header: proto.Message.InteractiveMessage.Header.fromObject({
                             hasMediaAttachment: false
@@ -106,8 +106,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 
     } catch (error) {
         console.error('Pinterest Error:', error);
-        await sock.sendMessage(id, { 
-            text: `❌ Terjadi kesalahan: ${error.message}` 
+        await sock.sendMessage(id, {
+            text: `❌ Terjadi kesalahan: ${error.message}`
         });
         await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }

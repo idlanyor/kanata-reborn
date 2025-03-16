@@ -27,7 +27,7 @@ export default async ({ sock, m, id, psn, sender }) => {
 ├ .settings <fitur> on/off
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                     contextInfo: {
                         isForwarded: true,
                         forwardingScore: 9999999,
@@ -55,7 +55,7 @@ _Powered by Kanata-V2_`,
 
         const [feature, value] = psn.split(' ');
         if (!['antilink', 'welcome', 'goodbye', 'antispam', 'antitoxic', 'antipromosi', 'only_admin'].includes(feature)) {
-            await sock.sendMessage(id, { 
+            await sock.sendMessage(id, {
                 text: '❌ Fitur tidak valid!',
                 contextInfo: {
                     externalAdReply: {
@@ -72,7 +72,7 @@ _Powered by Kanata-V2_`,
 
         const newValue = value === 'on';
         await Group.updateSetting(id, feature, newValue);
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `✅ Berhasil mengubah *${feature}* menjadi *${newValue ? 'aktif' : 'nonaktif'}*`,
             contextInfo: {
                 externalAdReply: {
@@ -86,14 +86,14 @@ _Powered by Kanata-V2_`,
         });
 
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '⚙️', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '⚙️',
+                key: m.key
+            }
         });
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ *Terjadi kesalahan:*\n${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -105,13 +105,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 };

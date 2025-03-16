@@ -13,20 +13,20 @@ export const description = 'Search Images from Shutterstock'
 
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     if (!psn) {
-        await sock.sendMessage(id, { 
-            text: '⚠️ Silakan masukkan kata kunci pencarian!\n\nContoh: !shutterstock anime' 
+        await sock.sendMessage(id, {
+            text: '⚠️ Silakan masukkan kata kunci pencarian!\n\nContoh: !shutterstock anime'
         });
         return;
     }
 
     await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-    
+
     try {
         const results = await shutterstockSearch(psn);
-        
+
         if (!results.length) {
-            await sock.sendMessage(id, { 
-                text: '❌ Tidak ditemukan hasil untuk pencarian tersebut.' 
+            await sock.sendMessage(id, {
+                text: '❌ Tidak ditemukan hasil untuk pencarian tersebut.'
             });
             return;
         }
@@ -81,7 +81,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                             text: `*[SHUTTERSTOCK SEARCH RESULTS]*\n\n🔍 Kata kunci: "${psn}"\n📸 Total hasil: ${results.length}`
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.fromObject({
-                            text: ' © Copyright By KanataV2'
+                            text: ' © Copyright By KanataV3'
                         }),
                         header: proto.Message.InteractiveMessage.Header.fromObject({
                             hasMediaAttachment: false
@@ -98,8 +98,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
-            text: `❌ Terjadi kesalahan: ${error.message}` 
+        await sock.sendMessage(id, {
+            text: `❌ Terjadi kesalahan: ${error.message}`
         });
         await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }

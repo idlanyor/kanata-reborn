@@ -153,7 +153,7 @@ function generatePrayerMessage(name, time) {
     }
 
     text += `╰──────────────────\n\n`;
-    text += `_Powered by Kanata-V2_`;
+    text += `_Powered by Kanata-V3_`;
     return text;
 }
 

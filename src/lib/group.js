@@ -90,7 +90,7 @@ export async function groupParticipants(ev, sock) {
 
     for (const participant of participants) {
         const userId = participant.split('@')[0];
-        
+
         switch (action) {
             case 'add':
                 if (settings.welcome) {
@@ -116,7 +116,7 @@ ${groupMetadata.desc || 'Tidak ada deskripsi'}
 ${settings.welcome_message.replace('@user', `@${userId}`).replace('@group', groupName)}
 
 ─────────────────
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                         mentions: [participant]
                     };
                     await sendMessage(participant, welcomeMsg);
@@ -138,7 +138,7 @@ Semoga kita berjumpa lagi!
 ${settings.goodbye_message.replace('@user', `@${userId}`).replace('@group', groupName)}
 
 ─────────────────
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                         mentions: [participant]
                     };
                     await sendMessage(participant, goodbyeMsg);
@@ -158,7 +158,7 @@ Anda telah dipromosikan menjadi admin grup.
 👥 *Total Admin:* ${groupMetadata.participants.filter(p => p.admin).length}
 
 ─────────────────
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                     mentions: [participant]
                 };
                 await sendMessage(participant, promoteMsg);
@@ -176,7 +176,7 @@ _Powered by Kanata-V2_`,
 👥 *Total Admin:* ${groupMetadata.participants.filter(p => p.admin).length}
 
 ─────────────────
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                     mentions: [participant]
                 };
                 await sendMessage(participant, demoteMsg);

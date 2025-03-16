@@ -6,7 +6,7 @@ export const sendIAMessage = async (jid, btns = [], quoted, opts = {}, sock) => 
             message: {
                 interactiveMessage: proto.Message.InteractiveMessage.create({
                     body: proto.Message.InteractiveMessage.Body.create({
-                        text: '*Kanata Bot V2*', // Isi utama pesan
+                        text: '*Kanata Bot V3*', // Isi utama pesan
                     }),
                     footer: proto.Message.InteractiveMessage.Footer.create({
                         text: opts.footer, // Footer pesan

@@ -5,7 +5,7 @@ export const handler = 'gcstalk'
 export const description = 'Retrieve GC Information by Invite Link'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (!psn) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: '⚠️ Mohon masukkan link grup WhatsApp yang valid!',
             contextInfo: {
                 externalAdReply: {
@@ -22,7 +22,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     }
 
     if (!psn.includes('https://chat.whatsapp.com/')) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: '❌ Link tidak valid! Pastikan menggunakan format https://chat.whatsapp.com/KODE',
             contextInfo: {
                 externalAdReply: {
@@ -40,7 +40,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     try {
         const filterCode = psn.match(/chat\.whatsapp\.com\/([A-Za-z0-9]{20,24})/)?.[1]
         const result = await sock.groupGetInviteInfo(filterCode)
-        
+
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
                 text: `╭─「 *GROUP INFORMATION* 」
@@ -57,7 +57,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 ${result.desc || '(No Description)'}
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                 contextInfo: {
                     mentionedJid: [result.participants.filter((d) => d.admin === 'superadmin')[0].id],
                     isForwarded: true,
@@ -76,17 +76,17 @@ _Powered by Kanata-V2_`,
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
+
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '✅', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '✅',
+                key: m.key
+            }
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: '❌ Terjadi kesalahan saat mengambil informasi grup: ' + error.message,
             contextInfo: {
                 externalAdReply: {
@@ -98,13 +98,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 };

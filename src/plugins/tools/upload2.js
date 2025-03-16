@@ -1,13 +1,13 @@
-import { uploadGambar } from "../../helper/uploader.js";
+import { uploadGambar2 } from "../../helper/uploader.js";
 import { sendIAMessage } from "../../helper/button.js";
 
-export const description = "📤 *Upload File at Catbox* 📤";
-export const handler = 'tourl'
+export const description = "📤 *Upload Image* 📤";
+export const handler = 'upload'
 
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (Buffer.isBuffer(attf)) {
         try {
-            const linkGambar = await uploadGambar(attf);
+            const linkGambar = await uploadGambar2(attf);
 
             const btns = [
                 {
@@ -45,7 +45,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             };
 
             await sendIAMessage(id, btns, m, {
-                header: '乂 Catbox Image Uploader 乂',
+                header: '乂 Image Uploader 乂',
                 content: messageContent.viewOnceMessage.message.imageMessage.caption,
                 footer: '© 2024 Kanata Bot • Created with ❤️ by Roy',
                 media: linkGambar,

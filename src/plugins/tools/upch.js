@@ -12,18 +12,18 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     try {
         // Deteksi jenis media dari message
         if (m.message?.imageMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
-            messageOptions.image = attf ;
+            messageOptions.image = attf;
             messageOptions.caption = psn || '';
             messageOptions.mimetype = 'image/jpeg';
-        } 
+        }
         else if (m.message?.videoMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage) {
-            messageOptions.video = attf ;
+            messageOptions.video = attf;
             messageOptions.caption = psn || '';
             messageOptions.mimetype = 'video/mp4';
         }
         else if (m.message?.audioMessage || m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.audioMessage) {
             messageOptions.audio = attf;
-            messageOptions.mimetype = 'audio/mp4';
+            messageOptions.mimetype = 'audio/ogg;codec=opus';
             messageOptions.ptt = true;
         }
         else {
@@ -55,7 +55,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(globalThis.newsLetterJid, messageOptions);
 
         // Kirim konfirmasi
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: "✅ Pesanmu telah dikirim ke channel!",
             contextInfo: {
                 externalAdReply: {
@@ -70,16 +70,16 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         });
 
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '✅', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '✅',
+                key: m.key
+            }
         });
 
     } catch (error) {
         console.error('Error in UPCH:', error);
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ Terjadi kesalahan: ${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -93,11 +93,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         });
 
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 };

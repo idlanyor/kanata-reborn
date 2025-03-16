@@ -12,7 +12,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
                 id: `ai`
             },
             {
-                title: '⚡ GPT Turbo V2 - Skizotech',
+                title: '⚡ GPT Turbo V3 - Skizotech',
                 id: `ai2`
             },
             {

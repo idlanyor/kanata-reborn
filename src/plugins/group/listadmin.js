@@ -9,7 +9,7 @@ export default async ({ sock, m, id }) => {
         const groupMetadata = await sock.groupMetadata(id);
         const admins = groupMetadata.participants.filter(p => p.admin);
         const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg');
-        
+
         let adminList = admins.map((admin, i) => {
             const adminName = admin.admin === 'superadmin' ? '👑' : '👮‍♂️';
             return `${i + 1}. ${adminName} @${admin.id.split('@')[0]}`;
@@ -24,7 +24,7 @@ export default async ({ sock, m, id }) => {
 ${adminList}
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                 contextInfo: {
                     mentionedJid: admins.map(a => a.id),
                     isForwarded: true,
@@ -43,17 +43,17 @@ _Powered by Kanata-V2_`,
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
+
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '👮‍♂️', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '👮‍♂️',
+                key: m.key
+            }
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ *Terjadi kesalahan:*\n${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -65,13 +65,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 };

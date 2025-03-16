@@ -9,7 +9,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
     try {
         const user = await User.getUser(noTel);
         if (!user) {
-            await sock.sendMessage(id, { 
+            await sock.sendMessage(id, {
                 text: '❌ User tidak ditemukan dalam database',
                 contextInfo: {
                     externalAdReply: {
@@ -26,7 +26,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
 
         const expNeeded = user.level * 1000;
         const progress = (user.exp / expNeeded) * 100;
-        
+
         // Generate progress bar
         const progressBarLength = 10;
         const filledBars = Math.round((progress / 100) * progressBarLength);
@@ -45,7 +45,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
 ├ 📅 *Joined:* ${new Date(user.join_date).toLocaleDateString()}
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                 contextInfo: {
                     mentionedJid: [user.phone + "@s.whatsapp.net"],
                     isForwarded: true,
@@ -64,17 +64,17 @@ _Powered by Kanata-V2_`,
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
+
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '📊', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '📊',
+                key: m.key
+            }
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ Terjadi kesalahan: ${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -86,13 +86,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 }; 

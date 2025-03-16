@@ -8,23 +8,36 @@ const bufferToReadStream = (buffer, path) => {
     // Convert buffer dadi ReadStream nganggo path
     return fs.createReadStream(path);
 };
-
+/**
+ * Fungsi buat upload gambar ke catbox.moe
+ * @param {Buffer} buffer - Buffer data gambar yang mau di-upload
+ * @returns {Promise<string>} - URL file yang di-upload
+ */
 export const uploadGambar = async (buffer) => {
     try {
-        const form = new FormData()
-        form.append('file', buffer)
-        form.append('api_key', globalThis.apiHelper.imgHippo.apikey)
-        const headers = {
-            ...form.getHeaders()
-        };
-        const response = await axios.post(globalThis.apiHelper.imgHippo.baseUrl, form, {
-            headers
-        })
-        return response.data.url
+        // Bikin instance FormData baru
+        const form = new FormData();
+        // Tambahin field 'reqtype' dengan nilai 'fileupload'
+        form.append('reqtype', 'fileupload');
+        // Tambahin field 'fileToUpload' dengan buffer data gambar
+        form.append('fileToUpload', buffer, {
+            filename: 'upload.jpg' // Nama file yang di-upload
+        });
+
+        // Kirim request POST ke API catbox.moe
+        const response = await axios.post('https://catbox.moe/user/api.php', form, {
+            headers: {
+                ...form.getHeaders()
+            }
+        });
+
+        // Balikin URL file yang di-upload
+        return response.data;
     } catch (error) {
-        throw error
+        // Lempar error kalo ada masalah waktu upload
+        throw error;
     }
-}
+};
 
 export const uploadGambar2 = async (buffer) => {
     try {

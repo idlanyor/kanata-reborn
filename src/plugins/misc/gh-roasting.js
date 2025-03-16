@@ -22,7 +22,7 @@ export default async ({ sock, m, id, psn }) => {
             }
         });
     }
-    
+
     try {
         const { data } = await hikaru("aiexperience/github/roasting", {
             params: {
@@ -31,7 +31,7 @@ export default async ({ sock, m, id, psn }) => {
                 language: "id"
             }
         });
-        
+
         const profile = data.result.profile;
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
@@ -47,7 +47,7 @@ export default async ({ sock, m, id, psn }) => {
 ├ ${data.result.roasting}
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                 contextInfo: {
                     isForwarded: true,
                     forwardingScore: 9999999,
@@ -65,13 +65,13 @@ _Powered by Kanata-V2_`,
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
+
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '🔥', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '🔥',
+                key: m.key
+            }
         });
 
     } catch (error) {
@@ -87,13 +87,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 };

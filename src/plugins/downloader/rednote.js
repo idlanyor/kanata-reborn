@@ -13,16 +13,16 @@ export const description = 'Download video from RedNote (Xiaohongshu)';
 
 export default async ({ sock, m, id, psn }) => {
     if (!psn) {
-        await sock.sendMessage(id, { 
-            text: `⚠️ Silakan masukkan URL RedNote!\n\nContoh: !rednote http://xhslink.com/xxxxx` 
+        await sock.sendMessage(id, {
+            text: `⚠️ Silakan masukkan URL RedNote!\n\nContoh: !rednote http://xhslink.com/xxxxx`
         });
         return;
     }
 
     // Validasi URL RedNote
     if (!psn.match(/xhslink\.com\/[a-zA-Z0-9]+/)) {
-        await sock.sendMessage(id, { 
-            text: '❌ URL RedNote tidak valid!' 
+        await sock.sendMessage(id, {
+            text: '❌ URL RedNote tidak valid!'
         });
         return;
     }
@@ -30,8 +30,8 @@ export default async ({ sock, m, id, psn }) => {
     await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
 
     try {
-        await sock.sendMessage(id, { 
-            text: '⏳ Sedang memproses video...' 
+        await sock.sendMessage(id, {
+            text: '⏳ Sedang memproses video...'
         });
 
         const { title, downloadUrl } = await rednote(psn);
@@ -44,9 +44,9 @@ export default async ({ sock, m, id, psn }) => {
         const message = generateWAMessageFromContent(id, {
             extendedTextMessage: {
                 text: `🎥 *REDNOTE DOWNLOADER*\n\n` +
-                      `📝 *Judul:* ${title || 'Tidak ada judul'}\n` +
-                      `🔗 *URL:* ${psn}\n\n` +
-                      `_Sedang mengirim video..._`,
+                    `📝 *Judul:* ${title || 'Tidak ada judul'}\n` +
+                    `🔗 *URL:* ${psn}\n\n` +
+                    `_Sedang mengirim video..._`,
                 contextInfo: {
                     externalAdReply: {
                         title: 'RedNote Downloader',
@@ -68,7 +68,7 @@ export default async ({ sock, m, id, psn }) => {
                 url: downloadUrl
             },
             caption: `🎥 *${title || 'RedNote Video'}*\n\n` +
-                    `_Downloaded by KanataV2_`,
+                `_Downloaded by KanataV3_`,
             mimetype: 'video/mp4'
         }, { quoted: m });
 
@@ -76,9 +76,9 @@ export default async ({ sock, m, id, psn }) => {
 
     } catch (error) {
         console.error('RedNote Error:', error);
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ Terjadi kesalahan: ${error.message}\n\n` +
-                  `Pastikan URL valid dan video tersedia.` 
+                `Pastikan URL valid dan video tersedia.`
         });
         await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }

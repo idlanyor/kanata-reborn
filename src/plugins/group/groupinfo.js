@@ -1,4 +1,4 @@
- import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ['groupinfo', 'gcinfo'];
@@ -8,10 +8,10 @@ export default async ({ sock, m, id }) => {
     try {
         const groupMetadata = await sock.groupMetadata(id);
         const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg');
-        
+
         // Hitung jumlah admin
         const adminCount = groupMetadata.participants.filter(p => p.admin).length;
-        
+
         // Format tanggal pembuatan
         const createdDate = new Date(groupMetadata.creation * 1000).toLocaleDateString('id-ID', {
             weekday: 'long',
@@ -34,7 +34,7 @@ export default async ({ sock, m, id }) => {
 ${groupMetadata.desc || '(Tidak ada deskripsi)'}
 ╰──────────────────
 
-_Powered by Kanata-V2_`,
+_Powered by Kanata-V3_`,
                 contextInfo: {
                     mentionedJid: groupMetadata.owner ? [groupMetadata.owner] : [],
                     isForwarded: true,
@@ -53,17 +53,17 @@ _Powered by Kanata-V2_`,
         }), { userJid: id, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
-        
+
         // Kirim reaksi sukses
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '📊', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '📊',
+                key: m.key
+            }
         });
 
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ *Terjadi kesalahan:*\n${error.message}`,
             contextInfo: {
                 externalAdReply: {
@@ -75,13 +75,13 @@ _Powered by Kanata-V2_`,
                 }
             }
         });
-        
+
         // Kirim reaksi error
-        await sock.sendMessage(id, { 
-            react: { 
-                text: '❌', 
-                key: m.key 
-            } 
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
         });
     }
 }; 
