@@ -3,6 +3,7 @@ import { StickerTypes, createSticker } from "wa-sticker-formatter";
 export const handler = 'bratnime'
 export const description = 'Anime Brat Generator'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
+    if (!psn) return m.reply('teksnya mana cik?')
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
     const { url } = await fetch(`https://fastrestapis.fasturl.link/maker/animbrat?text=${encodeURIComponent(psn)}&mode=image&position=center`)
     const stickerOption = {

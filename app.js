@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import readline from 'readline';
 import { call } from './src/lib/call.js';
 import { logger } from './src/helper/logger.js';
-import { copilotHika } from './src/lib/ai.js';
+import { gpt4Hika } from './src/lib/ai.js';
 import { schedulePrayerReminders } from './src/lib/jadwalshalat.js';
 import User from './src/database/models/User.js';
 import Group from './src/database/models/Group.js';
@@ -315,6 +315,7 @@ export async function startBot() {
                 let botMentioned = m.message?.extendedTextMessage?.contextInfo?.participant?.includes(botId)
                     || m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(botId)
                 let fullmessage = m.body
+                // console.log(m.body)
                 let ctx = m.quoted?.text || ''
                 // auto AI mention
                 if (botMentioned) {
@@ -323,7 +324,7 @@ export async function startBot() {
                         if (!(await Group.getSettings(id)).autoai == 1) {
                             return
                         } else {
-                            await sock.sendMessage(id, { text: await copilotHika({ prompt: `${fullmessage}  ${ctx}`, id }) }, { quoted: m })
+                            await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage}  ${ctx}`, id }) }, { quoted: m })
                         }
                     } catch (error) {
                         await sock.sendMessage(id, { text: 'ups,ada yang salah' }, { quoted: m })

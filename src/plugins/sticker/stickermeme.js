@@ -15,7 +15,7 @@ export default async ({ sock, m, id, psn, attf }) => {
         } else if (attf) {
             imageBuffer = attf;
         } else {
-            await m.reply('❌ Kirim/reply gambar dengan caption .smeme text1|text2\n\nNote: text2 bersifat opsional');
+            await m.reply('❌ Kirim/reply gambar dengan caption .smeme text1.text2\n\nNote: text2 bersifat opsional');
             return;
         }
 

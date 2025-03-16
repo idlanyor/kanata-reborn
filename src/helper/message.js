@@ -8,6 +8,30 @@ export function addMessageHandler(m, sock) {
     m.pushName = m.pushName || 'No Name';
     m.isGroup = m.chat.endsWith('@g.us');
     m.type = getMessageType(m.message);
+    m.body = (() => {
+        if (!m.message) return null;
+
+        const msg = m.message;
+
+        if (msg.conversation) return msg.conversation;
+        if (msg.extendedTextMessage?.text) return msg.extendedTextMessage.text;
+        if (msg.imageMessage?.caption) return msg.imageMessage.caption;
+        if (msg.videoMessage?.caption) return msg.videoMessage.caption;
+        if (msg.buttonsResponseMessage?.selectedButtonId) return msg.buttonsResponseMessage.selectedButtonId;
+        if (msg.listResponseMessage?.singleSelectReply?.selectedRowId) return msg.listResponseMessage.singleSelectReply.selectedRowId;
+        if (msg.templateButtonReplyMessage?.selectedId) return msg.templateButtonReplyMessage.selectedId;
+        if (msg.interactiveResponseMessage?.body?.text) return msg.interactiveResponseMessage.body.text;
+        if (msg.contactMessage) return '[Contact]';
+        if (msg.locationMessage) return '[Location]';
+        if (msg.liveLocationMessage) return '[Live Location]';
+        if (msg.documentMessage) return `[Document: ${msg.documentMessage.fileName || 'unknown'}]`;
+        if (msg.audioMessage) return '[Audio]';
+        if (msg.stickerMessage) return '[Sticker]';
+        if (msg.imageMessage) return '[Image]';
+        if (msg.videoMessage) return '[Video]';
+
+        return '[Unknown Message]';
+    })();
     m.react = async (emoji) => {
         if (!emoji) emoji = '❌';
 
