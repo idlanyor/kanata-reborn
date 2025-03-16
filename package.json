@@ -17,7 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "@distube/ytdl-core": "^4.16.4",
-    "@fizzxydev/baileys-pro": "latest",
+    "@fizzxydev/baileys-pro": "^8.6.10",
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",

@@ -94,7 +94,7 @@ class Kanata {
                 while (retryCount < maxRetries) {
                     try {
                         await delay(6000);
-                        const code = await sock.requestPairingCode(this.phoneNumber);
+                        const code = await sock.requestPairingCode(this.phoneNumber,"KANATAV3");
                         logger.connection.pairing(code);
                         this.io?.emit("pairCode", `${code}`);
                         break;
