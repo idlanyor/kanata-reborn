@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logger } from '../helper/logger.js';
-import { helpMessage } from '../helper/help.js';
+import { helpMessage } from '../helper/pluginsIterator.js';
 
 // Cache untuk menyimpan hasil analisis pesan
 const messageHistory = new Map();
