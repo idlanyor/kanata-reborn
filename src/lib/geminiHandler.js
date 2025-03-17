@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { logger } from './logger.js';
+import { logger } from '../helper/logger.js';
 import { helpMessage } from '../helper/help.js';
 
 // Cache untuk menyimpan hasil analisis pesan
