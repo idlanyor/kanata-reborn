@@ -108,41 +108,46 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         }
 
         // Coba proses dengan Gemini AI
-        const response = await geminiHandler.analyzeMessage(command);
+        try {
+            const response = await geminiHandler.analyzeMessage(command);
 
-        // Jika berhasil diproses oleh Gemini
-        if (response.success) {
-            // Eksekusi command yang diidentifikasi oleh Gemini
-            const cmd = response.command;
-            const args = response.args;
+            // Jika berhasil diproses oleh Gemini
+            if (response.success) {
+                // Eksekusi command yang diidentifikasi oleh Gemini
+                const cmd = response.command;
+                const args = response.args;
 
-            const pluginsDir = path.join(__dirname, 'src/plugins');
-            const plugins = Object.fromEntries(
-                await Promise.all(findJsFiles(pluginsDir).map(async file => {
-                    const { default: plugin, handler } = await import(pathToFileURL(file).href);
-                    if (Array.isArray(handler) && handler.includes(cmd)) {
-                        return [cmd, plugin];
-                    }
-                    return [handler, plugin];
-                }))
-            );
+                const pluginsDir = path.join(__dirname, 'src/plugins');
+                const plugins = Object.fromEntries(
+                    await Promise.all(findJsFiles(pluginsDir).map(async file => {
+                        const { default: plugin, handler } = await import(pathToFileURL(file).href);
+                        if (Array.isArray(handler) && handler.includes(cmd)) {
+                            return [cmd, plugin];
+                        }
+                        return [handler, plugin];
+                    }))
+                );
 
-            if (plugins[cmd]) {
-                logger.info(`Executing command from Gemini: ${cmd}`);
-                await sock.sendMessage(id, { text: response.message });
-                await plugins[cmd]({ sock, m, id, psn: args, sender, noTel, attf, cmd });
-                logger.success(`Command ${cmd} executed successfully`);
-            } else {
-                await sock.sendMessage(id, { text: response.message });
+                if (plugins[cmd]) {
+                    logger.info(`Executing command from Gemini: ${cmd}`);
+                    await sock.sendMessage(id, { text: response.message });
+                    await plugins[cmd]({ sock, m, id, psn: args, sender, noTel, attf, cmd });
+                    logger.success(`Command ${cmd} executed successfully`);
+                } else {
+                    await sock.sendMessage(id, { text: response.message });
+                }
+                return;
             }
-            return;
-        }
 
-        // Jika tidak berhasil, coba chat biasa
-        if (!command.startsWith('!') && !command.startsWith('.')) {
-            const chatResponse = await geminiHandler.chat(command);
-            await sock.sendMessage(id, { text: chatResponse });
-            return;
+            // Jika tidak berhasil, coba chat biasa
+            if (!command.startsWith('!') && !command.startsWith('.')) {
+                const chatResponse = await geminiHandler.chat(command);
+                await sock.sendMessage(id, { text: chatResponse });
+                return;
+            }
+        } catch (geminiError) {
+            logger.error('Error in Gemini processing:', geminiError);
+            // Jika error di Gemini, lanjutkan ke command biasa
         }
 
         // Jika dimulai dengan prefix, proses sebagai command biasa

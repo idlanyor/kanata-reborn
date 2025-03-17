@@ -13,6 +13,25 @@ class GeminiHandler {
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
     }
 
+    // Fungsi untuk mengekstrak JSON dari teks
+    extractJSON(text) {
+        try {
+            // Coba parse langsung jika sudah JSON
+            return JSON.parse(text);
+        } catch (e) {
+            try {
+                // Coba ekstrak JSON dari teks
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+            } catch (err) {
+                logger.error('Error extracting JSON:', err);
+            }
+            return null;
+        }
+    }
+
     async analyzeMessage(message, retryCount = 0) {
         // Cek rate limiting
         const lastCallTime = messageHistory.get(message);
@@ -95,14 +114,24 @@ PENTING:
 - Pake bahasa gaul yang asik
 - Tetep sopan & helpful
 - Pake emoji yang cocok
-- Command yang dipilih HARUS ada di daftar yang dikasih`;
+- Command yang dipilih HARUS ada di daftar yang dikasih
+- HARUS BALIKIN RESPONSE DALAM FORMAT JSON YANG VALID, JANGAN ADA TEKS TAMBAHAN DI LUAR JSON`;
 
             // Dapatkan respons dari Gemini
             const result = await this.model.generateContent(prompt);
             const responseText = result.response.text();
             
-            // Parse respons JSON
-            const parsedResponse = JSON.parse(responseText);
+            // Parse respons JSON dengan handling error
+            logger.info('Raw Gemini response:', responseText);
+            const parsedResponse = this.extractJSON(responseText);
+            
+            if (!parsedResponse) {
+                logger.error('Failed to parse JSON from Gemini response');
+                return {
+                    success: false,
+                    message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
+                };
+            }
 
             // Jika confidence tinggi, return untuk eksekusi command
             if (parsedResponse.confidence > 0.8) {
