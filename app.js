@@ -99,6 +99,7 @@ async function getPhoneNumber() {
 
 async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
     if (!command) return;
+    if (m.key.fromMe) return;
 
     try {
         // Skip untuk pesan pendek atau dari bot
