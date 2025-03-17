@@ -1,4 +1,3 @@
-import nlp from 'compromise';
 import { spotifySong } from './neoxr/spotify.js';
 import { yutubAudio } from './downloader.js';
 

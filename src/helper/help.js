@@ -49,14 +49,5 @@ async function loadPlugins(dir) {
 
 export async function helpMessage() {
     const plugins = await loadPlugins(pluginsDir);
-    let caption = "🌟 Hai, aku Kanata! Berikut daftar perintah yang tersedia:\n\n";
-    for (const category in plugins) {
-        caption += `📂 *${category.toUpperCase()}*\n`;
-        plugins[category].forEach(plugin => {
-            caption += `- 🛠 *${plugin.handler}* \n`;
-        });
-        caption += '\n';
-    }
-    caption += "Ketik perintah yang kamu butuhkan! 🚀";
-    return { caption, plugins };
+    return plugins;
 }

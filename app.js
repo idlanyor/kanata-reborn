@@ -20,7 +20,7 @@ import User from './src/database/models/User.js';
 import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
 import { autoAI } from './src/lib/autoai.js'
-
+import GeminiHandler from './src/lib/geminiHandler.js';
 
 const app = express()
 const server = createServer(app)
@@ -63,6 +63,9 @@ app.get('/', (req, res) => {
     res.sendFile(join(_dirname, 'index.html'))
 })
 
+// Inisialisasi Gemini Handler
+const geminiHandler = new GeminiHandler(globalThis.apiKey.gemini);
+
 async function getPhoneNumber() {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const namaSesiPath = path.join(__dirname, globalThis.sessionName);
@@ -96,21 +99,65 @@ async function getPhoneNumber() {
 
 async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
     if (!command) return;
-    let [cmd, ...args] = "";
-    [cmd, ...args] = command.split(' ');
-    cmd = cmd.toLowerCase();
-    if (command.startsWith('!')) {
-        cmd = command.toLowerCase().substring(1).split(' ')[0];
-        args = command.split(' ').slice(1)
-    }
-    if (command.startsWith('.')) {
-        cmd = command.toLowerCase().substring(1).split(' ')[0];
-        args = command.split(' ').slice(1)
-    }
-    // logger.info(`Pesan baru diterima dari ${m.pushName}`);
-    // logger.message.in(command);
 
     try {
+        // Skip untuk pesan pendek atau dari bot
+        if (command.length < 3 || sender === globalThis.botNumber) {
+            return;
+        }
+
+        // Coba proses dengan Gemini AI
+        const response = await geminiHandler.analyzeMessage(command);
+
+        // Jika berhasil diproses oleh Gemini
+        if (response.success) {
+            // Eksekusi command yang diidentifikasi oleh Gemini
+            const cmd = response.command;
+            const args = response.args;
+
+            const pluginsDir = path.join(__dirname, 'src/plugins');
+            const plugins = Object.fromEntries(
+                await Promise.all(findJsFiles(pluginsDir).map(async file => {
+                    const { default: plugin, handler } = await import(pathToFileURL(file).href);
+                    if (Array.isArray(handler) && handler.includes(cmd)) {
+                        return [cmd, plugin];
+                    }
+                    return [handler, plugin];
+                }))
+            );
+
+            if (plugins[cmd]) {
+                logger.info(`Executing command from Gemini: ${cmd}`);
+                await sock.sendMessage(id, { text: response.message });
+                await plugins[cmd]({ sock, m, id, psn: args, sender, noTel, attf, cmd });
+                logger.success(`Command ${cmd} executed successfully`);
+            } else {
+                await sock.sendMessage(id, { text: response.message });
+            }
+            return;
+        }
+
+        // Jika tidak berhasil, coba chat biasa
+        if (!command.startsWith('!') && !command.startsWith('.')) {
+            const chatResponse = await geminiHandler.chat(command);
+            await sock.sendMessage(id, { text: chatResponse });
+            return;
+        }
+
+        // Jika dimulai dengan prefix, proses sebagai command biasa
+        let [cmd, ...args] = command.split(' ');
+        cmd = cmd.toLowerCase();
+        if (command.startsWith('!')) {
+            cmd = command.toLowerCase().substring(1).split(' ')[0];
+            args = command.split(' ').slice(1)
+        }
+        if (command.startsWith('.')) {
+            cmd = command.toLowerCase().substring(1).split(' ')[0];
+            args = command.split(' ').slice(1)
+        }
+        // logger.info(`Pesan baru diterima dari ${m.pushName}`);
+        // logger.message.in(command);
+
         // Cek apakah pesan dari bot
 
         // Inisialisasi pengaturan grup jika pesan dari grup
@@ -241,7 +288,10 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         }
 
     } catch (error) {
-        logger.error(`Error processing message`, error);
+        logger.error('Error in message processing:', error);
+        await sock.sendMessage(id, {
+            text: "Waduh error nih bestie! Coba lagi ntar ya 🙏"
+        });
     }
 }
 export async function startBot() {
