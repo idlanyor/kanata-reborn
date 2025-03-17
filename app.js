@@ -19,6 +19,7 @@ import { schedulePrayerReminders } from './src/lib/jadwalshalat.js';
 import User from './src/database/models/User.js';
 import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
+import { autoAI } from './src/lib/autoai.js'
 
 
 const app = express()
@@ -254,11 +255,12 @@ export async function startBot() {
     bot.start().then(sock => {
         logger.success('Bot started successfully!');
         logger.divider();
-        sock.ev.removeAllListeners('messages.upsert');
+        // sock.ev.removeAllListeners('messages.upsert');
         sock.ev.on('messages.upsert', async (chatUpdate) => {
             try {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
+                await autoAI(m, sock)
                 const sender = m.pushName;
                 const id = m.chat;
                 // if(id.endsWith('@g.us')) return
@@ -349,7 +351,6 @@ export async function startBot() {
         // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
         // schedulePrayerReminders(sock, globalThis.newsLetterJid);
         schedulePrayerReminders(sock, globalThis.groupJid);
-
 
         sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
         sock.ev.on('groups.update', ev => groupUpdate(ev, sock));

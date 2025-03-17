@@ -23,6 +23,7 @@ export const spotifySong = async (q) => {
         const result = await spotifySearch(q)
         // return
         const { data } = await spotifyDownload(result[0].url)
+        console.log(data)
         // console.log(data);
         return {
             thumbnail: data?.coverImage || 'https://files.catbox.moe/2wynab.jpg',
