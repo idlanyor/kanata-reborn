@@ -15,7 +15,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
                     externalAdReply: {
                         title: '❌ Profile Error',
                         body: 'User not found in database',
-                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                     }
@@ -56,7 +56,7 @@ _Powered by Kanata-V3_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
                     }
                 }
@@ -80,7 +80,7 @@ _Powered by Kanata-V3_`,
                 externalAdReply: {
                     title: '❌ Profile Error',
                     body: 'An error occurred while fetching profile',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

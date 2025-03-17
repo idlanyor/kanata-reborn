@@ -47,7 +47,7 @@ export const uploadGambar2 = async (buffer) => {
         const headers = {
             ...form.getHeaders()
         };
-        const { data } = await axios.post('https://fastrestapis.fasturl.link/downup/uploader-v2', form, {
+        const { data } = await axios.post('https://fastrestapis.fasturl.cloud/downup/uploader-v2', form, {
             headers
         })
         return data.result

@@ -14,7 +14,7 @@ export default async ({ sock, m, id, psn }) => {
                 externalAdReply: {
                     title: '乂 GitHub Roast 乂',
                     body: 'Please provide a GitHub username',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -57,7 +57,7 @@ _Powered by Kanata-V3_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: profile.avatar_url || 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: profile.avatar_url || 'https://files.catbox.moe/2wynab.jpg',
                         sourceUrl: `https://github.com/${psn}`
                     }
                 }
@@ -81,7 +81,7 @@ _Powered by Kanata-V3_`,
                 externalAdReply: {
                     title: '❌ GitHub Error',
                     body: 'Username not found',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

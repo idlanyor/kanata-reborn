@@ -9,7 +9,7 @@ globalThis.groupJid = '0@g.us'
 globalThis.communityId = '0@g.us'
 globalThis.newsLetterJid = '0@newsletter'
 globalThis.newsLetterUrl = 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
-globalThis.kanataThumb = 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg'
+globalThis.kanataThumb = 'https://files.catbox.moe/2wynab.jpg'
 
 
 // fungsi dasar

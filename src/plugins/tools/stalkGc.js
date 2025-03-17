@@ -11,7 +11,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '乂 Group Stalker 乂',
                     body: 'Please provide a valid WhatsApp group link',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -28,7 +28,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 externalAdReply: {
                     title: '❌ Invalid Link',
                     body: 'Please check your group link format',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }
@@ -68,7 +68,7 @@ _Powered by Kanata-V3_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
                     }
                 }
@@ -92,7 +92,7 @@ _Powered by Kanata-V3_`,
                 externalAdReply: {
                     title: '❌ Stalking Failed',
                     body: 'An error occurred while fetching group info',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

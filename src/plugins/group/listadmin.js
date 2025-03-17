@@ -8,7 +8,7 @@ export default async ({ sock, m, id }) => {
     try {
         const groupMetadata = await sock.groupMetadata(id);
         const admins = groupMetadata.participants.filter(p => p.admin);
-        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg');
+        const ppgroup = await sock.profilePictureUrl(id, 'image').catch(_ => 'https://files.catbox.moe/2wynab.jpg');
 
         let adminList = admins.map((admin, i) => {
             const adminName = admin.admin === 'superadmin' ? '👑' : '👮‍♂️';
@@ -59,7 +59,7 @@ _Powered by Kanata-V3_`,
                 externalAdReply: {
                     title: '❌ Admin List Error',
                     body: 'An error occurred while fetching admin list',
-                    thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                     mediaType: 1,
                 }

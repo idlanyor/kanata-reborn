@@ -79,7 +79,7 @@
 //             externalAdReply: {
 //                 title: '乂 Kanata Bot Menu 乂',
 //                 body: 'Click here to join our channel!',
-//                 thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+//                 thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
 //                 sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
 //                 mediaType: 1,
 //                 renderLargerThumbnail: true

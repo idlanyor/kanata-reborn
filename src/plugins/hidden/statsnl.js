@@ -101,7 +101,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     //             currencyCode: "IDR",
     //             message: await systemSpec(),
     //             priceAmount1000: "91000",
-    //             thumbnail: await getBuffer('https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg'),
+    //             thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
     //             surface: "Kanata Bot",
     //             contextInfo: { mentionedJid: [id] },
     //         },

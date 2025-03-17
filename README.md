@@ -9,7 +9,7 @@
 [![Node.js Version](https://img.shields.io/badge/Node.js-14+-43853D?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Baileys](https://img.shields.io/badge/Baileys-Latest-blue?style=for-the-badge)](https://github.com/whiskeysockets/baileys)
 
-<img src="https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg" width="400px" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+<img src="https://files.catbox.moe/2wynab.jpg" width="400px" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 
 </div>
 
@@ -76,7 +76,7 @@ globalThis.groupJid = '0@g.us'
 globalThis.communityId = '0@g.us'
 globalThis.newsLetterJid = '0@newsletter'
 globalThis.newsLetterUrl = 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
-globalThis.kanataThumb = 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg'
+globalThis.kanataThumb = 'https://files.catbox.moe/2wynab.jpg'
 
 
 // Basic functions

@@ -31,8 +31,8 @@ export const sendIAMessage = async (jid, btns = [], quoted, opts = {}, sock) => 
                         // mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
-                        sourceUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                        sourceUrl: 'https://files.catbox.moe/2wynab.jpg',
                         mediaType: 1, // Media tipe (default: gambar)
                     },
                     nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({

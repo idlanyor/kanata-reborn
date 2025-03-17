@@ -57,7 +57,7 @@ export default async ({ sock, m, id, psn, sender }) => {
                     externalAdReply: {
                         title: '⚠️ Security Alert',
                         body: 'Virtex Detected!',
-                        thumbnailUrl: 'https://fastrestapis.fasturl.link/file/v2/kDhOKQW.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
                         mediaType: 1,
                         renderLargerThumbnail: true
