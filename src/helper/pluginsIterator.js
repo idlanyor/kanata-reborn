@@ -6,6 +6,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const pluginsDir = path.join(__dirname, '../plugins');
 
+// Deskripsi khusus untuk beberapa plugin agar lebih jelas
+const CUSTOM_DESCRIPTIONS = {
+    'play': 'Memutar/mendengarkan lagu dari YouTube',
+    'yp': 'Memutar/mendengarkan lagu dari YouTube (shortcut)',
+    'ytplay': 'Memutar/mendengarkan lagu dari YouTube',
+    'lirik': 'Menampilkan lirik lagu (gunakan hanya jika user meminta lirik)',
+    'lyrics': 'Menampilkan lirik lagu (gunakan hanya jika user meminta lirik)',
+    'spotifysearch': 'Mencari lagu di Spotify'
+};
+
 async function loadPlugins(dir) {
     let plugins = {};
     const list = fs.readdirSync(dir);
@@ -31,7 +41,13 @@ async function loadPlugins(dir) {
                 plugins[subFolder].push(...pluginFiles);
             });
         } else if (file.endsWith('.js')) {
-            const { default: plugin, description, handler } = await import(pathToFileURL(filePath).href);
+            let { default: plugin, description, handler } = await import(pathToFileURL(filePath).href);
+            
+            // Override deskripsi dengan deskripsi khusus jika ada
+            if (handler && CUSTOM_DESCRIPTIONS[handler]) {
+                description = CUSTOM_DESCRIPTIONS[handler];
+            }
+            
             const folderName = path.basename(path.dirname(filePath));
             if (!plugins[folderName]) {
                 plugins[folderName] = [];

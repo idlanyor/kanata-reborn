@@ -363,28 +363,55 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 plugins = { "basic": DEFAULT_COMMANDS };
             }
             
+            // Cek intent lagu - apakah user ingin mendengarkan atau melihat lirik
+            const musicPlayIntents = [
+                "putar", "puterin", "dengerin", "main", "dengar", "play",
+                "musik", "lagu", "song", "tolong puterin", "coba puterin"
+            ];
+            
+            const lyricIntents = [
+                "lirik", "lyrics", "liriknya", "teks lagu", "kata-kata", 
+                "arti lirik", "terjemahan lirik", "maksud lirik"
+            ];
+            
+            // Cek apakah ada intent untuk memutar lagu
+            const hasMusicPlayIntent = musicPlayIntents.some(intent => 
+                message.toLowerCase().includes(intent)
+            );
+            
+            // Cek apakah ada intent untuk lirik
+            const hasLyricIntent = lyricIntents.some(intent => 
+                message.toLowerCase().includes(intent)
+            );
+            
             // Format daftar fungsi untuk prompt - dengan handling struktur yang berbeda
             let formattedPlugins = [];
             
             if (typeof plugins === 'object') {
-                // Cek apakah plugins memiliki properties yang diharapkan
-                if (plugins.items && Array.isArray(plugins.items)) {
-                    // Format untuk struktur { items: [] }
-                    formattedPlugins = [{
-                        category: "commands",
-                        commands: plugins.items.map(item => ({
+                // Ambil semua plugin dari berbagai kategori dan flatten
+                const allPlugins = [];
+                Object.entries(plugins).forEach(([category, items]) => {
+                    if (Array.isArray(items)) {
+                        items.forEach(item => {
+                            if (item && (item.handler || item.command)) {
+                                allPlugins.push({
                             command: item.handler || item.command,
-                            description: item.description || "No description"
-                        }))
-                    }];
-                    
-                    logger.info(`Formatted ${plugins.items.length} commands from plugins.items`);
-                } else {
-                    // Format untuk struktur { category1: [], category2: [] }
+                                    description: item.description || "No description",
+                                    category: category
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                // Log jumlah plugin yang ditemukan
+                logger.info(`Found ${allPlugins.length} total plugins across all categories`);
+                
+                // Format ulang per kategori
                     formattedPlugins = Object.entries(plugins).map(([category, items]) => {
                         // Validasi bahwa items adalah array
                         if (!Array.isArray(items)) {
-                            logger.warning(`Items for category ${category} is not an array, using empty array`);
+                        logger.warning(`Items for category ${category} is not an array, using empty array`);
                             return {
                                 category,
                                 commands: []
@@ -407,7 +434,6 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 });
                     
                     logger.info(`Formatted commands from ${formattedPlugins.length} categories`);
-                }
             } else {
                 logger.warning("plugins is not an object, using default commands");
                 formattedPlugins = [{
@@ -419,13 +445,51 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 }];
             }
             
+            // Jika user ingin mendengarkan lagu tapi tidak spesifik meminta lirik,
+            // langsung arahkan ke command play/yp
+            if (hasMusicPlayIntent && !hasLyricIntent) {
+                // Cari command untuk memutar musik
+                let musicCommand = null;
+                let musicCommandArgs = "";
+                
+                // Cari command yang relevan dengan musik
+                for (const category of formattedPlugins) {
+                    for (const cmd of category.commands) {
+                        const cmdName = cmd.command.toLowerCase();
+                        if (cmdName === "play" || cmdName === "yp" || cmdName === "ytplay") {
+                            musicCommand = cmdName;
+                            // Ekstrak query musik - hapus kata kunci dari pesan asli
+                            let query = message;
+                            for (const intent of musicPlayIntents) {
+                                query = query.replace(new RegExp(intent, "gi"), "");
+                            }
+                            // Bersihkan query
+                            musicCommandArgs = query.trim();
+                            break;
+                        }
+                    }
+                    if (musicCommand) break;
+                }
+                
+                // Jika ketemu command musik, langsung arahkan
+                if (musicCommand) {
+                    logger.info(`Detected music play intent, using command: ${musicCommand} with args: ${musicCommandArgs}`);
+                    return {
+                        success: true,
+                        command: musicCommand,
+                        args: musicCommandArgs,
+                        message: `Oke bestie, gw puterin lagu "${musicCommandArgs}" buat lu ya! 🎵`
+                    };
+                }
+            }
+            
             // Log formattedPlugins untuk debugging
             logger.info(`formattedPlugins structure: ${JSON.stringify(formattedPlugins.map(p => ({ 
                 category: p.category, 
                 commandCount: p.commands ? p.commands.length : 0 
             })))}`);
             
-            // Buat prompt untuk Gemini AI
+            // Buat prompt untuk Gemini AI dengan panduan yang lebih spesifik
             const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
 
 ${JSON.stringify(formattedPlugins, null, 2)}
@@ -443,10 +507,11 @@ Tugas lu:
    - Gaada parameter jelas -> confidence rendah
    - Gajelas maksudnya -> confidence rendah
 
-3. Kalo mau jalanin command:
-   - Pastiin user beneran mau pake command itu
-   - Cek parameter udah lengkap
-   - Kalo ragu, mending confidence rendah
+3. PENTING UNTUK PERINTAH MUSIK:
+   - Jika user ingin MENDENGARKAN lagu/musik -> gunakan command "play" atau "yp"
+   - Jika user SPESIFIK meminta LIRIK lagu -> barulah gunakan command lirik
+   - Contoh "Puterin lagu Coldplay" -> command: yp, BUKAN lirik
+   - Contoh "Mau lirik lagu Coldplay" -> command: lirik
 
 4. Khusus untuk translate:
    - Kalo ada kata kunci seperti "translate", "terjemahkan", "artikan"
