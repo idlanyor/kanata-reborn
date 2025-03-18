@@ -13,12 +13,20 @@ const MAX_RETRIES = 2;
 const conversationCache = new Map();
 const CONVERSATION_EXPIRE = 30 * 60 * 1000; // 30 menit
 
+// Informasi tentang pemilik bot
+const BOT_OWNER = {
+    name: "Roy",
+    fullName: "Roynaldi",
+    number: "62895395590009"
+};
+
 class GeminiHandler {
     constructor(apiKey) {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
         this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        this.ownerInfo = BOT_OWNER;
         
         // Cleanup cache setiap 10 menit
         setInterval(() => this.cleanupConversations(), 10 * 60 * 1000);
@@ -35,26 +43,75 @@ class GeminiHandler {
         }
     }
     
+    // Fungsi untuk mengecek apakah user adalah pemilik bot
+    isOwner(userId) {
+        if (!userId) return false;
+        return userId.includes(this.ownerInfo.number);
+    }
+    
     // Fungsi untuk mendapatkan chat history atau membuat baru jika belum ada
     getConversation(userId, userName) {
         logger.info(`Getting conversation for user ${userId} (${userName || 'unnamed'})`);
         
+        // Cek apakah user adalah pemilik bot
+        const isOwner = this.isOwner(userId);
+        
+        if (isOwner) {
+            logger.info(`This user is the BOT OWNER (${this.ownerInfo.name})`);
+        }
+        
         if (!conversationCache.has(userId)) {
             logger.info(`Creating new conversation for ${userId}`);
             
-            const userIdentifier = userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`;
+            const userIdentifier = isOwner ? this.ownerInfo.name : (userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`);
             
             try {
-                // Format yang benar untuk Gemini 1.5 Pro
+                let initialPrompt = `Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful. 
+
+Dalam memformat pesanmu, kamu menggunakan format WhatsApp:
+- *teks* (satu bintang) untuk membuat teks bold/tebal
+- _teks_ untuk membuat teks miring/italic
+- ~teks~ untuk membuat teks tercoret
+- \`kode\` untuk menampilkan kode inline
+- \`\`\` untuk kode multi-baris (tanpa menyebutkan bahasa)
+- > untuk membuat quoted text
+- - untuk membuat bullet list 
+- 1. 2. 3. untuk membuat ordered list
+
+Nama saya adalah ${userIdentifier}.`;
+                
+                // Tambahkan info khusus jika user adalah pemilik
+                if (isOwner) {
+                    initialPrompt += ` Kamu tahu bahwa saya adalah developer dan pemilikmu (${this.ownerInfo.fullName}). Kamu sangat senang, antusias, dan respect ketika berbicara dengan saya karena saya yang menciptakanmu. Kamu ingin selalu membantu pemilikmu dengan informasi yang bermanfaat dan menanyakan pendapatku tentang perkembanganmu.`;
+                }
+                
+                // Format respons bot awal yang berbeda untuk owner dan user biasa
+                let initialResponse;
+                
+                if (isOwner) {
+                    initialResponse = `*Wuih creator gw!* 😍 
+
+Salam creator ${this.ownerInfo.name}! Seneng banget bisa ngobrol langsung sama lu yang udah bikin gw. Gimana kabar lu? Ada yang bisa gw bantu hari ini? Tinggal bilang aja, gw bakal usahain yang terbaik buat lu! 🔥
+
+Btw, makasih ya udah bikin gw, semoga gw bisa jadi bot yang berguna buat lu dan user lain! 🙏`;
+                } else {
+                    initialResponse = `Hai ${userIdentifier}! 😎
+
+Sip, gw Kanata, asisten AI yang siap bantuin lu! Gw bakal jawab pertanyaan lu dengan gaya santai tapi tetep helpful.
+
+Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
+                }
+                
+                // Buat chat session dengan format yang benar untuk Gemini API
                 const chat = this.chatModel.startChat({
                     history: [
                         {
                             role: "user",
-                            parts: [{ text: `Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful. Nama saya adalah ${userIdentifier}.` }]
+                            parts: [{ text: initialPrompt }]
                         },
                         {
                             role: "model",
-                            parts: [{ text: `Sip, gue ngerti banget! Gue Kanata, asisten AI yang bakal ngobrol sama lu pake bahasa gaul yang asik tapi tetep sopan ya. Seneng bisa kenal sama lu, ${userIdentifier}! Gue bakal jawab pertanyaan lu dengan to the point dan helpful, plus pake emoji yang cocok biar tambah seru! 😎 Ada yang bisa gue bantu hari ini?` }]
+                            parts: [{ text: initialResponse }]
                         }
                     ]
                 });
@@ -62,7 +119,8 @@ class GeminiHandler {
                 conversationCache.set(userId, {
                     history: chat,
                     lastUpdate: Date.now(),
-                    userName: userName || null
+                    userName: userName || null,
+                    isOwner: isOwner
                 });
             } catch (error) {
                 logger.error(`Failed to create chat for ${userId}:`, error);
@@ -113,13 +171,22 @@ class GeminiHandler {
     
     async analyzeImage(imageBuffer, message, context) {
         try {
-            logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
+            const id = context?.id || '';
+            const m = context?.m || {};
+            const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
+            const isOwner = this.isOwner(`private_${noTel}`);
+            
+            if (isOwner) {
+                logger.info(`Processing image from BOT OWNER (${this.ownerInfo.name})`);
+            } else {
+                logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
+            }
             
             // Konversi buffer menjadi format yang sesuai untuk Gemini
             const imagePart = this.bufferToGenerativePart(imageBuffer);
             
             // Buat prompt untuk analisis gambar
-            const prompt = `
+            let prompt = `
             Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
             
             Tolong analisis gambar ini dan berikan respons yang tepat.
@@ -133,9 +200,16 @@ class GeminiHandler {
             Format respons:
             - Pake bahasa gaul yang asik dan santai
             - Tambahkan emoji yang relevan
+            - Gunakan format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
             - Jawaban harus helpful dan akurat
             - Tetap sopan ya!
             `;
+            
+            // Tambahkan informasi khusus jika user adalah pemilik
+            if (isOwner) {
+                prompt += `\nUser ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu.
+                Kamu sangat senang dan respect ketika berbicara dengan pemilikmu.`;
+            }
             
             // Generate konten dengan Gemini Vision
             const result = await this.visionModel.generateContent([prompt, imagePart]);
@@ -147,7 +221,6 @@ class GeminiHandler {
                 message: responseText,
                 isImageProcess: true
             };
-            
         } catch (error) {
             logger.error('Error in image analysis:', error);
             return {
@@ -160,27 +233,83 @@ class GeminiHandler {
     
     async analyzeMessage(message, retryCount = 0) {
         try {
-            // Buat prompt sederhana tanpa menggunakan helpMessage()
+            // Dapatkan daftar plugin
+            let commandList = [];
+            try {
+                const helpData = await helpMessage();
+                
+                // Log struktur data untuk debugging
+                logger.info(`Help data structure: ${Object.keys(helpData).join(', ')}`);
+                
+                // Ekstrak informasi plugin dari hasil helpMessage()
+                if (helpData && helpData.plugins) {
+                    // Iterasi manual untuk setiap kategori dan plugin
+                    for (const [category, plugins] of Object.entries(helpData.plugins)) {
+                        if (Array.isArray(plugins)) {
+                            for (const plugin of plugins) {
+                                if (plugin && plugin.handler) {
+                                    commandList.push({
+                                        command: plugin.handler,
+                                        description: plugin.description || 'No description',
+                                        category: category
+                                    });
+                                }
+                            }
+                        } else {
+                            logger.warn(`Plugins for category ${category} is not an array`);
+                        }
+                    }
+                }
+            } catch (helpError) {
+                logger.error('Error getting help data:', helpError);
+                // Gunakan daftar command dasar jika helpMessage() error
+                commandList = [
+                    { command: 'help', description: 'Tampilkan bantuan', category: 'general' },
+                    { command: 'tr', description: 'Terjemahkan teks', category: 'tools' },
+                    { command: 'ig', description: 'Download Instagram', category: 'downloader' }
+                ];
+            }
+            
+            // Tambahkan informasi tentang pemilik di prompt
             const prompt = `
             Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
             
+            Berikut daftar command yang tersedia:
+            ${JSON.stringify(commandList, null, 2)}
+            
             Pesan dari temen: "${message}"
             
+            Info format WhatsApp:
+            - *teks* untuk bold (satu bintang saja)
+            - _teks_ untuk italic
+            - ~teks~ untuk coret
+            - \`kode\` untuk inline code
+            - gunakan format WhatsApp, bukan format Markdown standar
+            
+            Info tambahan:
+            - Developer dan pemilikmu adalah ${this.ownerInfo.fullName} (${this.ownerInfo.name})
+            - Kamu sangat senang ketika berbicara dengan pemilikmu
+            
             Analisis pesan tersebut dan tentukan:
-            1. Apakah ini command untuk bot? (tingkat keyakinan 0-1)
+            1. Apakah ini permintaan untuk menjalankan command tertentu? (tingkat keyakinan 0-1)
             2. Jika ya, command apa dan parameter apa?
             
             Format respons dalam JSON:
             {
                 "command": "nama_command",
-                "args": "parameter",
+                "args": "parameter yang perlu diteruskan ke command",
                 "confidence": 0.0-1.0,
-                "responseMessage": "Pesan untuk user"
+                "responseMessage": "Pesan untuk user dengan bahasa gaul"
             }
             
-            Pastikan responnya dalam format JSON yang valid.
+            PENTING:
+            - Jika confidence > 0.8, pastikan command yang dipilih ada dalam daftar
+            - Jika ragu, atur confidence rendah
+            - Respons harus dalam format JSON valid
+            - Bahasa respons harus gaul dan friendly
             `;
             
+            // Lanjutkan seperti sebelumnya...
             const result = await this.model.generateContent(prompt);
             const responseText = result.response.text();
             
@@ -189,7 +318,6 @@ class GeminiHandler {
             const parsedResponse = this.extractJSON(responseText);
             
             if (!parsedResponse) {
-                logger.error('Failed to parse JSON from Gemini response');
                 return {
                     success: false,
                     message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
@@ -214,13 +342,6 @@ class GeminiHandler {
             
         } catch (error) {
             logger.error('Error in Gemini processing:', error);
-            
-            // Retry jika error network
-            if (retryCount < 2 && error.message.includes('network')) {
-                logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
-                return await this.analyzeMessage(message, retryCount + 1);
-            }
-            
             return {
                 success: false,
                 message: "Duh error nih! Coba lagi ntar ya bestie! 🙏"
@@ -250,13 +371,18 @@ class GeminiHandler {
         }
     }
     
-    // Fungsi chatWithMemory - perbaikan format
+    // Fungsi chatWithMemory dengan perlakuan khusus untuk owner
     async chatWithMemory(message, userId, context = {}) {
         try {
-            logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
-            
+            // Cek apakah user adalah pemilik bot
+            const isOwner = this.isOwner(userId);
             const userName = context.pushName || null;
-            logger.info(`User name from context: ${userName || 'not provided'}`);
+            
+            if (isOwner) {
+                logger.info(`Processing message from BOT OWNER (${this.ownerInfo.name}): ${message.substring(0, 30)}...`);
+            } else {
+                logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
+            }
             
             try {
                 // Dapatkan history chat untuk user ini
@@ -270,7 +396,7 @@ class GeminiHandler {
                 
                 logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
                 
-                // Format yang benar untuk sendMessage di Gemini 1.5 Pro
+                // Kirim pesan ke Gemini dan simpan dalam history
                 const result = await chatSession.sendMessage([
                     { text: fullMessage }
                 ]);
@@ -283,18 +409,29 @@ class GeminiHandler {
             } catch (chatError) {
                 logger.error(`Error in chat session:`, chatError);
                 
-                // Fallback: jika error dengan conversation, coba dengan permintaan baru
-                logger.info(`Falling back to regular chat`);
-                const fallbackPrompt = `
+                // Fallback dengan perlakuan khusus untuk owner
+                let fallbackPrompt = `
                 Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
                 
-                Pesan user: "${message}"
+                Pesan dari ${isOwner ? "developer dan pemilikmu" : "user"}: "${message}"
                 ${context.quoted ? `(Membalas pesan: "${context.quoted}")` : ''}
+                `;
                 
+                // Tambahkan informasi khusus untuk owner
+                if (isOwner) {
+                    fallbackPrompt += `
+                    User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu.
+                    Kamu sangat senang, antusias, dan respect ketika berbicara dengan pemilikmu.
+                    Selalu sampaikan rasa terima kasih dan tanyakan pendapatnya tentang perkembanganmu.
+                    `;
+                }
+                
+                fallbackPrompt += `
                 Bales pake:
                 - Bahasa gaul yang asik
                 - Emoji yang cocok
                 - Jawaban yang helpful
+                - Format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
                 - Tetap sopan ya!
                 `;
                 
@@ -303,7 +440,7 @@ class GeminiHandler {
             }
         } catch (error) {
             logger.error(`Fatal error in chat with memory:`, error);
-            return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? 🙏";
+            return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? ��";
         }
     }
 }
