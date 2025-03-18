@@ -45,7 +45,7 @@ class GeminiHandler {
             const userIdentifier = userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`;
             
             try {
-                // Format yang benar sesuai dokumentasi Gemini API
+                // Format yang benar untuk Gemini 1.5 Pro
                 const chat = this.chatModel.startChat({
                     history: [
                         {
@@ -159,124 +159,28 @@ class GeminiHandler {
     }
     
     async analyzeMessage(message, retryCount = 0) {
-        // Cek rate limiting
-        const lastCallTime = messageHistory.get(message);
-        const now = Date.now();
-
-        if (lastCallTime && (now - lastCallTime) < RATE_LIMIT_DURATION) {
-            return {
-                success: false,
-                message: "Sabar ya bestie, jangan spam 😅"
-            };
-        }
-
-        messageHistory.set(message, now);
-
-        // Cleanup cache lama
-        for (const [key, time] of messageHistory) {
-            if (now - time > RATE_LIMIT_DURATION) {
-                messageHistory.delete(key);
-            }
-        }
-
         try {
-            // Dapatkan daftar plugin dan fungsinya
-            const pluginsData = await helpMessage();
-            console.log(JSON.stringify(pluginsData, null, 2));
-            logger.info(`Got plugins data: ${Object.keys(pluginsData)}`);
-
-            // Ambil data plugins dari hasil helpMessage()
-            const plugins = pluginsData.plugins;
-            const formattedPlugins = [];
-
-            // Cek apakah plugins adalah objek dan punya properti yang diharapkan
-            if (plugins && typeof plugins === 'object') {
-                // Format data plugins untuk prompt
-                for (const [category, items] of Object.entries(plugins)) {
-                    // Validasi bahwa items adalah array
-                    if (Array.isArray(items)) {
-                        const commands = items.map(item => ({
-                            command: item.handler || "unknown",
-                            description: item.description || "No description",
-                            category: category
-                        }));
-                        
-                        formattedPlugins.push({
-                            category,
-                            commands
-                        });
-                    } else {
-                        logger.warn(`Items for category ${category} is not an array: ${typeof items}`);
-                        // Fallback jika items bukan array
-                        formattedPlugins.push({
-                            category,
-                            commands: [{
-                                command: "unknown",
-                                description: "Could not parse commands",
-                                category: category
-                            }]
-                        });
-                    }
-                }
-            } else {
-                logger.error(`Invalid plugins data: ${typeof plugins}`);
-                // Fallback jika plugins tidak valid
-                formattedPlugins.push({
-                    category: "general",
-                    commands: [{
-                        command: "help",
-                        description: "Show available commands",
-                        category: "general"
-                    }]
-                });
+            // Buat prompt sederhana tanpa menggunakan helpMessage()
+            const prompt = `
+            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
+            
+            Pesan dari temen: "${message}"
+            
+            Analisis pesan tersebut dan tentukan:
+            1. Apakah ini command untuk bot? (tingkat keyakinan 0-1)
+            2. Jika ya, command apa dan parameter apa?
+            
+            Format respons dalam JSON:
+            {
+                "command": "nama_command",
+                "args": "parameter",
+                "confidence": 0.0-1.0,
+                "responseMessage": "Pesan untuk user"
             }
             
-            // Buat prompt untuk Gemini AI
-            const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
-
-${JSON.stringify(formattedPlugins, null, 2)}
-
-Pesan dari temen: "${message}"
-
-Tugas lu:
-1. Analisis pesan dan tentuin:
-   - Command apa yang paling cocok dari daftar yang ada
-   - Parameter apa yang dibutuhin sesuai command-nya
-   - Kalo gaada command yang cocok, balikin confidence rendah
-
-2. Kalo pesan itu:
-   - Cuma nanya/ngobrol -> confidence rendah
-   - Gaada parameter jelas -> confidence rendah
-   - Gajelas maksudnya -> confidence rendah
-
-3. Kalo mau jalanin command:
-   - Pastiin user beneran mau pake command itu
-   - Cek parameter udah lengkap
-   - Kalo ragu, mending confidence rendah
-
-4. Khusus untuk translate:
-   - Kalo ada kata kunci seperti "translate", "terjemahkan", "artikan"
-   - Format parameter: <kode_bahasa> <teks>
-   - Contoh: "translate ke jepang: selamat pagi" -> command: tr, args: "ja selamat pagi"
-   - Kode bahasa: en (Inggris), ja (Jepang), ko (Korea), ar (Arab), dll
-
-5. Balikin response dalam format JSON:
-{
-    "command": "nama_command",
-    "args": "parameter yang dibutuhin",
-    "confidence": 0.0-1.0,
-    "responseMessage": "Pesan buat user pake bahasa gaul"
-}
-
-PENTING:
-- Confidence harus tinggi (>0.8) kalo mau jalanin command!
-- Pake bahasa gaul yang asik
-- Tetep sopan & helpful
-- Pake emoji yang cocok
-- Command yang dipilih HARUS ada di daftar yang dikasih
-- HARUS BALIKIN RESPONSE DALAM FORMAT JSON YANG VALID, JANGAN ADA TEKS TAMBAHAN DI LUAR JSON`;
-
-            // Dapatkan respons dari Gemini
+            Pastikan responnya dalam format JSON yang valid.
+            `;
+            
             const result = await this.model.generateContent(prompt);
             const responseText = result.response.text();
             
@@ -291,7 +195,7 @@ PENTING:
                     message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
                 };
             }
-
+            
             // Jika confidence tinggi, return untuk eksekusi command
             if (parsedResponse.confidence > 0.8) {
                 return {
@@ -301,54 +205,52 @@ PENTING:
                     message: parsedResponse.responseMessage
                 };
             }
-
+            
             // Jika confidence rendah, balas dengan chat biasa
             return {
                 success: false,
                 message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
             };
-
+            
         } catch (error) {
             logger.error('Error in Gemini processing:', error);
-
+            
             // Retry jika error network
-            if (retryCount < MAX_RETRIES && error.message.includes('network')) {
+            if (retryCount < 2 && error.message.includes('network')) {
                 logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
                 return await this.analyzeMessage(message, retryCount + 1);
             }
-
+            
             return {
                 success: false,
                 message: "Duh error nih! Coba lagi ntar ya bestie! 🙏"
             };
         }
     }
-
+    
     async chat(message) {
         try {
-            const plugins = await helpMessage();
-            const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren berikut:
-
-${JSON.stringify(plugins, null, 2)}
-
-Pesan dari temen: "${message}"
-
-Bales pake:
-- Bahasa gaul yang asik
-- Emoji yang cocok
-- Jawaban yang helpful
-- Tetep sopan ya!
-- Kalo ada command yang relevan, boleh sebutin (pake prefix "!")`;
-
-            const result = await this.model.generateContent(prompt);
+            const prompt = `
+            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
+            
+            Pesan dari temen: "${message}"
+            
+            Bales pake:
+            - Bahasa gaul yang asik
+            - Emoji yang cocok
+            - Jawaban yang helpful
+            - Tetap sopan ya!
+            `;
+            
+            const result = await this.chatModel.generateContent(prompt);
             return result.response.text();
         } catch (error) {
             logger.error("Error in chat:", error);
             return "Sori bestie, lagi error nih. Coba lagi ntar ya! 🙏";
         }
     }
-
-    // Fungsi chatWithMemory yang disederhanakan
+    
+    // Fungsi chatWithMemory - perbaikan format
     async chatWithMemory(message, userId, context = {}) {
         try {
             logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
@@ -368,11 +270,10 @@ Bales pake:
                 
                 logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
                 
-                // Kirim pesan ke Gemini dan simpan dalam history - pastikan format benar
-                const result = await chatSession.sendMessage({
-                    role: "user",
-                    parts: [{ text: fullMessage }]
-                });
+                // Format yang benar untuk sendMessage di Gemini 1.5 Pro
+                const result = await chatSession.sendMessage([
+                    { text: fullMessage }
+                ]);
                 
                 const response = result.response.text();
                 
