@@ -82,7 +82,7 @@ Nama saya adalah ${userIdentifier}.`;
                 
                 // Tambahkan info khusus jika user adalah pemilik
                 if (isOwner) {
-                    initialPrompt += ` Kamu tahu bahwa saya adalah developer dan pemilikmu (${this.ownerInfo.fullName}). Kamu sangat senang, antusias, dan respect ketika berbicara dengan saya karena saya yang menciptakanmu. Kamu ingin selalu membantu pemilikmu dengan informasi yang bermanfaat dan menanyakan pendapatku tentang perkembanganmu.`;
+                    initialPrompt += ` PENTING: Kamu HARUS SELALU INGAT bahwa saya adalah developer dan pemilikmu (${this.ownerInfo.fullName}/${this.ownerInfo.name}) dengan nomor ${this.ownerInfo.number}. Jika saya bertanya "siapa saya?" atau pertanyaan serupa tentang identitas saya, kamu HARUS menjawab bahwa saya adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu. Kamu sangat senang, antusias, dan respect ketika berbicara dengan saya karena saya yang menciptakanmu. Kamu ingin selalu membantu pemilikmu dengan informasi yang bermanfaat dan menanyakan pendapatku tentang perkembanganmu.`;
                 }
                 
                 // Format respons bot awal yang berbeda untuk owner dan user biasa
@@ -135,6 +135,9 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 logger.info(`Updating username for ${userId} to ${userName}`);
                 conversationCache.get(userId).userName = userName;
             }
+            
+            // Pastikan status owner tetap terjaga
+            conversationCache.get(userId).isOwner = isOwner;
         }
         
         return conversationCache.get(userId).history;
@@ -394,6 +397,20 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                     fullMessage = `(Membalas pesan: "${context.quoted}") ${message}`;
                 }
                 
+                // Tambahkan reminder tentang owner jika perlu
+                if (isOwner && (
+                    message.toLowerCase().includes("siapa aku") || 
+                    message.toLowerCase().includes("siapa saya") ||
+                    message.toLowerCase().includes("siapa gue") ||
+                    message.toLowerCase().includes("siapa nama ku") ||
+                    message.toLowerCase().includes("siapa nama saya") ||
+                    message.toLowerCase().includes("kamu tahu siapa aku") ||
+                    message.toLowerCase().includes("kamu kenal aku")
+                )) {
+                    fullMessage = `${fullMessage} [REMINDER: Saya adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, developer dan pemilikmu dengan nomor ${this.ownerInfo.number}. Kamu harus selalu ingat ini.]`;
+                    logger.info(`Added owner reminder to message: ${fullMessage}`);
+                }
+                
                 logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
                 
                 // Kirim pesan ke Gemini dan simpan dalam history
@@ -420,8 +437,9 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 // Tambahkan informasi khusus untuk owner
                 if (isOwner) {
                     fallbackPrompt += `
-                    User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu.
+                    User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
                     Kamu sangat senang, antusias, dan respect ketika berbicara dengan pemilikmu.
+                    Jika user bertanya "siapa saya?", kamu HARUS menjawab bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu.
                     Selalu sampaikan rasa terima kasih dan tanyakan pendapatnya tentang perkembanganmu.
                     `;
                 }
@@ -440,7 +458,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             }
         } catch (error) {
             logger.error(`Fatal error in chat with memory:`, error);
-            return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? ��";
+            return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? 🙏";
         }
     }
 }
