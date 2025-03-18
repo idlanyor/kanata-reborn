@@ -20,6 +20,14 @@ const BOT_OWNER = {
     number: "62895395590009"
 };
 
+// Fallback jika helpMessage gagal
+const DEFAULT_COMMANDS = [
+    { handler: "menu", description: "Menampilkan daftar perintah" },
+    { handler: "tr", description: "Menerjemahkan teks ke bahasa lain" },
+    { handler: "sticker", description: "Membuat sticker dari gambar" },
+    { handler: "owner", description: "Info tentang pemilik bot" }
+];
+
 class GeminiHandler {
     constructor(apiKey) {
         this.genAI = new GoogleGenerativeAI(apiKey);
@@ -56,18 +64,69 @@ class GeminiHandler {
         return userId.includes(this.ownerInfo.number);
     }
     
+    // Fungsi untuk mendapatkan ID user yang aman
+    getSafeUserId(userId) {
+        if (!userId) return "unknown_user";
+        return userId;
+    }
+    
+    // Fungsi untuk mendapatkan nama user yang aman
+    getUserIdentifier(userId, userName) {
+        // Verifikasi userId
+        const safeUserId = this.getSafeUserId(userId);
+        
+        // Cek apakah user adalah pemilik bot
+        const isOwner = this.isOwner(safeUserId);
+        
+        if (isOwner) {
+            return {
+                name: this.ownerInfo.name,
+                isOwner: true
+            };
+        }
+        
+        // Untuk user biasa, gunakan userName jika tersedia
+        if (userName) {
+            return {
+                name: userName,
+                isOwner: false
+            };
+        }
+        
+        // Fallback jika tidak ada userName
+        try {
+            const userPrefix = safeUserId.split('_')[1]?.substring(0, 4) || 'unknown';
+            return {
+                name: `user_${userPrefix}`,
+                isOwner: false
+            };
+        } catch (error) {
+            // Jika terjadi error saat parsing userId
+            return {
+                name: "anonymous",
+                isOwner: false
+            };
+        }
+    }
+    
     // Fungsi untuk mendapatkan chat history atau membuat baru jika belum ada
     getConversation(userId, userName) {
+        // Validasi userId
+        if (!userId) {
+            logger.warn("getConversation called with empty userId, using 'unknown_user'");
+            userId = "unknown_user";
+        }
+        
         // Cek apakah user adalah pemilik bot
         const isOwner = this.isOwner(userId);
+        const userInfo = this.getUserIdentifier(userId, userName);
         
         if (isOwner) {
             logger.info(`This user is the BOT OWNER (${this.ownerInfo.name})`);
         }
         
         logger.info(`User name from context: ${userName || 'not provided'}`);
-        const userIdentifier = isOwner ? this.ownerInfo.name : (userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`);
-        logger.info(`Getting conversation for user ${userId} (${userIdentifier})`);
+        logger.info(`Getting conversation for user ${userId} (${userInfo.name})`);
         
         if (!conversationCache.has(userId)) {
             logger.info(`Creating new conversation for ${userId}`);
@@ -88,7 +147,7 @@ Dalam memformat pesanmu, kamu menggunakan format WhatsApp:
 - 1. 2. 3. untuk membuat ordered list`;
             
             // Tambahkan info user
-            initialPrompt += `\n\nNama user ini adalah ${userIdentifier}.`;
+            initialPrompt += `\n\nNama user ini adalah ${userInfo.name}.`;
             
             // Tambahkan info khusus jika user adalah pemilik
             if (isOwner) {
@@ -105,7 +164,7 @@ Salam creator ${this.ownerInfo.name}! Seneng banget bisa ngobrol langsung sama l
 
 Btw, makasih ya udah bikin gw, semoga gw bisa jadi bot yang berguna buat lu dan user lain! 🙏`;
             } else {
-                initialResponse = `Hai ${userIdentifier}! 😎
+                initialResponse = `Hai ${userInfo.name}! 😎
 
 Sip, gw Kanata, asisten AI yang siap bantuin lu! Gw bakal jawab pertanyaan lu dengan gaya santai tapi tetep helpful.
 
@@ -287,25 +346,83 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
 
         try {
             // Dapatkan daftar plugin dan fungsinya
-            const plugins = await helpMessage();
-            
+            let plugins = null;
+            try {
+                plugins = await helpMessage();
             // Logging untuk debugging
+                if (plugins) {
             const categories = Object.keys(plugins);
             logger.info(`Got plugins data: ${categories.join(',')}`);
-
-            // Format daftar fungsi untuk prompt
-            const formattedPlugins = Object.entries(plugins)
-                .map(([category, items]) => {
-                    const commands = items.map(item => ({
-                        command: item.handler,
-                        description: item.description,
+                } else {
+                    logger.warn("helpMessage returned null or undefined");
+                    plugins = { "basic": DEFAULT_COMMANDS };
+                }
+            } catch (error) {
+                logger.error("Error getting plugins from helpMessage:", error);
+                plugins = { "basic": DEFAULT_COMMANDS };
+            }
+            
+            // Format daftar fungsi untuk prompt - dengan handling struktur yang berbeda
+            let formattedPlugins = [];
+            
+            if (typeof plugins === 'object') {
+                // Cek apakah plugins memiliki properties yang diharapkan
+                if (plugins.items && Array.isArray(plugins.items)) {
+                    // Format untuk struktur { items: [] }
+                    formattedPlugins = [{
+                        category: "commands",
+                        commands: plugins.items.map(item => ({
+                            command: item.handler || item.command,
+                            description: item.description || "No description"
+                        }))
+                    }];
+                    
+                    logger.info(`Formatted ${plugins.items.length} commands from plugins.items`);
+                } else {
+                    // Format untuk struktur { category1: [], category2: [] }
+                    formattedPlugins = Object.entries(plugins).map(([category, items]) => {
+                        // Validasi bahwa items adalah array
+                        if (!Array.isArray(items)) {
+                            logger.warn(`Items for category ${category} is not an array, using empty array`);
+                            return {
+                                category,
+                                commands: []
+                            };
+                        }
+                        
+                        const commands = items.map(item => {
+                            if (!item) return { command: "unknown", description: "No description" };
+                            return {
+                                command: item.handler || item.command || "unknown",
+                                description: item.description || "No description",
                         category: category
-                    }));
+                            };
+                        });
+                        
                     return {
                         category,
                         commands
                     };
                 });
+                    
+                    logger.info(`Formatted commands from ${formattedPlugins.length} categories`);
+                }
+            } else {
+                logger.warn("plugins is not an object, using default commands");
+                formattedPlugins = [{
+                    category: "basic",
+                    commands: DEFAULT_COMMANDS.map(cmd => ({
+                        command: cmd.handler,
+                        description: cmd.description
+                    }))
+                }];
+            }
+            
+            // Log formattedPlugins untuk debugging
+            logger.info(`formattedPlugins structure: ${JSON.stringify(formattedPlugins.map(p => ({ 
+                category: p.category, 
+                commandCount: p.commands ? p.commands.length : 0 
+            })))}`);
             
             // Buat prompt untuk Gemini AI
             const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
@@ -370,6 +487,7 @@ PENTING:
 
             // Jika confidence tinggi, return untuk eksekusi command
             if (parsedResponse.confidence > 0.8) {
+                logger.info(`Executing command from Gemini: ${parsedResponse.command}`);
                 return {
                     success: true,
                     command: parsedResponse.command,
@@ -388,7 +506,7 @@ PENTING:
             logger.error('Error in Gemini processing:', error);
 
             // Retry jika error network
-            if (retryCount < MAX_RETRIES && error.message.includes('network')) {
+            if (retryCount < MAX_RETRIES && error.message && error.message.includes('network')) {
                 logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
                 return await this.analyzeMessage(message, retryCount + 1);
             }
@@ -402,8 +520,14 @@ PENTING:
 
     async chat(message, userId, userName) {
         try {
+            // Validasi userId
+            if (!userId) {
+                logger.warn("chat called with empty userId, using 'unknown_user'");
+                userId = "unknown_user";
+            }
+            
             const isOwner = this.isOwner(userId);
-            const userIdentifier = isOwner ? this.ownerInfo.name : (userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`);
+            const userInfo = this.getUserIdentifier(userId, userName);
             
             // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
@@ -412,12 +536,23 @@ PENTING:
                 message.toLowerCase().includes("siapa gue")
             );
             
+            // Dapatkan daftar plugin dengan error handling
+            let pluginsData = "{}";
+            try {
             const plugins = await helpMessage();
+                if (plugins) {
+                    pluginsData = JSON.stringify(plugins);
+                }
+            } catch (error) {
+                logger.error("Error getting plugins in chat:", error);
+                // Gunakan data kosong jika error
+            }
+            
             let prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren berikut:
 
-${JSON.stringify(plugins, null, 2)}
+${pluginsData}
 
-Pesan dari user ${userIdentifier}: "${message}"
+Pesan dari user ${userInfo.name}: "${message}"
 
 Bales pake:
 - Bahasa gaul yang asik
@@ -447,6 +582,12 @@ Bales pake:
     // Fungsi chatWithMemory untuk menggantikan gpt4Hika
     async chatWithMemory(message, userId, context = {}) {
         try {
+            // Validasi userId
+            if (!userId) {
+                logger.warn("chatWithMemory called with empty userId, using 'unknown_user'");
+                userId = "unknown_user";
+            }
+            
             const isOwner = this.isOwner(userId);
             const userName = context.pushName || null;
             
@@ -490,10 +631,8 @@ Bales pake:
                 logger.info(`Sending message to Gemini: ${messageText.substring(0, 30)}...`);
                 
                 // PERBAIKAN: Kirim pesan dengan format parts yang benar
-                const result = await chatSession.sendMessage({
-                    role: "user",
-                    parts: [{ text: messageText }]
-                });
+                // Gunakan sendMessage dengan string biasa sesuai library Gemini API
+                const result = await chatSession.sendMessage([{ text: messageText }]);
                 
                 const response = result.response.text();
                 
