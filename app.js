@@ -382,7 +382,6 @@ export async function startBot() {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
                 if (m.key.fromMe) return
-                await autoAI(m, sock)
                 const sender = m.pushName;
                 const id = m.chat;
                 // if(id.endsWith('@g.us')) return
@@ -450,36 +449,74 @@ export async function startBot() {
                         // 1. Private chat: Selalu aktif
                         // 2. Group chat: Aktif hanya jika setting autoai = 1
                         
+                        // Identifikasi tipe chat
+                        const isPrivateChat = !id.endsWith('@g.us');
+                        
                         // Di private chat, selalu aktifkan AutoAI
                         if (isPrivateChat) {
-                            logger.info(`AutoAI activated in private chat with ${m.pushName}`);
+                            logger.info(`AutoAI activated in private chat with ${m.pushName || noTel}`);
                             const userId = `private_${noTel}`;
                             const quotedText = m.quoted?.text || "";
+                            
+                            // Log untuk debugging
+                            logger.info(`Calling chatWithMemory for user ${userId}`);
+                            logger.info(`Message: ${fullmessage.substring(0, 30)}...`);
+                            logger.info(`Context: pushName=${m.pushName}, noTel=${noTel}, quotedText=${quotedText ? 'present' : 'none'}`);
+                            
+                            try {
                             const response = await geminiHandler.chatWithMemory(
                                 fullmessage, 
                                 userId, 
-                                { quoted: quotedText }
-                            );
+                                    { 
+                                        pushName: m.pushName,
+                                        noTel: noTel,
+                                        quoted: quotedText
+                                    }
+                                );
+                                
                             await sock.sendMessage(id, { text: response }, { quoted: m });
+                            } catch (aiError) {
+                                logger.error(`Error in autoAI for private chat:`, aiError);
+                                await sock.sendMessage(id, { 
+                                    text: "Waduh, otak gw lagi error nih. Coba lagi ntar ya! 🙏" 
+                                }, { quoted: m });
+                            }
                             return;
                         } 
                         
                         // Di grup, cek pengaturan autoai
-                        if ((await Group.getSettings(id)).autoai == 1) {
+                        try {
+                            const settings = await Group.getSettings(id);
+                            if (settings.autoai == 1) {
                             logger.info(`AutoAI activated in group ${id} (explicitly enabled in settings)`);
                             const groupId = `group_${id}`;
                             const quotedText = m.quoted?.text || "";
+                                
                             const response = await geminiHandler.chatWithMemory(
                                 fullmessage, 
                                 groupId, 
-                                { quoted: quotedText }
-                            );
+                                    { 
+                                        pushName: m.pushName,
+                                        noTel: noTel,
+                                        quoted: quotedText
+                                    }
+                                );
+                                
                             await sock.sendMessage(id, { text: response }, { quoted: m });
                         } else {
                             logger.info(`AutoAI skipped in group ${id} (not enabled in settings)`);
+                            }
+                        } catch (groupError) {
+                            logger.error(`Error checking group settings:`, groupError);
+                            await sock.sendMessage(id, { 
+                                text: "Waduh, ada masalah sama pengaturan grupnya nih. Coba lagi ntar ya! 🙏" 
+                            }, { quoted: m });
                         }
                     } catch (error) {
-                        await sock.sendMessage(id, { text: 'Ups, ada yang salah' }, { quoted: m });
+                        logger.error(`General error in botMentioned handler:`, error);
+                        await sock.sendMessage(id, { 
+                            text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi ntar ya!' 
+                        }, { quoted: m });
                     }
                 }
 

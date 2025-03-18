@@ -18,14 +18,7 @@ class GeminiHandler {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
         this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-        this.chatModel = this.genAI.getGenerativeModel({ 
-            model: "gemini-1.5-pro",
-            generationConfig: {
-                temperature: 0.7,
-                topP: 0.95,
-                topK: 40,
-            }
-        });
+        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
         
         // Cleanup cache setiap 10 menit
         setInterval(() => this.cleanupConversations(), 10 * 60 * 1000);
@@ -43,26 +36,46 @@ class GeminiHandler {
     }
     
     // Fungsi untuk mendapatkan chat history atau membuat baru jika belum ada
-    getConversation(userId) {
+    getConversation(userId, userName) {
+        logger.info(`Getting conversation for user ${userId} (${userName || 'unnamed'})`);
+        
         if (!conversationCache.has(userId)) {
-            conversationCache.set(userId, {
-                history: this.chatModel.startChat({
+            logger.info(`Creating new conversation for ${userId}`);
+            
+            const userIdentifier = userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`;
+            
+            try {
+                const chat = this.chatModel.startChat({
                     history: [
                         {
                             role: "user",
-                            parts: "Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful."
+                            parts: `Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful. Nama saya adalah ${userIdentifier}.`
                         },
                         {
                             role: "model",
-                            parts: "Sip, gue ngerti banget! Gue Kanata, asisten AI yang bakal ngobrol sama lu pake bahasa gaul yang asik tapi tetep sopan ya. Gue bakal jawab pertanyaan lu dengan to the point dan helpful, plus pake emoji yang cocok biar tambah seru! 😎 Ada yang bisa gue bantu hari ini?"
+                            parts: `Sip, gue ngerti banget! Gue Kanata, asisten AI yang bakal ngobrol sama lu pake bahasa gaul yang asik tapi tetep sopan ya. Seneng bisa kenal sama lu, ${userIdentifier}! Gue bakal jawab pertanyaan lu dengan to the point dan helpful, plus pake emoji yang cocok biar tambah seru! 😎 Ada yang bisa gue bantu hari ini?`
                         }
                     ]
-                }),
-                lastUpdate: Date.now()
-            });
+                });
+                
+                conversationCache.set(userId, {
+                    history: chat,
+                    lastUpdate: Date.now(),
+                    userName: userName || null
+                });
+            } catch (error) {
+                logger.error(`Failed to create chat for ${userId}:`, error);
+                throw error;
+            }
         } else {
-            // Update timestamp saja
+            // Update timestamp
             conversationCache.get(userId).lastUpdate = Date.now();
+            
+            // Update username jika sebelumnya null tapi sekarang ada
+            if (!conversationCache.get(userId).userName && userName) {
+                logger.info(`Updating username for ${userId} to ${userName}`);
+                conversationCache.get(userId).userName = userName;
+            }
         }
         
         return conversationCache.get(userId).history;
@@ -301,27 +314,56 @@ Bales pake:
         }
     }
 
-    // Fungsi chatWithMemory untuk menggantikan gpt4Hika
+    // Fungsi chatWithMemory yang disederhanakan
     async chatWithMemory(message, userId, context = {}) {
         try {
-            logger.info(`Processing chat with memory for ${userId}: ${message.substring(0, 30)}...`);
+            logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
             
+            const userName = context.pushName || null;
+            logger.info(`User name from context: ${userName || 'not provided'}`);
+            
+            try {
             // Dapatkan history chat untuk user ini
-            const chatSession = this.getConversation(userId);
+                const chatSession = this.getConversation(userId, userName);
             
             // Tambahkan context jika ada
-            let contextPrompt = "";
+                let fullMessage = message;
             if (context.quoted) {
-                contextPrompt = `(Ini adalah balasan untuk pesan: "${context.quoted}")`;
+                    fullMessage = `(Membalas pesan: "${context.quoted}") ${message}`;
             }
+                
+                logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
             
             // Kirim pesan ke Gemini dan simpan dalam history
-            const result = await chatSession.sendMessage(`${contextPrompt} ${message}`);
+                const result = await chatSession.sendMessage(fullMessage);
             const response = result.response.text();
+                
+                logger.info(`Got response from Gemini: ${response.substring(0, 30)}...`);
             
             return response;
+            } catch (chatError) {
+                logger.error(`Error in chat session:`, chatError);
+                
+                // Fallback: jika error dengan conversation, coba dengan permintaan baru
+                logger.info(`Falling back to regular chat`);
+                const fallbackPrompt = `
+                Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
+                
+                Pesan user: "${message}"
+                ${context.quoted ? `(Membalas pesan: "${context.quoted}")` : ''}
+                
+                Bales pake:
+                - Bahasa gaul yang asik
+                - Emoji yang cocok
+                - Jawaban yang helpful
+                - Tetap sopan ya!
+                `;
+                
+                const fallbackResult = await this.chatModel.generateContent(fallbackPrompt);
+                return fallbackResult.response.text();
+            }
         } catch (error) {
-            logger.error(`Error in chat with memory:`, error);
+            logger.error(`Fatal error in chat with memory:`, error);
             return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? 🙏";
         }
     }
