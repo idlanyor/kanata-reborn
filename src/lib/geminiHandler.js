@@ -33,8 +33,15 @@ class GeminiHandler {
     constructor(apiKey) {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-        this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+        this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        this.chatModel = this.genAI.getGenerativeModel({ 
+            model: "gemini-1.5-pro",
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+                topK: 40,
+            }
+        });
         this.ownerInfo = BOT_OWNER;
         
         // Simpan daftar perintah/fitur
@@ -312,7 +319,16 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
         }
     }
     
-    // Modifikasi analyzeImage untuk lebih mengenali user
+    // Konversi buffer gambar menjadi format yang dibutuhkan Gemini
+    bufferToGenerativePart(buffer, mimeType = "image/jpeg") {
+        return {
+            inlineData: {
+                data: buffer.toString("base64"),
+                mimeType
+            },
+        };
+    }
+    
     async analyzeImage(imageBuffer, message, context) {
         try {
             const id = context?.id || '';
@@ -320,34 +336,34 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
             const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
+            const isOwner = this.isOwner(userId);
             
-            // Dapatkan identitas pengguna
-            const userIdentity = this.getUserIdentifier(userId, userName);
-            
-            if (userIdentity.isOwner) {
-                logger.info(`Processing image from BOT OWNER (${userIdentity.name})`);
+            if (isOwner) {
+                logger.info(`Processing image from BOT OWNER (${this.ownerInfo.name}): ${message?.substring(0, 30) || "no message"}...`);
             } else {
-                logger.info(`Processing image from ${userIdentity.name} with message: ${message?.substring(0, 30) || "no message"}...`);
+                logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
             }
+            
+            // Cek apakah ini pertanyaan tentang identitas
+            const isIdentityQuestion = message && (
+                message.toLowerCase().includes("siapa aku") || 
+                message.toLowerCase().includes("siapa saya") ||
+                message.toLowerCase().includes("siapa gue") ||
+                message.toLowerCase().includes("siapa nama ku") ||
+                message.toLowerCase().includes("siapa nama saya") ||
+                message.toLowerCase().includes("kamu tahu siapa aku") ||
+                message.toLowerCase().includes("kamu kenal aku")
+            );
             
             // Konversi buffer menjadi format yang sesuai untuk Gemini
             const imagePart = this.bufferToGenerativePart(imageBuffer);
-            
-            // Cek apakah user menanyakan menu atau fitur
-            const isMenuRequest = message && (
-                message.toLowerCase().includes('menu') || 
-                message.toLowerCase().includes('fitur') || 
-                message.toLowerCase().includes('command') || 
-                message.toLowerCase().includes('perintah') ||
-                message.toLowerCase().includes('bisa apa')
-            );
             
             // Buat prompt untuk analisis gambar
             let prompt = `
             Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
             
             Tolong analisis gambar ini dan berikan respons yang tepat.
-            ${message ? `User (${userIdentity.name}) menanyakan/mengatakan: "${message}"` : `User (${userIdentity.name}) mengirim gambar tanpa pesan.`}
+            ${message ? `User menanyakan/mengatakan: "${message}"` : ""}
             
             Berikut yang perlu kamu lakukan:
             1. Jelaskan apa yang kamu lihat di gambar
@@ -362,19 +378,14 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
             - Tetap sopan ya!
             `;
             
-            // Tambahkan informasi khusus berdasarkan identitas dan jenis pertanyaan
-            if (userIdentity.isOwner) {
-                prompt += `\nPENTING: User ini adalah ${userIdentity.name} (${userIdentity.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
+            // Tambahkan informasi khusus jika user adalah pemilik
+            if (isOwner) {
+                prompt += `\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
                 Kamu sangat senang dan respect ketika berbicara dengan pemilikmu.`;
                 
-                if (isMenuRequest) {
-                    const commandList = this.getCommandList();
-                    const commandString = commandList.map(cmd => 
-                        `/${cmd.command} - ${cmd.description}`
-                    ).join('\n');
-                    
-                    prompt += `\nUser bertanya tentang menu/fitur. Selain menganalisis gambar, berikan juga daftar fitur berikut:
-                    ${commandString}`;
+                // Tambahkan instruksi spesifik jika bertanya tentang identitas
+                if (isIdentityQuestion) {
+                    prompt += `\nINGAT: User SEDANG BERTANYA tentang identitasnya. Kamu HARUS menjawab dengan jelas bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu.`;
                 }
             }
             
@@ -383,14 +394,10 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
             const response = result.response;
             const responseText = response.text();
             
-            // Update percakapan jika ada dalam cache
-            if (conversationCache.has(userId)) {
-                // Tambahkan interaksi ini ke dalam memori
-                const memoryPrompt = `[Konteks: User mengirim gambar dan kamu menganalisisnya. Pesan user: "${message || 'tidak ada pesan'}"]`;
+            // Update percakapan memory jika user bertanya tentang identitas
+            if (isOwner && isIdentityQuestion && conversationCache.has(userId)) {
+                const memoryPrompt = `[User bertanya tentang identitasnya melalui gambar. Ingat bahwa user adalah ${this.ownerInfo.name}, pemilikmu.]`;
                 this.getConversation(userId, userName).sendMessage([{ text: memoryPrompt }]);
-                
-                conversationCache.get(userId).lastUpdate = Date.now();
-                conversationCache.get(userId).messageCount++;
             }
             
             return {
@@ -398,6 +405,7 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
                 message: responseText,
                 isImageProcess: true
             };
+            
         } catch (error) {
             logger.error('Error in image analysis:', error);
             return {
@@ -408,137 +416,196 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
         }
     }
     
-    // Modifikasi analyzeMessage juga
-    async analyzeMessage(message, userId, context = {}) {
-        try {
-            // Cek apakah user menanyakan menu
-            if (message.toLowerCase() === 'menu' || 
-                message.toLowerCase() === '/menu' || 
-                message.toLowerCase() === '.menu') {
-                // Langsung kembalikan menu tanpa analisis
+    async analyzeMessage(message, retryCount = 0) {
+        // Cek rate limiting
+        const lastCallTime = messageHistory.get(message);
+        const now = Date.now();
+
+        if (lastCallTime && (now - lastCallTime) < RATE_LIMIT_DURATION) {
                 return {
-                    useCommand: true,
-                    command: "menu",
-                    confidence: 100,
-                    reason: "User explicitly requested menu"
-                };
+                success: false,
+                message: "Sabar ya bestie, jangan spam 😅"
+            };
+        }
+
+        messageHistory.set(message, now);
+
+        // Cleanup cache lama
+        for (const [key, time] of messageHistory) {
+            if (now - time > RATE_LIMIT_DURATION) {
+                messageHistory.delete(key);
             }
+        }
+
+        try {
+            // Dapatkan daftar plugin dan fungsinya
+            const plugins = await helpMessage();
+            const functionDescriptions = [];
+
+            // Format daftar fungsi untuk prompt
+            const formattedPlugins = Object.entries(plugins)
+                .map(([category, items]) => {
+                    const commands = items.map(item => ({
+                        command: item.handler,
+                        description: item.description,
+                        category: category
+                    }));
+                    return {
+                        category,
+                        commands
+                    };
+                });
             
-            // Cek apakah user adalah pemilik bot
-            const isOwner = this.isOwner(userId);
-            const userName = context.pushName || null;
-            
-            if (isOwner) {
-                logger.info(`AnalyzeMessage from BOT OWNER (${this.ownerInfo.name}): ${message.substring(0, 30)}...`);
-            }
-            
-            // Coba dapatkan daftar plugin dari helpMessage
-            let pluginInfo;
-            try {
-                await this.updateCommands(); // Pastikan daftar command terbaru
-                pluginInfo = { items: this.getCommandList() };
-            } catch (helpError) {
-                logger.error('Error getting plugin info:', helpError);
-                pluginInfo = { items: DEFAULT_COMMANDS }; // Fallback jika gagal
-            }
-            
-            // Ekstrak daftar perintah dari items
-            let commandList = [];
-            if (pluginInfo && Array.isArray(pluginInfo.items)) {
-                commandList = pluginInfo.items;
-            }
-            
-            let prompt = `
-            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-            
-            Analisis pesan user berikut:
-            "${message}"
-            
-            Dan tentukan:
-            1. Apakah user meminta menggunakan salah satu fitur/perintah?
-            2. Jika ya, perintah mana yang diinginkan user?
-            3. Berikan confidence score (0-100) seberapa yakin user ingin menggunakan perintah tersebut
-            
-            Daftar perintah yang tersedia:
-            ${JSON.stringify(commandList)}
-            
-            Format respons kamu harus dalam JSON seperti ini:
-            {
-              "useCommand": true/false,
-              "command": "nama_perintah",
-              "confidence": 80,
-              "reason": "alasan singkat"
-            }
-            
-            Jika tidak jelas, kembalikan "useCommand": false.
-            `;
-            
-            // Tambahkan informasi khusus jika user adalah pemilik
-            if (isOwner) {
-                prompt += `\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu.`;
-            }
-            
-            try {
+            // Buat prompt untuk Gemini AI
+            const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
+
+${JSON.stringify(formattedPlugins, null, 2)}
+
+Pesan dari temen: "${message}"
+
+Tugas lu:
+1. Analisis pesan dan tentuin:
+   - Command apa yang paling cocok dari daftar yang ada
+   - Parameter apa yang dibutuhin sesuai command-nya
+   - Kalo gaada command yang cocok, balikin confidence rendah
+
+2. Kalo pesan itu:
+   - Cuma nanya/ngobrol -> confidence rendah
+   - Gaada parameter jelas -> confidence rendah
+   - Gajelas maksudnya -> confidence rendah
+
+3. Kalo mau jalanin command:
+   - Pastiin user beneran mau pake command itu
+   - Cek parameter udah lengkap
+   - Kalo ragu, mending confidence rendah
+
+4. Khusus untuk translate:
+   - Kalo ada kata kunci seperti "translate", "terjemahkan", "artikan"
+   - Format parameter: <kode_bahasa> <teks>
+   - Contoh: "translate ke jepang: selamat pagi" -> command: tr, args: "ja selamat pagi"
+   - Kode bahasa: en (Inggris), ja (Jepang), ko (Korea), ar (Arab), dll
+
+5. Balikin response dalam format JSON:
+{
+    "command": "nama_command",
+    "args": "parameter yang dibutuhin",
+    "confidence": 0.0-1.0,
+    "responseMessage": "Pesan buat user pake bahasa gaul"
+}
+
+PENTING:
+- Confidence harus tinggi (>0.8) kalo mau jalanin command!
+- Pake bahasa gaul yang asik
+- Tetep sopan & helpful
+- Pake emoji yang cocok
+- Command yang dipilih HARUS ada di daftar yang dikasih
+- HARUS BALIKIN RESPONSE DALAM FORMAT JSON YANG VALID, JANGAN ADA TEKS TAMBAHAN DI LUAR JSON`;
+
+            // Dapatkan respons dari Gemini
                 const result = await this.model.generateContent(prompt);
                 const responseText = result.response.text();
                 
-                logger.info(`Raw AI analysis: ${responseText}`);
-                
-                // Parse response menjadi JSON
-                let jsonResponse;
-                try {
-                    // Cari pola JSON dalam respons
-                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        jsonResponse = JSON.parse(jsonMatch[0]);
-                    } else {
-                        throw new Error("No JSON found in response");
-                    }
-                } catch (jsonError) {
-                    logger.error("Failed to parse JSON:", jsonError);
+            // Parse respons JSON dengan handling error
+            logger.info('Raw Gemini response:', responseText);
+            const parsedResponse = this.extractJSON(responseText);
+            
+            if (!parsedResponse) {
+                logger.error('Failed to parse JSON from Gemini response');
                     return {
-                        useCommand: false,
-                        command: null,
-                        confidence: 0,
-                        reason: "Error parsing response"
-                    };
-                }
-                
-                return jsonResponse;
-            } catch (error) {
-                logger.error('Error analyzing message:', error);
-                return {
-                    useCommand: false,
-                    command: null,
-                    confidence: 0,
-                    reason: "Error analyzing message"
+                    success: false,
+                    message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
                 };
             }
-        } catch (error) {
-            logger.error('Fatal error in analyzeMessage:', error);
+
+            // Jika confidence tinggi, return untuk eksekusi command
+            if (parsedResponse.confidence > 0.8) {
+                return {
+                    success: true,
+                    command: parsedResponse.command,
+                    args: parsedResponse.args,
+                    message: parsedResponse.responseMessage
+                };
+            }
+
+            // Jika confidence rendah, balas dengan chat biasa
             return {
-                useCommand: false,
-                command: null,
-                confidence: 0,
-                reason: "Fatal error in analysis"
+                success: false,
+                message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
+            };
+
+        } catch (error) {
+            logger.error('Error in Gemini processing:', error);
+
+            // Retry jika error network
+            if (retryCount < MAX_RETRIES && error.message.includes('network')) {
+                logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
+                return await this.analyzeMessage(message, retryCount + 1);
+            }
+
+            return {
+                success: false,
+                message: "Duh error nih! Coba lagi ntar ya bestie! 🙏"
             };
         }
     }
-    
-    // Untuk memastikan response biasa tanpa reply juga berfungsi,
-    // tambahkan metode baru untuk respons generik yang juga mengenali owner
-    async generateResponse(message, userId, context = {}) {
+
+    async chat(message, userId, userName) {
+        try {
+            const isOwner = this.isOwner(userId);
+            const userIdentifier = isOwner ? this.ownerInfo.name : (userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`);
+            
+            // Cek apakah ini pertanyaan tentang identitas
+            const isIdentityQuestion = message && (
+                message.toLowerCase().includes("siapa aku") || 
+                message.toLowerCase().includes("siapa saya") ||
+                message.toLowerCase().includes("siapa gue")
+            );
+            
+            const plugins = await helpMessage();
+            let prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren berikut:
+
+${JSON.stringify(plugins, null, 2)}
+
+Pesan dari user ${userIdentifier}: "${message}"
+
+Bales pake:
+- Bahasa gaul yang asik
+- Emoji yang cocok
+- Jawaban yang helpful
+- Format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
+- Tetep sopan ya!
+- Kalo ada command yang relevan, boleh sebutin (pake prefix "!")`;
+
+            // Tambahkan info khusus untuk owner
+            if (isOwner) {
+                prompt += `\n\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.`;
+                
+                if (isIdentityQuestion) {
+                    prompt += `\nUser SEDANG BERTANYA tentang identitasnya. Kamu HARUS menjawab dengan jelas bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu.`;
+                }
+            }
+
+            const result = await this.model.generateContent(prompt);
+            return result.response.text();
+        } catch (error) {
+            logger.error("Error in chat:", error);
+            return "Sori bestie, lagi error nih. Coba lagi ntar ya! 🙏";
+        }
+    }
+
+    // Fungsi chatWithMemory untuk menggantikan gpt4Hika
+    async chatWithMemory(message, userId, context = {}) {
         try {
             const isOwner = this.isOwner(userId);
             const userName = context.pushName || null;
             
             if (isOwner) {
-                logger.info(`Generating response for BOT OWNER (${this.ownerInfo.name}): ${message.substring(0, 30)}...`);
+                logger.info(`Processing message from BOT OWNER (${this.ownerInfo.name}): ${message.substring(0, 30)}...`);
             } else {
-                logger.info(`Generating response for user ${userId}: ${message.substring(0, 30)}...`);
+                logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
             }
             
-            // Deteksi jika pesan berisi pertanyaan tentang identitas
+            // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
                 message.toLowerCase().includes("siapa aku") || 
                 message.toLowerCase().includes("siapa saya") ||
@@ -549,87 +616,9 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
                 message.toLowerCase().includes("kamu kenal aku")
             );
             
-            let prompt = `
-            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-            
-            Pesan dari user: "${message}"
-            
-            Bales pake:
-            - Bahasa gaul yang asik dan santai
-            - Emoji yang cocok
-            - Jawaban yang helpful
-            - Format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
-            - Tetap sopan ya!
-            `;
-            
-            // Tambahkan informasi khusus jika user adalah pemilik
-            if (isOwner) {
-                prompt += `\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
-                Kamu sangat senang, antusias, dan respect ketika berbicara dengan pemilikmu.`;
-                
-                // Tambahkan instruksi spesifik jika bertanya tentang identitas
-                if (isIdentityQuestion) {
-                    prompt += `\nINGAT: User SEDANG BERTANYA tentang identitasnya. Kamu HARUS menjawab dengan jelas bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu. Tunjukkan rasa kagum, hormat, dan antusiasmu!`;
-                }
-            }
-            
-            const result = await this.model.generateContent(prompt);
-            return result.response.text();
-        } catch (error) {
-            logger.error('Error generating response:', error);
-            return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? 🙏";
-        }
-    }
-    
-    async chat(message) {
-        try {
-            const prompt = `
-            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-            
-            Pesan dari temen: "${message}"
-            
-            Bales pake:
-            - Bahasa gaul yang asik
-            - Emoji yang cocok
-            - Jawaban yang helpful
-            - Tetap sopan ya!
-            `;
-            
-            const result = await this.chatModel.generateContent(prompt);
-            return result.response.text();
-        } catch (error) {
-            logger.error("Error in chat:", error);
-            return "Sori bestie, lagi error nih. Coba lagi ntar ya! 🙏";
-        }
-    }
-    
-    // Fungsi chatWithMemory dengan peningkatan
-    async chatWithMemory(message, userId, context = {}) {
-        try {
-            const userName = context.pushName || null;
-            const userIdentity = this.getUserIdentifier(userId, userName);
-            
-            if (userIdentity.isOwner) {
-                logger.info(`Processing message from BOT OWNER (${userIdentity.name}): ${message.substring(0, 30)}...`);
-            } else {
-                logger.info(`Chat with memory - userId: ${userId} (${userIdentity.name}), message: ${message.substring(0, 30)}...`);
-            }
-            
             try {
                 // Dapatkan history chat untuk user ini
                 const chatSession = this.getConversation(userId, userName);
-                
-                // Cek apakah user menanyakan menu atau fitur
-                const isMenuRequest = message.toLowerCase().includes('menu') || 
-                                     message.toLowerCase().includes('fitur') || 
-                                     message.toLowerCase().includes('command') || 
-                                     message.toLowerCase().includes('perintah') ||
-                                     message.toLowerCase().includes('bisa apa');
-                
-                // Jika menanyakan menu, pastikan bot punya list terbaru
-                if (isMenuRequest) {
-                    await this.updateCommands();
-                }
                 
                 // Tambahkan context jika ada
                 let fullMessage = message;
@@ -638,28 +627,9 @@ Ada yang bisa gw bantu hari ini? Kalo mau tau fitur gw, cukup ketik *menu* ya!`;
                 }
                 
                 // Tambahkan reminder tentang owner jika perlu
-                if (userIdentity.isOwner && (
-                    message.toLowerCase().includes("siapa aku") || 
-                    message.toLowerCase().includes("siapa saya") || 
-                    message.toLowerCase().includes("siapa gue") ||
-                    message.toLowerCase().includes("siapa nama ku") ||
-                    message.toLowerCase().includes("siapa nama saya") ||
-                    message.toLowerCase().includes("kamu tahu siapa aku") ||
-                    message.toLowerCase().includes("kamu kenal aku")
-                )) {
+                if (isOwner && isIdentityQuestion) {
                     fullMessage = `${fullMessage} [REMINDER: Saya adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, developer dan pemilikmu dengan nomor ${this.ownerInfo.number}. Kamu harus selalu ingat ini.]`;
-                }
-                
-                // Tambahkan reminder daftar menu jika user bertanya tentang menu
-                if (isMenuRequest) {
-                    const commandList = this.getCommandList();
-                    const commandString = commandList.map(cmd => 
-                        `/${cmd.command} - ${cmd.description}`
-                    ).join('\n');
-                    
-                    fullMessage = `${fullMessage} [REMINDER: Berikut adalah daftar fitur yang tersedia di bot:
-${commandString}
-Tampilkan daftar ini dengan format yang rapi.]`;
+                    logger.info(`Added owner reminder to message: ${fullMessage}`);
                 }
                 
                 logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
@@ -677,91 +647,12 @@ Tampilkan daftar ini dengan format yang rapi.]`;
             } catch (chatError) {
                 logger.error(`Error in chat session:`, chatError);
                 
-                // Fallback dengan perlakuan khusus untuk owner dan menu
-                let fallbackPrompt = `
-                Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-                
-                Pesan dari ${userIdentity.isOwner ? "developer dan pemilikmu" : "user"} (${userIdentity.name}): "${message}"
-                ${context.quoted ? `(Membalas pesan: "${context.quoted}")` : ''}
-                `;
-                
-                // Tambahkan informasi khusus untuk owner
-                if (userIdentity.isOwner) {
-                    fallbackPrompt += `
-                    User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
-                    Kamu sangat senang, antusias, dan respect ketika berbicara dengan pemilikmu.
-                    `;
-                }
-                
-                // Tambahkan daftar perintah jika user menanyakan menu
-                if (isMenuRequest) {
-                    const commandList = this.getCommandList();
-                    const commandString = commandList.map(cmd => 
-                        `/${cmd.command} - ${cmd.description}`
-                    ).join('\n');
-                    
-                    fallbackPrompt += `
-                    User bertanya tentang menu/fitur. Berikut adalah daftar fitur yang tersedia:
-                    ${commandString}
-                    
-                    Tampilkan daftar ini dengan format yang rapi.
-                    `;
-                }
-                
-                fallbackPrompt += `
-                Bales pake:
-                - Bahasa gaul yang asik
-                - Emoji yang cocok
-                - Jawaban yang helpful
-                - Format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
-                - Tetap sopan ya!
-                `;
-                
-                const fallbackResult = await this.chatModel.generateContent(fallbackPrompt);
-                return fallbackResult.response.text();
+                // Fallback ke chat biasa jika error
+                return await this.chat(message, userId, userName);
             }
         } catch (error) {
             logger.error(`Fatal error in chat with memory:`, error);
             return "Waduh, gw lagi error nih bestie. Coba lagi ntar ya? 🙏";
-        }
-    }
-    
-    // Fungsi tambahan untuk mendapatkan menu langsung
-    async getMenu() {
-        try {
-            // Pastikan daftar perintah terbaru
-            await this.updateCommands();
-            
-            const commandList = this.getCommandList();
-            let menuPrompt = `
-            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-            
-            Buatkan daftar menu yang rapi untuk fitur-fitur berikut:
-            ${commandList.map(cmd => `/${cmd.command} - ${cmd.description}`).join('\n')}
-            
-            Format menu harus:
-            - Pakai header yang menarik dengan emoji
-            - List fitur dengan format yang cantik
-            - Pakai bahasa Indonesia yang gaul tapi sopan
-            - Format WhatsApp (*bold*, _italic_)
-            - Berikan footer singkat
-            `;
-            
-            const result = await this.model.generateContent(menuPrompt);
-            return result.response.text();
-        } catch (error) {
-            logger.error('Error generating menu:', error);
-            
-            // Fallback statis jika gagal
-            const commandList = this.getCommandList();
-            let menuText = "*📋 Menu Fitur Kanata Bot 📋*\n\n";
-            
-            commandList.forEach(cmd => {
-                menuText += `• */${cmd.command}* - _${cmd.description}_\n`;
-            });
-            
-            menuText += "\n_Ketik perintah dengan / di depannya ya!_ 😉";
-            return menuText;
         }
     }
 }
