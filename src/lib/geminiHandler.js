@@ -1,10 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logger } from '../helper/logger.js';
-import { helpMessage } from '../helper/help.js';
 import axios from "axios";
 import { uploadGambar2 } from "../helper/uploader.js";
+import { helpMessage } from '../helper/pluginsIterator.js';
 
 // Cache untuk menyimpan hasil analisis pesan
+// oke siap 
 const messageHistory = new Map();
 const RATE_LIMIT_DURATION = 2000;
 const MAX_RETRIES = 2;
