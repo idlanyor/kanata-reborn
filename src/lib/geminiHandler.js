@@ -18,7 +18,7 @@ class GeminiHandler {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
         this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        this.chatModel = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
         
         // Cleanup cache setiap 10 menit
         setInterval(() => this.cleanupConversations(), 10 * 60 * 1000);
