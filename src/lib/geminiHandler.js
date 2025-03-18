@@ -45,15 +45,16 @@ class GeminiHandler {
             const userIdentifier = userName || `user_${userId.split('_')[1]?.substring(0, 4) || 'unknown'}`;
             
             try {
+                // Format yang benar sesuai dokumentasi Gemini API
                 const chat = this.chatModel.startChat({
                     history: [
                         {
                             role: "user",
-                            parts: `Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful. Nama saya adalah ${userIdentifier}.`
+                            parts: [{ text: `Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful. Nama saya adalah ${userIdentifier}.` }]
                         },
                         {
                             role: "model",
-                            parts: `Sip, gue ngerti banget! Gue Kanata, asisten AI yang bakal ngobrol sama lu pake bahasa gaul yang asik tapi tetep sopan ya. Seneng bisa kenal sama lu, ${userIdentifier}! Gue bakal jawab pertanyaan lu dengan to the point dan helpful, plus pake emoji yang cocok biar tambah seru! 😎 Ada yang bisa gue bantu hari ini?`
+                            parts: [{ text: `Sip, gue ngerti banget! Gue Kanata, asisten AI yang bakal ngobrol sama lu pake bahasa gaul yang asik tapi tetep sopan ya. Seneng bisa kenal sama lu, ${userIdentifier}! Gue bakal jawab pertanyaan lu dengan to the point dan helpful, plus pake emoji yang cocok biar tambah seru! 😎 Ada yang bisa gue bantu hari ini?` }]
                         }
                     ]
                 });
@@ -323,24 +324,28 @@ Bales pake:
             logger.info(`User name from context: ${userName || 'not provided'}`);
             
             try {
-            // Dapatkan history chat untuk user ini
+                // Dapatkan history chat untuk user ini
                 const chatSession = this.getConversation(userId, userName);
-            
-            // Tambahkan context jika ada
+                
+                // Tambahkan context jika ada
                 let fullMessage = message;
-            if (context.quoted) {
+                if (context.quoted) {
                     fullMessage = `(Membalas pesan: "${context.quoted}") ${message}`;
-            }
+                }
                 
                 logger.info(`Sending message to Gemini: ${fullMessage.substring(0, 30)}...`);
-            
-            // Kirim pesan ke Gemini dan simpan dalam history
-                const result = await chatSession.sendMessage(fullMessage);
-            const response = result.response.text();
+                
+                // Kirim pesan ke Gemini dan simpan dalam history - pastikan format benar
+                const result = await chatSession.sendMessage({
+                    role: "user",
+                    parts: [{ text: fullMessage }]
+                });
+                
+                const response = result.response.text();
                 
                 logger.info(`Got response from Gemini: ${response.substring(0, 30)}...`);
-            
-            return response;
+                
+                return response;
             } catch (chatError) {
                 logger.error(`Error in chat session:`, chatError);
                 
