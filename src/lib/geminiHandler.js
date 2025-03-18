@@ -113,7 +113,7 @@ class GeminiHandler {
     getConversation(userId, userName) {
         // Validasi userId
         if (!userId) {
-            logger.warn("getConversation called with empty userId, using 'unknown_user'");
+            logger.warning("getConversation called with empty userId, using 'unknown_user'");
             userId = "unknown_user";
         }
         
@@ -354,7 +354,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             const categories = Object.keys(plugins);
             logger.info(`Got plugins data: ${categories.join(',')}`);
                 } else {
-                    logger.warn("helpMessage returned null or undefined");
+                    logger.warning("helpMessage returned null or undefined");
                     plugins = { "basic": DEFAULT_COMMANDS };
                 }
             } catch (error) {
@@ -383,7 +383,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                     formattedPlugins = Object.entries(plugins).map(([category, items]) => {
                         // Validasi bahwa items adalah array
                         if (!Array.isArray(items)) {
-                            logger.warn(`Items for category ${category} is not an array, using empty array`);
+                            logger.warning(`Items for category ${category} is not an array, using empty array`);
                             return {
                                 category,
                                 commands: []
@@ -408,7 +408,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                     logger.info(`Formatted commands from ${formattedPlugins.length} categories`);
                 }
             } else {
-                logger.warn("plugins is not an object, using default commands");
+                logger.warning("plugins is not an object, using default commands");
                 formattedPlugins = [{
                     category: "basic",
                     commands: DEFAULT_COMMANDS.map(cmd => ({
@@ -522,7 +522,7 @@ PENTING:
         try {
             // Validasi userId
             if (!userId) {
-                logger.warn("chat called with empty userId, using 'unknown_user'");
+                logger.warning("chat called with empty userId, using 'unknown_user'");
                 userId = "unknown_user";
             }
             
@@ -584,7 +584,7 @@ Bales pake:
         try {
             // Validasi userId
             if (!userId) {
-                logger.warn("chatWithMemory called with empty userId, using 'unknown_user'");
+                logger.warning("chatWithMemory called with empty userId, using 'unknown_user'");
                 userId = "unknown_user";
             }
             
