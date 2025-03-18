@@ -98,20 +98,16 @@ async function getPhoneNumber() {
 }
 
 async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
-    if (!command) return;
+    if (!command && !attf) return;
     if (m.key.fromMe) return;
 
     try {
-        // Skip untuk pesan pendek atau dari bot
-        if (command.length < 3 || sender === globalThis.botNumber) {
-            return;
-        }
-
         // =================================
         // SISTEM PEMROSESAN PESAN
         // =================================
-        // 1. Private Chat: Menggunakan Gemini AI untuk analisis natural language
+        // 1. Private Chat: Menggunakan Gemini AI untuk analisis natural language & gambar
         //    - Mencoba mengenali command dari bahasa natural
+        //    - Menganalisis gambar jika ada
         //    - Chat biasa jika tidak ada command yang cocok
         // 2. Group Chat: Hanya mengenali command dengan prefix (! atau .)
         //    - AutoAI hanya aktif jika diaktifkan di pengaturan grup
@@ -120,65 +116,120 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         // Cek apakah chat private atau grup
         const isPrivateChat = !id.endsWith('@g.us');
         
+        // Cek apakah ada gambar yang dikirim/direply
+        const hasImage = Buffer.isBuffer(attf);
+        
         // Gunakan Gemini AI hanya untuk private chat
         if (isPrivateChat) {
-            logger.info(`Processing private chat message with Gemini AI: ${command.substring(0, 30)}...`);
-            try {
-                const response = await geminiHandler.analyzeMessage(command);
+            // Jika ada gambar, proses dengan Gemini Vision
+            if (hasImage) {
+                logger.info(`Processing image in private chat from ${m.pushName}`);
+                const imageResponse = await geminiHandler.analyzeImage(attf, command, { id, m });
+                
+                if (imageResponse.success) {
+                    await sock.sendMessage(id, { 
+                        text: imageResponse.message 
+                    }, { quoted: m });
+                } else {
+                    await sock.sendMessage(id, { 
+                        text: imageResponse.message 
+                    }, { quoted: m });
+                }
+                return;
+            }
+            
+            // Jika tidak ada gambar, proses teks seperti biasa
+            if (command && command.length >= 3 && sender !== globalThis.botNumber) {
+                logger.info(`Processing private chat message with Gemini AI: ${command.substring(0, 30)}...`);
+                try {
+                    const response = await geminiHandler.analyzeMessage(command);
 
-                // Jika berhasil diproses oleh Gemini
-                if (response.success) {
-                    // Eksekusi command yang diidentifikasi oleh Gemini
-                    const cmd = response.command;
-                    const args = response.args;
+                    // Jika berhasil diproses oleh Gemini
+                    if (response.success) {
+                        // Eksekusi command yang diidentifikasi oleh Gemini
+                        const cmd = response.command;
+                        const args = response.args;
 
-                    const pluginsDir = path.join(__dirname, 'src/plugins');
-                    const plugins = Object.fromEntries(
-                        await Promise.all(findJsFiles(pluginsDir).map(async file => {
-                            const { default: plugin, handler } = await import(pathToFileURL(file).href);
-                            if (Array.isArray(handler) && handler.includes(cmd)) {
-                                return [cmd, plugin];
-                            }
-                            return [handler, plugin];
-                        }))
-                    );
+                        const pluginsDir = path.join(__dirname, 'src/plugins');
+                        const plugins = Object.fromEntries(
+                            await Promise.all(findJsFiles(pluginsDir).map(async file => {
+                                const { default: plugin, handler } = await import(pathToFileURL(file).href);
+                                if (Array.isArray(handler) && handler.includes(cmd)) {
+                                    return [cmd, plugin];
+                                }
+                                return [handler, plugin];
+                            }))
+                        );
 
-                    if (plugins[cmd]) {
-                        logger.info(`Executing command from Gemini: ${cmd}`);
-                        await sock.sendMessage(id, { text: response.message });
-                        await plugins[cmd]({ sock, m, id, psn: args, sender, noTel, attf, cmd });
-                        logger.success(`Command ${cmd} executed successfully`);
-                    } else {
-                        await sock.sendMessage(id, { text: response.message });
+                        if (plugins[cmd]) {
+                            logger.info(`Executing command from Gemini: ${cmd}`);
+                            await sock.sendMessage(id, { text: response.message });
+                            await plugins[cmd]({ sock, m, id, psn: args, sender, noTel, attf, cmd });
+                            logger.success(`Command ${cmd} executed successfully`);
+                        } else {
+                            await sock.sendMessage(id, { text: response.message });
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                // Jika tidak berhasil, coba chat biasa (hanya untuk private chat)
-                if (!command.startsWith('!') && !command.startsWith('.')) {
-                    const chatResponse = await geminiHandler.chat(command);
-                    await sock.sendMessage(id, { text: chatResponse });
-                    return;
+                    // Jika tidak berhasil, coba chat biasa (hanya untuk private chat)
+                    if (!command.startsWith('!') && !command.startsWith('.')) {
+                        const chatResponse = await geminiHandler.chat(command);
+                        await sock.sendMessage(id, { text: chatResponse });
+                        return;
+                    }
+                } catch (geminiError) {
+                    logger.error('Error in Gemini processing:', geminiError);
+                    // Jika error di Gemini, lanjutkan ke command biasa
                 }
-            } catch (geminiError) {
-                logger.error('Error in Gemini processing:', geminiError);
-                // Jika error di Gemini, lanjutkan ke command biasa
             }
         }
-
+        
+        // Untuk grup, cek apakah ada command dengan handler yang cocok dengan gptgambar
+        if (hasImage && !isPrivateChat) {
+            const imageHandlers = ['jelasin', 'tulis', 'kanata', 'bacakan', 'bacain', 
+                                  'kerjain', 'kerjakan', 'jelaskan', 'terjemahkan', 
+                                  'mangsud', 'maksud'];
+                                  
+            const cmdLower = command ? command.toLowerCase() : '';
+            
+            // Cek apakah command dimulai dengan salah satu handler
+            const matchHandler = imageHandlers.some(handler => 
+                cmdLower.startsWith(`!${handler}`) || 
+                cmdLower.startsWith(`.${handler}`) || 
+                cmdLower === handler
+            );
+            
+            if (matchHandler) {
+                logger.info(`Processing image in group with command: ${command}`);
+                const imageResponse = await geminiHandler.analyzeImage(attf, command, { id, m });
+                
+                if (imageResponse.success) {
+                    await sock.sendMessage(id, { 
+                        text: imageResponse.message 
+                    }, { quoted: m });
+                } else {
+                    await sock.sendMessage(id, { 
+                        text: imageResponse.message 
+                    }, { quoted: m });
+                }
+                return;
+            }
+        }
+        
         // Proses sebagai command biasa (untuk grup atau jika Gemini gagal di private chat)
         let [cmd, ...args] = command.split(' ');
-        cmd = cmd.toLowerCase();
-        if (command.startsWith('!')) {
-            cmd = command.toLowerCase().substring(1).split(' ')[0];
-            args = command.split(' ').slice(1)
-        }
-        if (command.startsWith('.')) {
-            cmd = command.toLowerCase().substring(1).split(' ')[0];
-            args = command.split(' ').slice(1)
-        }
-        // logger.info(`Pesan baru diterima dari ${m.pushName}`);
-        // logger.message.in(command);
+    cmd = cmd.toLowerCase();
+    if (command.startsWith('!')) {
+        cmd = command.toLowerCase().substring(1).split(' ')[0];
+        args = command.split(' ').slice(1)
+    }
+    if (command.startsWith('.')) {
+        cmd = command.toLowerCase().substring(1).split(' ')[0];
+        args = command.split(' ').slice(1)
+    }
+    // logger.info(`Pesan baru diterima dari ${m.pushName}`);
+    // logger.message.in(command);
 
         // Inisialisasi pengaturan grup jika pesan dari grup
         if (id.endsWith('@g.us')) {
@@ -392,7 +443,7 @@ export async function startBot() {
                 
                 // Auto AI mention - hanya aktif di private chat atau jika diaktifkan di grup
                 if (botMentioned) {
-                    // if (m.key.fromMe) return
+                    if (m.key.fromMe) return
                     try {
                         // Strategi AutoAI:
                         // 1. Private chat: Selalu aktif

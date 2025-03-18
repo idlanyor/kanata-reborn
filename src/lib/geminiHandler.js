@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logger } from '../helper/logger.js';
 import { helpMessage } from '../helper/pluginsIterator.js';
+import axios from "axios";
+import { uploadGambar2 } from "../helper/uploader.js";
 
 // Cache untuk menyimpan hasil analisis pesan
 const messageHistory = new Map();
@@ -11,12 +13,11 @@ class GeminiHandler {
     constructor(apiKey) {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+        this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     }
 
-    // Fungsi untuk mengekstrak JSON dari teks
     extractJSON(text) {
         try {
-            // Coba parse langsung jika sudah JSON
             return JSON.parse(text);
         } catch (e) {
             try {
@@ -30,6 +31,15 @@ class GeminiHandler {
             }
             return null;
         }
+    }
+
+    bufferToGenerativePart(buffer, mimeType = "image/jpeg") {
+        return {
+            inlineData: {
+                data: buffer.toString("base64"),
+                mimeType
+            },
+        };
     }
 
     async analyzeMessage(message, retryCount = 0) {
@@ -186,6 +196,53 @@ Bales pake:
         } catch (error) {
             logger.error("Error in chat:", error);
             return "Sori bestie, lagi error nih. Coba lagi ntar ya! 🙏";
+        }
+    }
+
+    async analyzeImage(imageBuffer, message, context) {
+        try {
+            logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
+            
+            // Konversi buffer menjadi format yang sesuai untuk Gemini
+            const imagePart = this.bufferToGenerativePart(imageBuffer);
+            
+            // Buat prompt untuk analisis gambar
+            const prompt = `
+            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
+            
+            Tolong analisis gambar ini dan berikan respons yang tepat.
+            ${message ? `User menanyakan/mengatakan: "${message}"` : ""}
+            
+            Berikut yang perlu kamu lakukan:
+            1. Jelaskan apa yang kamu lihat di gambar
+            2. Jika ada teks di gambar, ekstrak dengan akurat
+            3. Jika ada kode pemrograman, jelaskan fungsinya
+            
+            Format respons:
+            - Pake bahasa gaul yang asik dan santai
+            - Tambahkan emoji yang relevan
+            - Jawaban harus helpful dan akurat
+            - Tetap sopan ya!
+            `;
+            
+            // Generate konten dengan Gemini Vision
+            const result = await this.visionModel.generateContent([prompt, imagePart]);
+            const response = result.response;
+            const responseText = response.text();
+            
+            return {
+                success: true,
+                message: responseText,
+                isImageProcess: true
+            };
+            
+        } catch (error) {
+            logger.error('Error in image analysis:', error);
+            return {
+                success: false,
+                message: "Waduh, gw gagal analisis gambarnya nih bestie! Coba lagi ntar ya? 🙏",
+                isImageProcess: true
+            };
         }
     }
 }
