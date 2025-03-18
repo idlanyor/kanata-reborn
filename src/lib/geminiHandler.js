@@ -181,22 +181,55 @@ class GeminiHandler {
 
         try {
             // Dapatkan daftar plugin dan fungsinya
-            const plugins = await helpMessage();
-            const functionDescriptions = [];
+            const pluginsData = await helpMessage();
+            console.log(JSON.stringify(pluginsData, null, 2));
+            logger.info(`Got plugins data: ${Object.keys(pluginsData)}`);
 
-            // Format daftar fungsi untuk prompt
-            const formattedPlugins = Object.entries(plugins)
-                .map(([category, items]) => {
-                    const commands = items.map(item => ({
-                        command: item.handler,
-                        description: item.description,
-                        category: category
-                    }));
-                    return {
-                        category,
-                        commands
-                    };
+            // Ambil data plugins dari hasil helpMessage()
+            const plugins = pluginsData.plugins;
+            const formattedPlugins = [];
+
+            // Cek apakah plugins adalah objek dan punya properti yang diharapkan
+            if (plugins && typeof plugins === 'object') {
+                // Format data plugins untuk prompt
+                for (const [category, items] of Object.entries(plugins)) {
+                    // Validasi bahwa items adalah array
+                    if (Array.isArray(items)) {
+                        const commands = items.map(item => ({
+                            command: item.handler || "unknown",
+                            description: item.description || "No description",
+                            category: category
+                        }));
+                        
+                        formattedPlugins.push({
+                            category,
+                            commands
+                        });
+                    } else {
+                        logger.warn(`Items for category ${category} is not an array: ${typeof items}`);
+                        // Fallback jika items bukan array
+                        formattedPlugins.push({
+                            category,
+                            commands: [{
+                                command: "unknown",
+                                description: "Could not parse commands",
+                                category: category
+                            }]
+                        });
+                    }
+                }
+            } else {
+                logger.error(`Invalid plugins data: ${typeof plugins}`);
+                // Fallback jika plugins tidak valid
+                formattedPlugins.push({
+                    category: "general",
+                    commands: [{
+                        command: "help",
+                        description: "Show available commands",
+                        category: "general"
+                    }]
                 });
+            }
             
             // Buat prompt untuk Gemini AI
             const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
