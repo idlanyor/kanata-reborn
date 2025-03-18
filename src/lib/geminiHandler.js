@@ -235,12 +235,23 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
     
     // Konversi buffer gambar menjadi format yang dibutuhkan Gemini
     bufferToGenerativePart(buffer, mimeType = "image/jpeg") {
+        try {
+            // Validasi buffer
+            if (!buffer || !(buffer instanceof Buffer)) {
+                throw new Error("Invalid buffer provided");
+            }
+            
+            // Gunakan format yang benar sesuai dokumentasi Gemini
         return {
             inlineData: {
                 data: buffer.toString("base64"),
-                mimeType
-            },
+                    mimeType: mimeType
+                }
         };
+        } catch (error) {
+            logger.error(`Error converting buffer to generative part: ${error.message}`);
+            throw error;
+        }
     }
     
     async analyzeImage(imageBuffer, message, context) {
@@ -252,11 +263,35 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             const userName = m.pushName || null;
             const isOwner = this.isOwner(userId);
             
+            // Verifikasi bahwa imageBuffer valid
+            if (!imageBuffer || !(imageBuffer instanceof Buffer)) {
+                logger.error('Invalid image buffer provided');
+            return {
+                success: false,
+                    message: "Waduh, gambarnya gak valid nih bestie! Coba kirim ulang ya? 🙏",
+                isImageProcess: true
+            };
+            }
+            
+            // Verifikasi ukuran gambar
+            const imageSizeMB = imageBuffer.length / (1024 * 1024);
+            if (imageSizeMB > 4) { // Batas ukuran 4MB untuk Gemini
+                logger.error(`Image too large: ${imageSizeMB.toFixed(2)}MB, exceeds 4MB limit`);
+            return {
+                success: false,
+                    message: "Gambar terlalu gede nih bestie! Gemini cuma bisa terima gambar maksimal 4MB. Coba kompres dulu ya? 🙏",
+                    isImageProcess: true
+                };
+            }
+            
             if (isOwner) {
                 logger.info(`Processing image from BOT OWNER (${this.ownerInfo.name}): ${message?.substring(0, 30) || "no message"}...`);
             } else {
                 logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
             }
+            
+            // Log ukuran gambar untuk debugging
+            logger.info(`Image size: ${imageSizeMB.toFixed(2)}MB`);
             
             // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
@@ -269,56 +304,85 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 message.toLowerCase().includes("kamu kenal aku")
             );
             
-            // Konversi buffer menjadi format yang sesuai untuk Gemini
-            const imagePart = this.bufferToGenerativePart(imageBuffer);
+            // Pastikan pesan tidak terlalu panjang untuk API
+            const safeMessage = message ? 
+                (message.length > 500 ? message.substring(0, 500) + "..." : message) : 
+                "Tolong analisis gambar ini";
             
-            // Buat prompt untuk analisis gambar
-            let prompt = `
-            Kamu adalah Kanata, bot WhatsApp yang asik dan friendly.
-            
-            Tolong analisis gambar ini dan berikan respons yang tepat.
-            ${message ? `User menanyakan/mengatakan: "${message}"` : ""}
-            
-            Berikut yang perlu kamu lakukan:
-            1. Jelaskan apa yang kamu lihat di gambar
-            2. Jika ada teks di gambar, ekstrak dengan akurat
-            3. Jika ada kode pemrograman, jelaskan fungsinya
-            
-            Format respons:
-            - Pake bahasa gaul yang asik dan santai
-            - Tambahkan emoji yang relevan
-            - Gunakan format WhatsApp (*bold*, _italic_, ~coret~, \`kode\`)
-            - Jawaban harus helpful dan akurat
-            - Tetap sopan ya!
-            `;
-            
-            // Tambahkan informasi khusus jika user adalah pemilik
-            if (isOwner) {
-                prompt += `\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.
-                Kamu sangat senang dan respect ketika berbicara dengan pemilikmu.`;
+            try {
+                // Konversi buffer menjadi format yang sesuai untuk Gemini
+                const imagePart = this.bufferToGenerativePart(imageBuffer);
                 
-                // Tambahkan instruksi spesifik jika bertanya tentang identitas
-                if (isIdentityQuestion) {
-                    prompt += `\nINGAT: User SEDANG BERTANYA tentang identitasnya. Kamu HARUS menjawab dengan jelas bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu.`;
+                // Buat prompt yang lebih singkat dan efisien
+                let prompt = `Sebagai Kanata, analisis gambar ini. ${safeMessage ? `User bertanya: "${safeMessage}"` : ""}`;
+                
+                // Tambahkan informasi khusus jika user adalah pemilik dan singkat
+                if (isOwner && isIdentityQuestion) {
+                    prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya tentang identitasnya.`;
+                }
+                
+                // Generate konten dengan Gemini Vision (dengan try-catch lebih detail)
+                logger.info(`Sending image analysis request to Gemini`);
+                
+                // Kirim ke API dengan pembatasan konten
+                const result = await this.visionModel.generateContent([prompt, imagePart]);
+                const response = result.response;
+                const responseText = response.text();
+                
+                logger.info(`Got response from Gemini Vision: ${responseText.substring(0, 50)}...`);
+                
+                return {
+                    success: true,
+                    message: responseText,
+                    isImageProcess: true
+                };
+            } catch (apiError) {
+                logger.error(`API error in image analysis: ${apiError.message}`);
+                
+                // Coba ukuran lebih kecil jika error mungkin terkait ukuran
+                if (imageSizeMB > 1 && apiError.message.includes('invalid argument')) {
+                    logger.info(`Attempting with smaller image...`);
+                    try {
+                        // Buat prompt yang sangat minimal
+                        const minimalPrompt = "Analisis gambar ini";
+                        const result = await this.visionModel.generateContent([
+                            minimalPrompt, 
+                            this.bufferToGenerativePart(imageBuffer)
+                        ]);
+                        
+                        return {
+                            success: true,
+                            message: result.response.text(),
+                            isImageProcess: true
+                        };
+                    } catch (retryError) {
+                        logger.error(`Retry also failed: ${retryError.message}`);
+                        throw retryError; // Re-throw untuk ditangkap outer catch
+                    }
+                } else {
+                    // Re-throw jika bukan masalah ukuran atau retry sudah gagal
+                    throw apiError;
                 }
             }
-            
-            // Generate konten dengan Gemini Vision
-            const result = await this.visionModel.generateContent([prompt, imagePart]);
-            const response = result.response;
-            const responseText = response.text();
-            
-            return {
-                success: true,
-                message: responseText,
-                isImageProcess: true
-            };
-            
         } catch (error) {
-            logger.error('Error in image analysis:', error);
+            logger.error(`Fatal error in image analysis: ${error.message}`, error);
+            
+            let errorMessage = "Waduh, gw gagal analisis gambarnya nih bestie! ";
+            
+            // Berikan pesan error yang lebih spesifik
+            if (error.message.includes('invalid argument')) {
+                errorMessage += "Ada masalah dengan format gambarnya. Coba kirim gambar dengan format jpg/png ya? 🙏";
+            } else if (error.message.includes('too large')) {
+                errorMessage += "Gambarnya terlalu gede! Coba kirim yang lebih kecil ya? 🙏";
+            } else if (error.message.includes('network')) {
+                errorMessage += "Koneksi ke Gemini lagi bermasalah nih. Coba lagi ntar ya? 🙏";
+            } else {
+                errorMessage += "Coba lagi ntar ya? 🙏";
+            }
+            
             return {
                 success: false,
-                message: "Waduh, gw gagal analisis gambarnya nih bestie! Coba lagi ntar ya? 🙏",
+                message: errorMessage,
                 isImageProcess: true
             };
         }
