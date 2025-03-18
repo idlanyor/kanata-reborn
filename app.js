@@ -453,14 +453,28 @@ export async function startBot() {
                         // Di private chat, selalu aktifkan AutoAI
                         if (isPrivateChat) {
                             logger.info(`AutoAI activated in private chat with ${m.pushName}`);
-                            await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage} ${ctx}`, id }) }, { quoted: m });
+                            const userId = `private_${noTel}`;
+                            const quotedText = m.quoted?.text || "";
+                            const response = await geminiHandler.chatWithMemory(
+                                fullmessage, 
+                                userId, 
+                                { quoted: quotedText }
+                            );
+                            await sock.sendMessage(id, { text: response }, { quoted: m });
                             return;
                         } 
                         
                         // Di grup, cek pengaturan autoai
                         if ((await Group.getSettings(id)).autoai == 1) {
                             logger.info(`AutoAI activated in group ${id} (explicitly enabled in settings)`);
-                            await sock.sendMessage(id, { text: await gpt4Hika({ prompt: `${fullmessage} ${ctx}`, id }) }, { quoted: m });
+                            const groupId = `group_${id}`;
+                            const quotedText = m.quoted?.text || "";
+                            const response = await geminiHandler.chatWithMemory(
+                                fullmessage, 
+                                groupId, 
+                                { quoted: quotedText }
+                            );
+                            await sock.sendMessage(id, { text: response }, { quoted: m });
                         } else {
                             logger.info(`AutoAI skipped in group ${id} (not enabled in settings)`);
                         }
