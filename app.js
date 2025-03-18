@@ -381,6 +381,7 @@ export async function startBot() {
             try {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
+                if (m.key.fromMe) return
                 await autoAI(m, sock)
                 const sender = m.pushName;
                 const id = m.chat;
