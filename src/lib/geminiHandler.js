@@ -392,47 +392,50 @@ HANYA berikan JSON, tanpa teks lain.`;
     // Update fungsi analyzeImage untuk menggunakan checkImageCommand
     async analyzeImage(imageBuffer, message, context) {
         try {
+            // Skip jika bukan format gambar
+            if (!imageBuffer || !(imageBuffer instanceof Buffer)) {
+                return {
+                    success: false,
+                    message: "Format file tidak didukung",
+                    isImageProcess: true
+                };
+            }
+
+            // Skip jika tidak ada caption
+            if (!message) {
+                return {
+                    success: false, 
+                    message: "Mohon sertakan caption/pertanyaan",
+                    isImageProcess: true
+                };
+            }
+
+            // Skip jika caption mengandung command khusus
+            const skipCommands = ['s', 'sticker', 'jadianime', 'smeme', 'removebg', 'ocr'];
+            const msgLower = message.toLowerCase();
+            
+            for (const cmd of skipCommands) {
+                if (msgLower.startsWith(cmd) || msgLower.startsWith('.' + cmd) || msgLower.startsWith('!' + cmd)) {
+                    return {
+                        success: false,
+                        message: "Gunakan command khusus untuk memproses gambar ini",
+                        isImageProcess: true
+                    };
+                }
+            }
+
             const id = context?.id || '';
             const m = context?.m || {};
             const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
             
-            // Periksa apakah ada perintah spesifik dalam pesan
-            const imageCommand = await this.checkImageCommand(message, imageBuffer, context);
-            
-            // Jika ada perintah spesifik, kembalikan untuk dieksekusi
-            if (imageCommand) {
-                logger.info(`Detected specific image command: ${imageCommand.command}`);
-                return {
-                    success: true,
-                    command: imageCommand.command,
-                    args: imageCommand.args,
-                    message: `Siap, gw proses gambar ini pake perintah ${imageCommand.command} ya! 👍`,
-                    isImageProcess: true,
-                    skipAnalysis: true // Flag baru untuk menandakan bahwa analisis gambar bisa dilewati
-                };
-            }
-            
-            // Lanjutkan dengan analisis gambar hanya jika tidak ada perintah spesifik
-            logger.info(`No specific image command detected, proceeding with analysis`);
-            
-            // Verifikasi bahwa imageBuffer valid
-            if (!imageBuffer || !(imageBuffer instanceof Buffer)) {
-                logger.error('Invalid image buffer provided');
-            return {
-                success: false,
-                    message: "Waduh, gambarnya gak valid nih bestie! Coba kirim ulang ya? 🙏",
-                isImageProcess: true
-            };
-            }
-            
             // Verifikasi ukuran gambar
             const imageSizeMB = imageBuffer.length / (1024 * 1024);
-            if (imageSizeMB > 4) { // Batas ukuran 4MB untuk Gemini
+            if (imageSizeMB > 4) {
                 logger.error(`Image too large: ${imageSizeMB.toFixed(2)}MB, exceeds 4MB limit`);
-            return {
-                success: false,
+                return {
+                    success: false,
                     message: "Gambar terlalu gede nih bestie! Gemini cuma bisa terima gambar maksimal 4MB. Coba kompres dulu ya? 🙏",
                     isImageProcess: true
                 };
@@ -446,10 +449,8 @@ HANYA berikan JSON, tanpa teks lain.`;
                 logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
             }
             
-            // Log ukuran gambar untuk debugging
             logger.info(`Image size: ${imageSizeMB.toFixed(2)}MB`);
             
-            // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
                 message.toLowerCase().includes("siapa aku") || 
                 message.toLowerCase().includes("siapa saya") ||
@@ -460,13 +461,9 @@ HANYA berikan JSON, tanpa teks lain.`;
                 message.toLowerCase().includes("kamu kenal aku")
             );
             
-            // Pastikan pesan tidak terlalu panjang untuk API
-            const safeMessage = message ? 
-                (message.length > 500 ? message.substring(0, 500) + "..." : message) : 
-                "Tolong analisis gambar ini";
+            const safeMessage = message.length > 500 ? message.substring(0, 500) + "..." : message;
             
             try {
-                // Konversi buffer menjadi format yang sesuai untuk Gemini
                 const imagePart = this.bufferToGenerativePart(imageBuffer);
                 
                 const visionModel = this.genAI.getGenerativeModel({ 
@@ -477,18 +474,14 @@ HANYA berikan JSON, tanpa teks lain.`;
                     }
                 });
                 
-                // Buat prompt yang lebih singkat dan efisien
-                let prompt = `Sebagai Kanata, analisis gambar ini. ${safeMessage ? `User bertanya: "${safeMessage}"` : ""}`;
+                let prompt = `Sebagai Kanata, analisis gambar ini. User bertanya: "${safeMessage}"`;
                 
-                // Tambahkan informasi khusus jika user adalah pemilik dan singkat
                 if (isOwner && isIdentityQuestion) {
                     prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya tentang identitasnya.`;
                 }
                 
-                // Generate konten dengan model yang tepat
                 logger.info(`Sending image analysis request to Gemini 1.5 Pro`);
                 
-                // Kirim ke API dengan pembatasan konten
                 const result = await visionModel.generateContent([
                     { text: prompt },
                     imagePart
@@ -507,11 +500,9 @@ HANYA berikan JSON, tanpa teks lain.`;
             } catch (apiError) {
                 logger.error(`API error in image analysis: ${apiError.message}`);
                 
-                // Coba dengan model lain jika yang pertama gagal
                 try {
                     logger.info(`Attempting with alternative model and minimal prompt...`);
                     
-                    // Minimal prompt dan model alternatif
                     const minimalPrompt = "Describe this image briefly";
                     const alternativeModel = this.genAI.getGenerativeModel({ 
                         model: "gemini-2.0-flash-lite", 
@@ -530,7 +521,7 @@ HANYA berikan JSON, tanpa teks lain.`;
                     };
                 } catch (retryError) {
                     logger.error(`Retry also failed: ${retryError.message}`);
-                    throw retryError; // Re-throw untuk ditangkap outer catch
+                    throw retryError;
                 }
             }
         } catch (error) {
@@ -538,7 +529,6 @@ HANYA berikan JSON, tanpa teks lain.`;
             
             let errorMessage = "Waduh, gw gagal analisis gambarnya nih bestie! ";
             
-            // Berikan pesan error yang lebih spesifik
             if (error.message.includes('invalid argument')) {
                 errorMessage += "Ada masalah dengan format gambarnya. Coba kirim gambar dengan format jpg/png ya? 🙏";
             } else if (error.message.includes('too large')) {
