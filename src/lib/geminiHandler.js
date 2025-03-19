@@ -3,6 +3,13 @@ import { logger } from '../helper/logger.js';
 import axios from "axios";
 import { uploadGambar2 } from "../helper/uploader.js";
 import { helpMessage } from '../helper/pluginsIterator.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execPromise = util.promisify(exec);
 
 // Cache untuk menyimpan hasil analisis pesan
 // oke siap 
@@ -39,6 +46,14 @@ class GeminiHandler {
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.95,
+                topK: 40,
+            }
+        });
+        this.audioModel = this.genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash",
+            generationConfig: {
+                temperature: 0.2,
+                topP: 0.8,
                 topK: 40,
             }
         });
@@ -254,6 +269,102 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
         }
     }
     
+    // Tambahkan fungsi untuk memeriksa apakah pesan berisi perintah spesifik untuk gambar
+    async checkImageCommand(message, imageBuffer, context) {
+        try {
+            const id = context?.id || '';
+            const m = context?.m || {};
+            const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
+            const userId = `private_${noTel}`;
+            const userName = m.pushName || null;
+            
+            logger.info(`Checking if message with image contains specific command: ${message?.substring(0, 30) || "no message"}...`);
+            
+            // Daftar perintah yang berhubungan dengan gambar
+            const imageRelatedCommands = [
+                {command: "sticker", keywords: ["sticker", "stiker", "jadiin sticker", "bikin sticker", "jadi sticker"]},
+                {command: "ocr", keywords: ["ocr", "baca text", "baca tulisan", "extract text"]},
+                {command: "removebg", keywords: ["removebg", "hapus background", "buang background", "transparent"]},
+                {command: "inspect", keywords: ["inspect", "analisis gambar", "cek gambar", "lihat gambar"]}
+            ];
+            
+            // Jika tidak ada pesan, hanya gambar saja, langsung analisis
+            if (!message || message.trim() === '') {
+                logger.info(`No text message provided with image, proceeding with analysis`);
+                return null; // Tidak ada perintah spesifik
+            }
+            
+            // Cek apakah pesan mengandung keyword perintah
+            const msgLower = message.toLowerCase();
+            for (const cmd of imageRelatedCommands) {
+                for (const keyword of cmd.keywords) {
+                    if (msgLower.includes(keyword)) {
+                        logger.info(`Detected image command: ${cmd.command} from keyword: ${keyword}`);
+                        return {
+                            command: cmd.command,
+                            args: message.replace(new RegExp(keyword, 'gi'), '').trim() || null
+                        };
+                    }
+                }
+            }
+            
+            // Jika tidak ada keyword spesifik, cek intent dengan Gemini
+            try {
+                const prompt = `Analisis pesan singkat berikut bersama dengan gambar:
+"${message}"
+
+Apakah user:
+1. Ingin membuat sticker dari gambar ini?
+2. Ingin mengekstrak teks dari gambar (OCR)?
+3. Ingin menghapus background gambar?
+4. Hanya ingin gambar dianalisis/dideskripsikan?
+5. Ingin tujuan lain?
+
+Berikan respons dalam format JSON:
+{
+  "intent": "sticker"|"ocr"|"removebg"|"analyze"|"other",
+  "confidence": 0.0-1.0
+}
+
+HANYA berikan JSON, tanpa teks lain.`;
+
+                const result = await this.model.generateContent(prompt);
+                const responseText = result.response.text();
+                const parsed = this.extractJSON(responseText);
+                
+                if (parsed && parsed.intent && parsed.confidence > 0.7) {
+                    // Map intent ke command
+                    const intentToCommand = {
+                        "sticker": "sticker",
+                        "ocr": "ocr",
+                        "removebg": "removebg",
+                        "analyze": null // Analisis default
+                    };
+                    
+                    const command = intentToCommand[parsed.intent];
+                    logger.info(`AI detected intent: ${parsed.intent} with confidence: ${parsed.confidence}, mapped to command: ${command || 'direct analysis'}`);
+                    
+                    if (command) {
+                        return {
+                            command: command,
+                            args: message || null
+                        };
+                    }
+                }
+            } catch (error) {
+                logger.error(`Error analyzing image intent: ${error.message}`);
+                // Fallback to default analysis if intent detection fails
+            }
+            
+            // Jika tidak ada perintah spesifik terdeteksi
+            return null;
+        } catch (error) {
+            logger.error(`Error in checkImageCommand: ${error.message}`);
+            return null; // Default ke analisis gambar
+        }
+    }
+    
+    // Update fungsi analyzeImage untuk menggunakan checkImageCommand
     async analyzeImage(imageBuffer, message, context) {
         try {
             const id = context?.id || '';
@@ -261,7 +372,25 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
-            const isOwner = this.isOwner(userId);
+            
+            // Periksa apakah ada perintah spesifik dalam pesan
+            const imageCommand = await this.checkImageCommand(message, imageBuffer, context);
+            
+            // Jika ada perintah spesifik, kembalikan untuk dieksekusi
+            if (imageCommand) {
+                logger.info(`Detected specific image command: ${imageCommand.command}`);
+                return {
+                    success: true,
+                    command: imageCommand.command,
+                    args: imageCommand.args,
+                    message: `Siap, gw proses gambar ini pake perintah ${imageCommand.command} ya! 👍`,
+                    isImageProcess: true,
+                    skipAnalysis: true // Flag baru untuk menandakan bahwa analisis gambar bisa dilewati
+                };
+            }
+            
+            // Lanjutkan dengan analisis gambar hanya jika tidak ada perintah spesifik
+            logger.info(`No specific image command detected, proceeding with analysis`);
             
             // Verifikasi bahwa imageBuffer valid
             if (!imageBuffer || !(imageBuffer instanceof Buffer)) {
@@ -283,6 +412,8 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                     isImageProcess: true
                 };
             }
+            
+            const isOwner = this.isOwner(userId);
             
             if (isOwner) {
                 logger.info(`Processing image from BOT OWNER (${this.ownerInfo.name}): ${message?.substring(0, 30) || "no message"}...`);
@@ -386,6 +517,175 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 isImageProcess: true
             };
         }
+    }
+    
+    // Fungsi untuk mengkonversi audio ke format yang benar jika diperlukan
+    async prepareAudioForGemini(audioBuffer, originalMimeType) {
+        try {
+            // Deteksi format audio
+            const isMP3 = originalMimeType.includes('mp3');
+            const isOGG = originalMimeType.includes('ogg') || originalMimeType.includes('opus');
+            
+            // Jika sudah MP3, gunakan langsung
+            if (isMP3) {
+                logger.info('Audio already in MP3 format, using directly');
+                return {
+                    buffer: audioBuffer,
+                    mimeType: 'audio/mp3'
+                };
+            }
+            
+            // Jika OGG/OPUS (format WhatsApp VN), konversi ke MP3
+            if (isOGG) {
+                logger.info('Converting OGG/OPUS audio to MP3');
+                
+                // Simpan buffer ke file sementara
+                const tempDir = path.join(process.cwd(), 'temp');
+                
+                // Buat direktori temp jika belum ada
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir, { recursive: true });
+                }
+                
+                const tempInputPath = path.join(tempDir, `input_${Date.now()}.ogg`);
+                const tempOutputPath = path.join(tempDir, `output_${Date.now()}.mp3`);
+                
+                // Tulis buffer ke file
+                fs.writeFileSync(tempInputPath, audioBuffer);
+                
+                // Konversi menggunakan ffmpeg
+                await execPromise(`ffmpeg -i ${tempInputPath} -acodec libmp3lame -q:a 2 ${tempOutputPath}`);
+                
+                // Baca hasil konversi
+                const convertedBuffer = fs.readFileSync(tempOutputPath);
+                
+                // Hapus file sementara
+                fs.unlinkSync(tempInputPath);
+                fs.unlinkSync(tempOutputPath);
+                
+                logger.info('Successfully converted audio to MP3');
+                
+                return {
+                    buffer: convertedBuffer,
+                    mimeType: 'audio/mp3'
+                };
+            }
+            
+            // Format lain, coba gunakan apa adanya
+            logger.warning(`Unsupported audio format: ${originalMimeType}, attempting to use as is`);
+            return {
+                buffer: audioBuffer,
+                mimeType: originalMimeType
+            };
+        } catch (error) {
+            logger.error(`Error preparing audio: ${error.message}`);
+            throw error;
+        }
+    }
+    
+    // Konversi buffer audio menjadi format untuk Gemini
+    bufferToAudioPart(buffer, mimeType) {
+        return {
+            inlineData: {
+                data: buffer.toString('base64'),
+                mimeType: mimeType
+            }
+        };
+    }
+    
+    // Fungsi utama untuk menganalisis audio
+    async analyzeAudio(audioBuffer, message, context) {
+        try {
+            const id = context?.id || '';
+            const m = context?.m || {};
+            const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
+            const userId = `private_${noTel}`;
+            const userName = m.pushName || null;
+            const isOwner = this.isOwner(userId);
+            
+            // Deteksi MIME type, default ke audio/ogg (format VN WhatsApp)
+            const mimeType = context?.mimetype || 'audio/ogg; codecs=opus';
+            
+            logger.info(`Processing audio: mimetype=${mimeType}, size=${(audioBuffer.length / 1024).toFixed(2)}KB`);
+            
+            // Persiapkan audio (konversi jika perlu)
+            const { buffer: preparedBuffer, mimeType: preparedMimeType } = 
+                await this.prepareAudioForGemini(audioBuffer, mimeType);
+            
+            // Buat prompt berdasarkan apakah pesan teks disertakan
+            let textPrompt = "Tolong dengarkan audio ini dan berikan transkripsi serta analisis singkat. ";
+            
+            if (message && message.trim()) {
+                textPrompt += `User mengirim pesan: "${message}". `;
+            }
+            
+            // Tambahkan instruksi berdasarkan apakah ini Owner
+            if (isOwner) {
+                textPrompt += `Ingat bahwa user ini adalah ${this.ownerInfo.name}, pemilik dan developermu. `;
+            }
+            
+            textPrompt += "Respon dengan format:\n";
+            textPrompt += "1. *Transkripsi:* [isi transkripsi]\n";
+            textPrompt += "2. *Analisis:* [analisis singkat]\n";
+            textPrompt += "Jika ada instruksi dalam audio, tolong highlight juga.";
+            
+            // Konversi ke format yang diterima Gemini
+            const audioPart = this.bufferToAudioPart(preparedBuffer, preparedMimeType);
+            
+            // Log untuk debugging
+            logger.info(`Sending audio to Gemini: length=${textPrompt.length} chars`);
+            
+            // Kirim ke Gemini
+            const result = await this.audioModel.generateContent([
+                audioPart,
+                { text: textPrompt }
+            ]);
+            
+            const responseText = result.response.text();
+            
+            logger.info(`Got response from Gemini Audio: ${responseText.substring(0, 50)}...`);
+            
+            return {
+                success: true,
+                message: responseText,
+                isAudioProcess: true
+            };
+        } catch (error) {
+            logger.error(`Error analyzing audio: ${error.message}`);
+            
+            // Berikan pesan error yang user-friendly
+            let errorMessage = "Waduh, gw gagal prosesing voice note ini nih bestie! ";
+            
+            if (error.message.includes('invalid argument')) {
+                errorMessage += "Format audio-nya kayaknya gak kompatibel. ";
+            } else if (error.message.includes('too large')) {
+                errorMessage += "Audio-nya kepanjangan nih. ";
+            } else if (error.message.includes('ffmpeg')) {
+                errorMessage += "Gw gak bisa konversi format audio-nya. ";
+            }
+            
+            errorMessage += "Coba kirim voice note yang lebih pendek atau jelas ya? 🙏";
+            
+            return {
+                success: false,
+                message: errorMessage,
+                isAudioProcess: true
+            };
+        }
+    }
+    
+    // Metode untuk mendeteksi jika pesan mengandung perintah untuk VN
+    async checkAudioCommand(message) {
+        if (!message) return false;
+        
+        const audioCommands = [
+            "transcript", "transkripsi", "dengerin audio", 
+            "tolong dengarkan", "apa isi audio", "apa isi vn",
+            "audio ini bilang apa", "vn ini bilang apa"
+        ];
+        
+        // Cek jika ada keyword perintah
+        return audioCommands.some(cmd => message.toLowerCase().includes(cmd));
     }
     
     async analyzeMessage(message, retryCount = 0) {
