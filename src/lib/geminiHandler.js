@@ -633,7 +633,99 @@ HANYA berikan JSON, tanpa teks lain.`;
         };
     }
     
-    // Fungsi utama untuk menganalisis audio
+    // Fungsi untuk mengecek tipe media
+    isAudioMessage(context) {
+        try {
+            if (!context || !context.m) return false;
+            
+            const m = context.m;
+            const type = Object.keys(m.message || {})[0];
+            
+            // Cek tipe pesan audio atau voice note
+            return (
+                type === 'audioMessage' || 
+                type === 'pttMessage' || 
+                (context.mimetype && (
+                    context.mimetype.includes('audio') || 
+                    context.mimetype.includes('ogg') || 
+                    context.mimetype.includes('opus')
+                ))
+            );
+        } catch (error) {
+            logger.error(`Error checking audio message type: ${error.message}`);
+            return false;
+        }
+    }
+    
+    isImageMessage(context) {
+        try {
+            if (!context || !context.m) return false;
+            
+            const m = context.m;
+            const type = Object.keys(m.message || {})[0];
+            
+            // Cek tipe pesan gambar
+            return (
+                type === 'imageMessage' || 
+                (context.mimetype && (
+                    context.mimetype.includes('image') ||
+                    context.mimetype.includes('jpg') ||
+                    context.mimetype.includes('jpeg') ||
+                    context.mimetype.includes('png')
+                ))
+            );
+        } catch (error) {
+            logger.error(`Error checking image message type: ${error.message}`);
+            return false;
+        }
+    }
+    
+    // Fungsi untuk memproses media (dispatcher)
+    async processMedia(mediaBuffer, message, context) {
+        try {
+            // Tambahkan logging untuk debuging
+            const m = context?.m || {};
+            const type = Object.keys(m.message || {})[0] || 'unknown';
+            const mimetype = context?.mimetype || 'unknown';
+            
+            logger.info(`Processing media: type=${type}, mimetype=${mimetype}`);
+            
+            // Cek tipe media
+            if (this.isAudioMessage(context)) {
+                logger.info(`Detected as audio/voice note`);
+                return await this.analyzeAudio(mediaBuffer, message, context);
+            } else if (this.isImageMessage(context)) {
+                logger.info(`Detected as image`);
+                return await this.analyzeImage(mediaBuffer, message, context);
+            } else {
+                // Jika tipe tidak terdeteksi, coba deteksi dari MIME type
+                if (mimetype.includes('audio') || mimetype.includes('ogg') || mimetype.includes('opus')) {
+                    logger.info(`Detected as audio from mimetype`);
+                    return await this.analyzeAudio(mediaBuffer, message, context);
+                } else if (mimetype.includes('image')) {
+                    logger.info(`Detected as image from mimetype`);
+                    return await this.analyzeImage(mediaBuffer, message, context);
+                } else {
+                    // Default fallback
+                    logger.warn(`Unknown media type, defaulting to image analysis`);
+                    return {
+                        success: false,
+                        message: "Maaf bestie, gw gak bisa proses media ini. Coba kirim format yang lain ya? 🙏",
+                        isUnknownMedia: true
+                    };
+                }
+            }
+        } catch (error) {
+            logger.error(`Error in processMedia: ${error.message}`);
+            return {
+                success: false,
+                message: "Waduh error nih! Gw gak bisa proses media ini. Coba lagi ntar ya bestie! 🙏",
+                isProcessError: true
+            };
+        }
+    }
+    
+    // Fungsi untuk analisis voice note/audio
     async analyzeAudio(audioBuffer, message, context) {
         try {
             const id = context?.id || '';
@@ -648,36 +740,43 @@ HANYA berikan JSON, tanpa teks lain.`;
             
             logger.info(`Processing audio: mimetype=${mimeType}, size=${(audioBuffer.length / 1024).toFixed(2)}KB`);
             
-            // Persiapkan audio (konversi jika perlu)
-            const { buffer: preparedBuffer, mimeType: preparedMimeType } = 
-                await this.prepareAudioForGemini(audioBuffer, mimeType);
+            // Cek apakah ini audio yang bisa diproses
+            if (audioBuffer.length > 10 * 1024 * 1024) { // 10MB
+                return {
+                    success: false,
+                    message: "Voice note/audio-nya kepanjangan nih bestie! Maksimal 10MB ya, coba kirim yang lebih pendek 🙏",
+                    isAudioProcess: true
+                };
+            }
+            
+            // Konversi audio ke base64
+            const base64Audio = audioBuffer.toString('base64');
             
             // Buat prompt berdasarkan apakah pesan teks disertakan
-            let textPrompt = "Tolong dengarkan audio ini dan berikan transkripsi serta analisis singkat. ";
+            let textPrompt = "Tolong dengarkan voice note/audio ini dan berikan transkripsi serta analisis singkat. ";
             
             if (message && message.trim()) {
-                textPrompt += `User mengirim pesan: "${message}". `;
+                textPrompt += `User juga mengirim pesan: "${message}". `;
             }
             
             // Tambahkan instruksi berdasarkan apakah ini Owner
             if (isOwner) {
-                textPrompt += `Ingat bahwa user ini adalah ${this.ownerInfo.name}, pemilik dan developermu. `;
+                textPrompt += `Ingat bahwa user ini adalah ${this.ownerInfo.name}, pemilikmu. `;
             }
             
-            textPrompt += "Respon dengan format:\n";
-            textPrompt += "1. *Transkripsi:* [isi transkripsi]\n";
-            textPrompt += "2. *Analisis:* [analisis singkat]\n";
-            textPrompt += "Jika ada instruksi dalam audio, tolong highlight juga.";
-            
-            // Konversi ke format yang diterima Gemini
-            const audioPart = this.bufferToAudioPart(preparedBuffer, preparedMimeType);
-            
-            // Log untuk debugging
-            logger.info(`Sending audio to Gemini: length=${textPrompt.length} chars`);
+            textPrompt += "Respon dengan format: \n1. *Transkripsi:* [isi voice note] \n2. *Analisis:* [analisis singkat]";
             
             // Kirim ke Gemini
+            logger.info(`Sending audio to Gemini`);
+            
+            try {
             const result = await this.audioModel.generateContent([
-                audioPart,
+                    {
+                        inlineData: {
+                            mimeType: "audio/mp3", // Gemini biasanya menerima format ini
+                            data: base64Audio
+                        }
+                    },
                 { text: textPrompt }
             ]);
             
@@ -690,25 +789,43 @@ HANYA berikan JSON, tanpa teks lain.`;
                 message: responseText,
                 isAudioProcess: true
             };
+            } catch (apiError) {
+                logger.error(`API error in audio analysis: ${apiError.message}`);
+                
+                // Jika error bisa jadi karena format, coba dengan prompt minimal
+                if (apiError.message.includes('invalid argument')) {
+                    logger.info(`Trying with minimal prompt and different format...`);
+                    
+                    try {
+                        const retryResult = await this.audioModel.generateContent([
+                            {
+                                inlineData: {
+                                    mimeType: "audio/mpeg", // Coba format alternatif
+                                    data: base64Audio
+                                }
+                            },
+                            { text: "Transcribe this audio" }
+                        ]);
+                        
+                        return {
+                            success: true,
+                            message: retryResult.response.text(),
+                            isAudioProcess: true
+                        };
+                    } catch (retryError) {
+                        logger.error(`Retry failed: ${retryError.message}`);
+                        throw retryError;
+                    }
+                } else {
+                    throw apiError;
+                }
+            }
         } catch (error) {
             logger.error(`Error analyzing audio: ${error.message}`);
             
-            // Berikan pesan error yang user-friendly
-            let errorMessage = "Waduh, gw gagal prosesing voice note ini nih bestie! ";
-            
-            if (error.message.includes('invalid argument')) {
-                errorMessage += "Format audio-nya kayaknya gak kompatibel. ";
-            } else if (error.message.includes('too large')) {
-                errorMessage += "Audio-nya kepanjangan nih. ";
-            } else if (error.message.includes('ffmpeg')) {
-                errorMessage += "Gw gak bisa konversi format audio-nya. ";
-            }
-            
-            errorMessage += "Coba kirim voice note yang lebih pendek atau jelas ya? 🙏";
-            
             return {
                 success: false,
-                message: errorMessage,
+                message: "Waduh, gw gagal prosesing voice note ini nih bestie! Coba kirim voice note yang lebih jelas atau yang pendek aja ya? 🙏",
                 isAudioProcess: true
             };
         }
