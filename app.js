@@ -218,7 +218,11 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         }
         
         // Proses sebagai command biasa (untuk grup atau jika Gemini gagal di private chat)
-        let [cmd, ...args] = command.split(' ');
+        // Periksa apakah command ada dan bukan array
+        let cmd = '', args = [];
+        if (command && typeof command === 'string') {
+            [cmd, ...args] = command.split(' ');
+        }
     cmd = cmd.toLowerCase();
     if (command.startsWith('!')) {
         cmd = command.toLowerCase().substring(1).split(' ')[0];
