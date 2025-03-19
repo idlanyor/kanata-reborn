@@ -50,7 +50,7 @@ class GeminiHandler {
             }
         });
         this.audioModel = this.genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash",
+            model: "gemini-2.0-flash-lite",
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.8,
@@ -236,15 +236,40 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             return JSON.parse(text);
         } catch (e) {
             try {
-                // Coba ekstrak JSON dari teks
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
+                // Coba ekstrak JSON dari teks dengan lebih hati-hati
+                const jsonRegex = /\{[\s\S]*?\}/g;
+                const matches = text.match(jsonRegex);
+                
+                if (matches && matches.length > 0) {
+                    // Ambil JSON pertama yang valid
+                    for (const match of matches) {
+                        try {
+                            return JSON.parse(match);
+                        } catch (innerErr) {
+                            // Lanjut ke match berikutnya jika parse error
+                            continue;
+                        }
+                    }
                 }
+                
+                // Jika masih gagal, coba hapus karakter non-JSON
+                const cleanedText = text.replace(/[^\x20-\x7E]/g, '');
+                const jsonStart = cleanedText.indexOf('{');
+                const jsonEnd = cleanedText.lastIndexOf('}') + 1;
+                
+                if (jsonStart !== -1 && jsonEnd !== -1 && jsonStart < jsonEnd) {
+                    const jsonString = cleanedText.substring(jsonStart, jsonEnd);
+                    return JSON.parse(jsonString);
+                }
+                
+                logger.error('Could not extract valid JSON after multiple attempts');
+                logger.debug('Raw text received:', text);
+                return null;
             } catch (err) {
                 logger.error('Error extracting JSON:', err);
+                logger.debug('Raw text received:', text);
+                return null;
             }
-            return null;
         }
     }
     
@@ -444,6 +469,16 @@ HANYA berikan JSON, tanpa teks lain.`;
                 // Konversi buffer menjadi format yang sesuai untuk Gemini
                 const imagePart = this.bufferToGenerativePart(imageBuffer);
                 
+                // PERUBAHAN: Gunakan model gemini-1.5-pro untuk analisis gambar
+                // bukan gemini-2.0-flash-lite yang tidak mendukung gambar
+                const visionModel = this.genAI.getGenerativeModel({ 
+                    model: "gemini-2.0-flash-lite",
+                    generationConfig: {
+                        temperature: 0.4,
+                        maxOutputTokens: 1024
+                    }
+                });
+                
                 // Buat prompt yang lebih singkat dan efisien
                 let prompt = `Sebagai Kanata, analisis gambar ini. ${safeMessage ? `User bertanya: "${safeMessage}"` : ""}`;
                 
@@ -452,11 +487,15 @@ HANYA berikan JSON, tanpa teks lain.`;
                     prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya tentang identitasnya.`;
                 }
                 
-                // Generate konten dengan Gemini Vision (dengan try-catch lebih detail)
-                logger.info(`Sending image analysis request to Gemini`);
+                // Generate konten dengan model yang tepat
+                logger.info(`Sending image analysis request to Gemini 1.5 Pro`);
                 
                 // Kirim ke API dengan pembatasan konten
-                const result = await this.visionModel.generateContent([prompt, imagePart]);
+                const result = await visionModel.generateContent([
+                    { text: prompt },
+                    imagePart
+                ]);
+                
                 const response = result.response;
                 const responseText = response.text();
                 
@@ -470,29 +509,30 @@ HANYA berikan JSON, tanpa teks lain.`;
             } catch (apiError) {
                 logger.error(`API error in image analysis: ${apiError.message}`);
                 
-                // Coba ukuran lebih kecil jika error mungkin terkait ukuran
-                if (imageSizeMB > 1 && apiError.message.includes('invalid argument')) {
-                    logger.info(`Attempting with smaller image...`);
-                    try {
-                        // Buat prompt yang sangat minimal
-                        const minimalPrompt = "Analisis gambar ini";
-                        const result = await this.visionModel.generateContent([
-                            minimalPrompt, 
-                            this.bufferToGenerativePart(imageBuffer)
-                        ]);
-                        
-                        return {
-                            success: true,
-                            message: result.response.text(),
-                            isImageProcess: true
-                        };
-                    } catch (retryError) {
-                        logger.error(`Retry also failed: ${retryError.message}`);
-                        throw retryError; // Re-throw untuk ditangkap outer catch
-                    }
-                } else {
-                    // Re-throw jika bukan masalah ukuran atau retry sudah gagal
-                    throw apiError;
+                // Coba dengan model lain jika yang pertama gagal
+                try {
+                    logger.info(`Attempting with alternative model and minimal prompt...`);
+                    
+                    // Minimal prompt dan model alternatif
+                    const minimalPrompt = "Describe this image briefly";
+                    const alternativeModel = this.genAI.getGenerativeModel({ 
+                        model: "gemini-2.0-flash-lite", 
+                        generationConfig: { temperature: 0.1 }
+                    });
+                    
+                    const result = await alternativeModel.generateContent([
+                        { text: minimalPrompt },
+                        this.bufferToGenerativePart(imageBuffer)
+                    ]);
+                    
+                    return {
+                        success: true,
+                        message: result.response.text(),
+                        isImageProcess: true
+                    };
+                } catch (retryError) {
+                    logger.error(`Retry also failed: ${retryError.message}`);
+                    throw retryError; // Re-throw untuk ditangkap outer catch
                 }
             }
         } catch (error) {
@@ -853,7 +893,7 @@ HANYA berikan JSON, tanpa teks lain.`;
                 commandCount: p.commands ? p.commands.length : 0 
             })))}`);
             
-            // Buat prompt untuk Gemini AI dengan panduan yang lebih spesifik
+            // Perbaiki prompt untuk memastikan JSON yang dihasilkan valid
             const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
 
 ${JSON.stringify(formattedPlugins, null, 2)}
@@ -877,13 +917,7 @@ Tugas lu:
    - Contoh "Puterin lagu Coldplay" -> command: yp, BUKAN lirik
    - Contoh "Mau lirik lagu Coldplay" -> command: lirik
 
-4. Khusus untuk translate:
-   - Kalo ada kata kunci seperti "translate", "terjemahkan", "artikan"
-   - Format parameter: <kode_bahasa> <teks>
-   - Contoh: "translate ke jepang: selamat pagi" -> command: tr, args: "ja selamat pagi"
-   - Kode bahasa: en (Inggris), ja (Jepang), ko (Korea), ar (Arab), dll
-
-5. Balikin response dalam format JSON:
+4. Balikin response dalam format JSON:
 {
     "command": "nama_command",
     "args": "parameter yang dibutuhin",
@@ -892,46 +926,70 @@ Tugas lu:
 }
 
 PENTING:
+- BALIKIN HANYA JSON MURNI, TANPA TEKS TAMBAHAN SEBELUM ATAU SESUDAH JSON
+- JANGAN TAMBAHKAN KOMENTAR, MARKDOWN, ATAU APAPUN DI LUAR JSON
 - Confidence harus tinggi (>0.8) kalo mau jalanin command!
 - Pake bahasa gaul yang asik
-- Tetep sopan & helpful
-- Pake emoji yang cocok
-- Command yang dipilih HARUS ada di daftar yang dikasih
-- HARUS BALIKIN RESPONSE DALAM FORMAT JSON YANG VALID, JANGAN ADA TEKS TAMBAHAN DI LUAR JSON`;
+- HANYA BALIKIN JSON MURNI`;
 
-            // Dapatkan respons dari Gemini
-            const result = await this.model.generateContent(prompt);
-            const responseText = result.response.text();
-            
-            // Parse respons JSON dengan handling error
-            logger.info('Raw Gemini response:', responseText);
-            const parsedResponse = this.extractJSON(responseText);
-            
-            if (!parsedResponse) {
-                logger.error('Failed to parse JSON from Gemini response');
+            try {
+                // Pilih model yang lebih kecil dan cepat untuk analisis pesan teks
+                const textModel = this.genAI.getGenerativeModel({ 
+                    model: "gemini-2.0-flash-lite", 
+                    generationConfig: {
+                        temperature: 0.2,
+                        topP: 0.9,
+                        topK: 40,
+                        responseStyle: "factual" // Upayakan respons faktual
+                    }
+                });
+                
+                // Dapatkan respons dari Gemini
+                const result = await textModel.generateContent(prompt);
+                const responseText = result.response.text();
+                
+                // Parse respons JSON dengan handling error yang sudah diperbaiki
+                logger.info('Raw Gemini response:', responseText);
+                const parsedResponse = this.extractJSON(responseText);
+                
+                if (!parsedResponse) {
+                    logger.error('Failed to parse JSON from Gemini response');
+                    return {
+                        success: false,
+                        message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
+                    };
+                }
+
+                // Jika confidence tinggi, return untuk eksekusi command
+                if (parsedResponse.confidence > 0.8) {
+                    logger.info(`Executing command from Gemini: ${parsedResponse.command}`);
+                    return {
+                        success: true,
+                        command: parsedResponse.command,
+                        args: parsedResponse.args,
+                        message: parsedResponse.responseMessage
+                    };
+                }
+
+                // Jika confidence rendah, balas dengan chat biasa
                 return {
                     success: false,
-                    message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
+                    message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
                 };
-            }
+            } catch (error) {
+                logger.error('Error in Gemini processing:', error);
 
-            // Jika confidence tinggi, return untuk eksekusi command
-            if (parsedResponse.confidence > 0.8) {
-                logger.info(`Executing command from Gemini: ${parsedResponse.command}`);
+                // Retry jika error network
+                if (retryCount < MAX_RETRIES && error.message && error.message.includes('network')) {
+                    logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
+                    return await this.analyzeMessage(message, retryCount + 1);
+                }
+
                 return {
-                    success: true,
-                    command: parsedResponse.command,
-                    args: parsedResponse.args,
-                    message: parsedResponse.responseMessage
+                    success: false,
+                    message: "Duh error nih! Coba lagi ntar ya bestie! 🙏"
                 };
             }
-
-            // Jika confidence rendah, balas dengan chat biasa
-            return {
-                success: false,
-                message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
-            };
-
         } catch (error) {
             logger.error('Error in Gemini processing:', error);
 
