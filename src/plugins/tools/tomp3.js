@@ -10,7 +10,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         if (m.quoted) {
             // Jika ada quoted message, download dari quoted
             videoBuffer = await downloadMediaMessage(
-                m.quoted,
+                m.quoted?.message,
                 'buffer',
                 {},
                 {
