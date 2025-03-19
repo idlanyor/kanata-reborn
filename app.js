@@ -21,6 +21,7 @@ import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
 import { autoAI } from './src/lib/autoai.js'
 import GeminiHandler from './src/lib/geminiHandler.js';
+import { downloadMediaMessage } from '@fizzxydev/baileys-pro/lib/Utils/messages.js'
 
 const app = express()
 const server = createServer(app)
