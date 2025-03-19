@@ -411,7 +411,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             }
 
             // Skip jika caption mengandung command khusus
-            const skipCommands = ['s', 'sticker', 'jadianime', 'smeme', 'removebg', 'ocr'];
+            const skipCommands = ['s', 'sticker', 'jadianime', 'smeme', 'removebg', 'brat','bratvid','bratnime','bratnimevid'];
             const msgLower = message.toLowerCase();
             
             for (const cmd of skipCommands) {
@@ -422,6 +422,30 @@ HANYA berikan JSON, tanpa teks lain.`;
                         isImageProcess: true
                     };
                 }
+            }
+
+            // Deteksi apakah ada perintah untuk analisis
+            const analysisCommands = [
+                'analisis', 'analyze', 'jelaskan', 'jelasin', 'explain',
+                'apa ini', 'apakah ini', 'what is', 'what\'s this',
+                'tolong jelaskan', 'bisa jelaskan', 'coba jelaskan',
+                'deskripsikan', 'describe'
+            ];
+
+            const hasAnalysisCommand = analysisCommands.some(cmd => 
+                msgLower.includes(cmd) || 
+                msgLower.startsWith(cmd) ||
+                msgLower.startsWith('.' + cmd) ||
+                msgLower.startsWith('!' + cmd)
+            );
+
+            // Skip jika tidak ada perintah analisis
+            if (!hasAnalysisCommand) {
+                return {
+                    success: false,
+                    message: null, // Tidak perlu memberikan pesan karena ini bukan error
+                    isImageProcess: true
+                };
             }
 
             const id = context?.id || '';
@@ -751,8 +775,8 @@ HANYA berikan JSON, tanpa teks lain.`;
             
             logger.info(`Processing audio: mimetype=${mimeType}, size=${(audioBuffer.length / 1024).toFixed(2)}KB`);
             
-            // Cek apakah ini audio yang bisa diproses
-            if (audioBuffer.length > 10 * 1024 * 1024) { // 10MB
+            // Cek ukuran audio
+            if (audioBuffer.length > 10 * 1024 * 1024) {
                 return {
                     success: false,
                     message: "Voice note/audio-nya kepanjangan nih bestie! Maksimal 10MB ya, coba kirim yang lebih pendek 🙏",
@@ -763,77 +787,117 @@ HANYA berikan JSON, tanpa teks lain.`;
             // Konversi audio ke base64
             const base64Audio = audioBuffer.toString('base64');
             
-            // Buat prompt berdasarkan apakah pesan teks disertakan
-            let textPrompt = "Tolong dengarkan voice note/audio ini dan berikan transkripsi serta analisis singkat. ";
-            
+            // Analisis pesan teks yang menyertai audio
+            let textPrompt = "";
             if (message && message.trim()) {
-                textPrompt += `User juga mengirim pesan: "${message}". `;
+                // Cek apakah ini perintah
+                if (message.toLowerCase().startsWith('!') || message.toLowerCase().startsWith('.')) {
+                    // Ambil command dan parameter
+                    const [cmd, ...args] = message.slice(1).split(' ');
+                    const cmdLower = cmd.toLowerCase();
+
+                    // Dapatkan daftar plugin
+                    let plugins = null;
+                    try {
+                        plugins = await helpMessage();
+                    } catch (error) {
+                        logger.warning("helpMessage returned null or undefined");
+                        plugins = { "basic": DEFAULT_COMMANDS };
+                    }
+
+                    // Cari command yang cocok di semua kategori
+                    let matchedCommand = null;
+                    let matchedCategory = null;
+
+                    Object.entries(plugins).forEach(([category, items]) => {
+                        if (Array.isArray(items)) {
+                            items.forEach(item => {
+                                if (item && (item.handler === cmdLower || item.command === cmdLower)) {
+                                    matchedCommand = item;
+                                    matchedCategory = category;
+                                }
+                            });
+                        }
+                    });
+
+                    if (matchedCommand) {
+                        textPrompt = `Ini adalah perintah "${cmdLower}" dari kategori "${matchedCategory}". 
+                            Deskripsi: ${matchedCommand.description || 'Tidak ada deskripsi'}
+                            Parameter yang diberikan: ${args.join(' ')}
+                            
+                            Tolong dengarkan voice note ini dan berikan:
+                            1. Transkripsi lengkap
+                            2. Analisis apakah isi voice note sesuai dengan command yang diminta
+                            3. Parameter yang diperlukan dari voice note untuk menjalankan command`;
+                    } else {
+                        textPrompt = `Ini adalah perintah: "${message}" tapi command tidak ditemukan dalam daftar plugin. 
+                            Tolong dengarkan voice note dan berikan saran command yang mungkin sesuai.`;
+                    }
+                } 
+                // Cek apakah ini permintaan informasi
+                else if (message.toLowerCase().includes('apa') || 
+                        message.toLowerCase().includes('bagaimana') ||
+                        message.toLowerCase().includes('mengapa') ||
+                        message.toLowerCase().includes('siapa')) {
+                    textPrompt = `User menanyakan informasi: "${message}". Tolong berikan informasi yang relevan dari audio ini.`;
+                }
+                // Default analisis
+                else {
+                    textPrompt = `Tolong dengarkan voice note/audio ini dan berikan: \n1. Transkripsi lengkap \n2. Analisis konteks dan maksud \n3. Respon yang sesuai`;
+                }
+            } else {
+                textPrompt = "Tolong transkripsi dan analisis voice note/audio ini secara lengkap.";
             }
             
-            // Tambahkan instruksi berdasarkan apakah ini Owner
+            // Tambah konteks owner jika perlu
             if (isOwner) {
-                textPrompt += `Ingat bahwa user ini adalah ${this.ownerInfo.name}, pemilikmu. `;
+                textPrompt += `\nCatatan: User adalah ${this.ownerInfo.name}, pemilikmu.`;
             }
-            
-            textPrompt += "Respon dengan format: \n1. *Transkripsi:* [isi voice note] \n2. *Analisis:* [analisis singkat]";
-            
-            // Kirim ke Gemini
-            logger.info(`Sending audio to Gemini`);
             
             try {
-            const result = await this.audioModel.generateContent([
+                const result = await this.audioModel.generateContent([
                     {
                         inlineData: {
-                            mimeType: "audio/mp3", // Gemini biasanya menerima format ini
+                            mimeType: "audio/mp3",
                             data: base64Audio
                         }
                     },
-                { text: textPrompt }
-            ]);
-            
-            const responseText = result.response.text();
-            
-            logger.info(`Got response from Gemini Audio: ${responseText.substring(0, 50)}...`);
-            
-            return {
-                success: true,
-                message: responseText,
-                isAudioProcess: true
-            };
-            } catch (apiError) {
-                logger.error(`API error in audio analysis: ${apiError.message}`);
+                    { text: textPrompt }
+                ]);
                 
-                // Jika error bisa jadi karena format, coba dengan prompt minimal
+                const responseText = result.response.text();
+                logger.info(`Got response from Gemini Audio: ${responseText.substring(0, 50)}...`);
+                
+                return {
+                    success: true,
+                    message: responseText,
+                    isAudioProcess: true
+                };
+            } catch (apiError) {
+                // Retry dengan format alternatif jika gagal
                 if (apiError.message.includes('invalid argument')) {
-                    logger.info(`Trying with minimal prompt and different format...`);
+                    logger.info(`Retrying with alternative format...`);
+                    const retryResult = await this.audioModel.generateContent([
+                        {
+                            inlineData: {
+                                mimeType: "audio/mpeg",
+                                data: base64Audio
+                            }
+                        },
+                        { text: textPrompt }
+                    ]);
                     
-                    try {
-                        const retryResult = await this.audioModel.generateContent([
-                            {
-                                inlineData: {
-                                    mimeType: "audio/mpeg", // Coba format alternatif
-                                    data: base64Audio
-                                }
-                            },
-                            { text: "Transcribe this audio" }
-                        ]);
-                        
-                        return {
-                            success: true,
-                            message: retryResult.response.text(),
-                            isAudioProcess: true
-                        };
-                    } catch (retryError) {
-                        logger.error(`Retry failed: ${retryError.message}`);
-                        throw retryError;
-                    }
-                } else {
-                    throw apiError;
+                    return {
+                        success: true,
+                        message: retryResult.response.text(),
+                        isAudioProcess: true
+                    };
                 }
+                throw apiError;
             }
+            
         } catch (error) {
             logger.error(`Error analyzing audio: ${error.message}`);
-            
             return {
                 success: false,
                 message: "Waduh, gw gagal prosesing voice note ini nih bestie! Coba kirim voice note yang lebih jelas atau yang pendek aja ya? 🙏",

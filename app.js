@@ -781,6 +781,11 @@ async function handleAudioMessage(m) {
 // Handler untuk gambar khusus
 async function handleImageMessage(m) {
     try {
+        // Skip jika tidak ada caption
+        if (!m.body) {
+            return;
+        }
+
         logger.info(`Handling image message from ${m.sender}`);
         const { type, mimetype } = getMediaInfo(m);
         logger.info(`Image details: type=${type}, mimetype=${mimetype || 'unknown'}`);
@@ -814,8 +819,6 @@ async function handleImageMessage(m) {
             isImage: true // Flag khusus
         };
 
-        // Tunggu indikator typing
-        await m.startTyping();
 
         // Proses gambar dengan GeminiHandler
         logger.info(`Processing image with GeminiHandler...`);
@@ -837,4 +840,6 @@ async function handleImageMessage(m) {
         await m.reply('Error nih pas proses gambar! Coba lagi ntar ya bestie! 🙏');
     }
 }
+
+
 
