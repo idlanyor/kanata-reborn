@@ -427,7 +427,7 @@ export async function startBot() {
 
                     // Untuk tipe media lain yang belum ditangani khusus
                     logger.info(`Detected other media type from ${m.sender}`);
-                    await m.reply('Media jenis ini belum didukung. Coba kirim gambar atau voice note ya! 🙏');
+                    // await m.reply('Media jenis ini belum didukung. Coba kirim gambar atau voice note ya! 🙏');
                     return;
                 }
                 // console.log(mediaType.image.buffer)
@@ -706,10 +706,42 @@ function isAudioMessage(m) {
     );
 }
 
+// Fungsi untuk deteksi pesan video
+function isVideoMessage(m) {
+    const { type, mimetype } = getMediaInfo(m);
+
+    // Cek pesan video langsung
+    const isDirectVideo = (
+        type === 'videoMessage' ||
+        (mimetype && (
+            mimetype.includes('video') ||
+            mimetype.includes('mp4') ||
+            mimetype.includes('quicktime') ||
+            mimetype.includes('mpeg')
+        ))
+    );
+
+    // Cek quoted message video
+    const isQuotedVideo = (
+        m.quoted &&
+        m.quoted.type === 'videoMessage' ||
+        (m.quoted?.mimetype && (
+            m.quoted.mimetype.includes('video') ||
+            m.quoted.mimetype.includes('mp4') ||
+            m.quoted.mimetype.includes('quicktime') ||
+            m.quoted.mimetype.includes('mpeg')
+        ))
+    );
+
+    return isDirectVideo || isQuotedVideo;
+}
+
+
 function isImageMessage(m) {
     const { type, mimetype } = getMediaInfo(m);
 
-    return (
+    // Cek pesan langsung
+    const isDirectImage = (
         type === 'imageMessage' ||
         (mimetype && (
             mimetype.includes('image') ||
@@ -718,7 +750,23 @@ function isImageMessage(m) {
             mimetype.includes('png')
         ))
     );
+
+    // Cek quoted message
+    const isQuotedImage = (
+        m.quoted &&
+        m.quoted.type === 'imageMessage' ||
+        (m.quoted?.mimetype && (
+            m.quoted.mimetype.includes('image') ||
+            m.quoted.mimetype.includes('jpg') ||
+            m.quoted.mimetype.includes('jpeg') ||
+            m.quoted.mimetype.includes('png')
+        ))
+    );
+
+    return isDirectImage || isQuotedImage;
 }
+
+
 
 // Handler untuk audio/voice note khusus
 async function handleAudioMessage(m) {
@@ -837,7 +885,7 @@ async function handleImageMessage(m) {
         }
     } catch (error) {
         logger.error(`Error handling image message: ${error.message}`);
-        await m.reply('Error nih pas proses gambar! Coba lagi ntar ya bestie! 🙏');
+        // await m.reply('Error nih pas proses gambar! Coba lagi ntar ya bestie! 🙏');
     }
 }
 

@@ -448,8 +448,18 @@ HANYA berikan JSON, tanpa teks lain.`;
                 };
             }
 
-            const id = context?.id || '';
-            const m = context?.m || {};
+            // Validasi context dan propertinya
+            if (!context) {
+                logger.error('Context is null or undefined');
+                return {
+                    success: false,
+                    message: "Terjadi kesalahan sistem. Coba lagi nanti ya!",
+                    isImageProcess: true
+                };
+            }
+
+            const id = context.id || '';
+            const m = context.m || {};
             const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
@@ -468,7 +478,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             const isOwner = this.isOwner(userId);
             
             if (isOwner) {
-                logger.info(`Processing image from BOT OWNER (${this.ownerInfo.name}): ${message?.substring(0, 30) || "no message"}...`);
+                logger.info(`Processing image from BOT OWNER (${this.ownerInfo?.name || 'Unknown'}): ${message?.substring(0, 30) || "no message"}...`);
             } else {
                 logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
             }
@@ -500,7 +510,7 @@ HANYA berikan JSON, tanpa teks lain.`;
                 
                 let prompt = `Sebagai Kanata, analisis gambar ini. User bertanya: "${safeMessage}"`;
                 
-                if (isOwner && isIdentityQuestion) {
+                if (isOwner && isIdentityQuestion && this.ownerInfo) {
                     prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya tentang identitasnya.`;
                 }
                 
