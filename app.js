@@ -112,32 +112,32 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         // 2. Group Chat: Hanya mengenali command dengan prefix (! atau .)
         //    - AutoAI hanya aktif jika diaktifkan di pengaturan grup
         // =================================
-        
+
         // Cek apakah chat private atau grup
         const isPrivateChat = !id.endsWith('@g.us');
-        
+
         // Cek apakah ada gambar yang dikirim/direply
         const hasImage = Buffer.isBuffer(attf);
-        
+
         // Gunakan Gemini AI hanya untuk private chat
         if (isPrivateChat) {
             // Jika ada gambar, proses dengan Gemini Vision
             if (hasImage) {
                 logger.info(`Processing image in private chat from ${m.pushName}`);
                 const imageResponse = await geminiHandler.analyzeImage(attf, command, { id, m });
-                
+
                 if (imageResponse.success) {
-                    await sock.sendMessage(id, { 
-                        text: imageResponse.message 
+                    await sock.sendMessage(id, {
+                        text: imageResponse.message
                     }, { quoted: m });
                 } else {
-                    await sock.sendMessage(id, { 
-                        text: imageResponse.message 
+                    await sock.sendMessage(id, {
+                        text: imageResponse.message
                     }, { quoted: m });
                 }
                 return;
             }
-            
+
             // Jika tidak ada gambar, proses teks seperti biasa
             if (command && command.length >= 3 && sender !== globalThis.botNumber) {
                 logger.info(`Processing private chat message with Gemini AI: ${command.substring(0, 30)}...`);
@@ -184,56 +184,56 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 }
             }
         }
-        
+
         // Untuk grup, cek apakah ada command dengan handler yang cocok dengan gptgambar
         if (hasImage && !isPrivateChat) {
-            const imageHandlers = ['jelasin', 'tulis', 'kanata', 'bacakan', 'bacain', 
-                                  'kerjain', 'kerjakan', 'jelaskan', 'terjemahkan', 
-                                  'mangsud', 'maksud'];
-                                  
+            const imageHandlers = ['jelasin', 'tulis', 'kanata', 'bacakan', 'bacain',
+                'kerjain', 'kerjakan', 'jelaskan', 'terjemahkan',
+                'mangsud', 'maksud'];
+
             const cmdLower = command ? command.toLowerCase() : '';
-            
+
             // Cek apakah command dimulai dengan salah satu handler
-            const matchHandler = imageHandlers.some(handler => 
-                cmdLower.startsWith(`!${handler}`) || 
-                cmdLower.startsWith(`.${handler}`) || 
+            const matchHandler = imageHandlers.some(handler =>
+                cmdLower.startsWith(`!${handler}`) ||
+                cmdLower.startsWith(`.${handler}`) ||
                 cmdLower === handler
             );
-            
+
             if (matchHandler) {
                 logger.info(`Processing image in group with command: ${command}`);
                 const imageResponse = await geminiHandler.analyzeImage(attf, command, { id, m });
-                
+
                 if (imageResponse.success) {
-                    await sock.sendMessage(id, { 
-                        text: imageResponse.message 
+                    await sock.sendMessage(id, {
+                        text: imageResponse.message
                     }, { quoted: m });
                 } else {
-                    await sock.sendMessage(id, { 
-                        text: imageResponse.message 
+                    await sock.sendMessage(id, {
+                        text: imageResponse.message
                     }, { quoted: m });
                 }
                 return;
             }
         }
-        
+
         // Proses sebagai command biasa (untuk grup atau jika Gemini gagal di private chat)
         // Periksa apakah command ada dan bukan array
         let cmd = '', args = [];
         if (command && typeof command === 'string') {
             [cmd, ...args] = command.split(' ');
         }
-    cmd = cmd.toLowerCase();
-    if (command.startsWith('!')) {
-        cmd = command.toLowerCase().substring(1).split(' ')[0];
-        args = command.split(' ').slice(1)
-    }
-    if (command.startsWith('.')) {
-        cmd = command.toLowerCase().substring(1).split(' ')[0];
-        args = command.split(' ').slice(1)
-    }
-    // logger.info(`Pesan baru diterima dari ${m.pushName}`);
-    // logger.message.in(command);
+        cmd = cmd.toLowerCase();
+        if (command.startsWith('!')) {
+            cmd = command.toLowerCase().substring(1).split(' ')[0];
+            args = command.split(' ').slice(1)
+        }
+        if (command.startsWith('.')) {
+            cmd = command.toLowerCase().substring(1).split(' ')[0];
+            args = command.split(' ').slice(1)
+        }
+        // logger.info(`Pesan baru diterima dari ${m.pushName}`);
+        // logger.message.in(command);
 
         // Inisialisasi pengaturan grup jika pesan dari grup
         if (id.endsWith('@g.us')) {
@@ -386,6 +386,8 @@ export async function startBot() {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
                 if (m.key.fromMe) return
+                // Deteksi media dengan fungsi yang sudah diperbaiki
+               
                 const sender = m.pushName;
                 const id = m.chat;
                 // if(id.endsWith('@g.us')) return
@@ -407,6 +409,25 @@ export async function startBot() {
                         caption: m.message?.audioMessage?.caption || m.message?.extendedTextMessage?.text,
                         mime: m.message?.audioMessage?.mimetype || m.quoted?.message?.audioMessage?.mimetype,
                     }
+                }
+                if (mediaType.image.buffer || mediaType.audio.buffer) {
+                    // Cek tipe media secara spesifik
+                    if (isAudioMessage(m)) {
+                        logger.info(`Detected audio/voice note from ${m.sender}`);
+                        await handleAudioMessage(m);
+                        return;
+                    }
+
+                    if (isImageMessage(m)) {
+                        logger.info(`Detected image from ${m.sender}`);
+                        await handleImageMessage(m);
+                        return;
+                    }
+
+                    // Untuk tipe media lain yang belum ditangani khusus
+                    logger.info(`Detected other media type from ${m.sender}`);
+                    await m.reply('Media jenis ini belum didukung. Coba kirim gambar atau voice note ya! 🙏');
+                    return;
                 }
                 // console.log(mediaType.image.buffer)
                 if (mediaType.image.buffer) {
@@ -444,7 +465,7 @@ export async function startBot() {
                 let fullmessage = m.body
                 // console.log(m.body)
                 let ctx = m.quoted?.text || ''
-                
+
                 // Auto AI mention - hanya aktif di private chat atau jika diaktifkan di grup
                 if (botMentioned) {
                     if (m.key.fromMe) return
@@ -452,74 +473,74 @@ export async function startBot() {
                         // Strategi AutoAI:
                         // 1. Private chat: Selalu aktif
                         // 2. Group chat: Aktif hanya jika setting autoai = 1
-                        
+
                         // Identifikasi tipe chat
                         const isPrivateChat = !id.endsWith('@g.us');
-                        
+
                         // Di private chat, selalu aktifkan AutoAI
                         if (isPrivateChat) {
                             logger.info(`AutoAI activated in private chat with ${m.pushName || noTel}`);
                             const userId = `private_${noTel}`;
                             const quotedText = m.quoted?.text || "";
-                            
+
                             // Log untuk debugging
                             logger.info(`Calling chatWithMemory for user ${userId}`);
                             logger.info(`Message: ${fullmessage.substring(0, 30)}...`);
                             logger.info(`Context: pushName=${m.pushName}, noTel=${noTel}, quotedText=${quotedText ? 'present' : 'none'}`);
-                            
+
                             try {
-                            const response = await geminiHandler.chatWithMemory(
-                                fullmessage, 
-                                userId, 
-                                    { 
+                                const response = await geminiHandler.chatWithMemory(
+                                    fullmessage,
+                                    userId,
+                                    {
                                         pushName: m.pushName,
                                         noTel: noTel,
                                         quoted: quotedText
                                     }
                                 );
-                                
-                            await sock.sendMessage(id, { text: response }, { quoted: m });
+
+                                await sock.sendMessage(id, { text: response }, { quoted: m });
                             } catch (aiError) {
                                 logger.error(`Error in autoAI for private chat:`, aiError);
-                                await sock.sendMessage(id, { 
-                                    text: "Waduh, otak gw lagi error nih. Coba lagi ntar ya! 🙏" 
+                                await sock.sendMessage(id, {
+                                    text: "Waduh, otak gw lagi error nih. Coba lagi ntar ya! 🙏"
                                 }, { quoted: m });
                             }
                             return;
-                        } 
-                        
+                        }
+
                         // Di grup, cek pengaturan autoai
                         try {
                             const settings = await Group.getSettings(id);
                             if (settings.autoai == 1) {
-                            logger.info(`AutoAI activated in group ${id} (explicitly enabled in settings)`);
-                            const groupId = `group_${id}`;
-                            const quotedText = m.quoted?.text || "";
-                                
-                            const response = await geminiHandler.chatWithMemory(
-                                fullmessage, 
-                                groupId, 
-                                    { 
+                                logger.info(`AutoAI activated in group ${id} (explicitly enabled in settings)`);
+                                const groupId = `group_${id}`;
+                                const quotedText = m.quoted?.text || "";
+
+                                const response = await geminiHandler.chatWithMemory(
+                                    fullmessage,
+                                    groupId,
+                                    {
                                         pushName: m.pushName,
                                         noTel: noTel,
                                         quoted: quotedText
                                     }
                                 );
-                                
-                            await sock.sendMessage(id, { text: response }, { quoted: m });
-                        } else {
-                            logger.info(`AutoAI skipped in group ${id} (not enabled in settings)`);
+
+                                await sock.sendMessage(id, { text: response }, { quoted: m });
+                            } else {
+                                logger.info(`AutoAI skipped in group ${id} (not enabled in settings)`);
                             }
                         } catch (groupError) {
                             logger.error(`Error checking group settings:`, groupError);
-                            await sock.sendMessage(id, { 
-                                text: "Waduh, ada masalah sama pengaturan grupnya nih. Coba lagi ntar ya! 🙏" 
+                            await sock.sendMessage(id, {
+                                text: "Waduh, ada masalah sama pengaturan grupnya nih. Coba lagi ntar ya! 🙏"
                             }, { quoted: m });
                         }
                     } catch (error) {
                         logger.error(`General error in botMentioned handler:`, error);
-                        await sock.sendMessage(id, { 
-                            text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi ntar ya!' 
+                        await sock.sendMessage(id, {
+                            text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi ntar ya!'
                         }, { quoted: m });
                     }
                 }
@@ -587,79 +608,79 @@ function getMediaInfo(m) {
         if (!m || !m.message) {
             return { type: 'unknown', mimetype: null };
         }
-        
+
         // Cek berbagai jenis pesan media yang umum
         const message = m.message;
-        
+
         if (message.audioMessage) {
-            return { 
-                type: 'audioMessage', 
+            return {
+                type: 'audioMessage',
                 mimetype: message.audioMessage.mimetype || 'audio/mp4',
                 duration: message.audioMessage.seconds
             };
         }
-        
+
         if (message.pttMessage) {
-            return { 
-                type: 'pttMessage', 
+            return {
+                type: 'pttMessage',
                 mimetype: message.pttMessage.mimetype || 'audio/ogg; codecs=opus',
                 duration: message.pttMessage.seconds
             };
         }
-        
+
         // WhatsApp juga bisa menyimpan audio di audioMessage dengan ptt=true
         if (message.audioMessage && message.audioMessage.ptt === true) {
-            return { 
-                type: 'pttMessage', 
+            return {
+                type: 'pttMessage',
                 mimetype: message.audioMessage.mimetype || 'audio/ogg; codecs=opus',
                 duration: message.audioMessage.seconds
             };
         }
-        
+
         if (message.imageMessage) {
-            return { 
-                type: 'imageMessage', 
+            return {
+                type: 'imageMessage',
                 mimetype: message.imageMessage.mimetype || 'image/jpeg'
             };
         }
-        
+
         if (message.videoMessage) {
-            return { 
-                type: 'videoMessage', 
+            return {
+                type: 'videoMessage',
                 mimetype: message.videoMessage.mimetype || 'video/mp4'
             };
         }
-        
+
         if (message.documentMessage) {
-            return { 
-                type: 'documentMessage', 
+            return {
+                type: 'documentMessage',
                 mimetype: message.documentMessage.mimetype
             };
         }
-        
+
         // Fallback: coba cek dengan Object.keys
         const keys = Object.keys(message);
         if (keys.length > 0) {
             // Coba tentukan tipe dan mimetype dari key pertama
             const type = keys[0];
             let mimetype = null;
-            
+
             if (message[type] && message[type].mimetype) {
                 mimetype = message[type].mimetype;
             }
-            
+
             // Tambahan deteksi khusus untuk tipe audio
             if (type.includes('audio') || (mimetype && mimetype.includes('audio'))) {
                 return { type: 'audioMessage', mimetype: mimetype || 'audio/mp4' };
             }
-            
+
             if (type.includes('ptt') || type.includes('voice')) {
                 return { type: 'pttMessage', mimetype: mimetype || 'audio/ogg; codecs=opus' };
             }
-            
+
             return { type, mimetype };
         }
-        
+
         return { type: 'unknown', mimetype: null };
     } catch (error) {
         logger.error(`Error getting media info: ${error.message}`);
@@ -670,15 +691,15 @@ function getMediaInfo(m) {
 // Buat fungsi khusus untuk deteksi apakah pesan adalah audio/VN
 function isAudioMessage(m) {
     const { type, mimetype } = getMediaInfo(m);
-    
+
     return (
-        type === 'audioMessage' || 
-        type === 'pttMessage' || 
+        type === 'audioMessage' ||
+        type === 'pttMessage' ||
         (mimetype && (
-            mimetype.includes('audio') || 
-            mimetype.includes('ogg') || 
-            mimetype.includes('opus') || 
-            mimetype.includes('mp3') || 
+            mimetype.includes('audio') ||
+            mimetype.includes('ogg') ||
+            mimetype.includes('opus') ||
+            mimetype.includes('mp3') ||
             mimetype.includes('wav')
         ))
     );
@@ -686,13 +707,13 @@ function isAudioMessage(m) {
 
 function isImageMessage(m) {
     const { type, mimetype } = getMediaInfo(m);
-    
+
     return (
-        type === 'imageMessage' || 
+        type === 'imageMessage' ||
         (mimetype && (
-            mimetype.includes('image') || 
-            mimetype.includes('jpg') || 
-            mimetype.includes('jpeg') || 
+            mimetype.includes('image') ||
+            mimetype.includes('jpg') ||
+            mimetype.includes('jpeg') ||
             mimetype.includes('png')
         ))
     );
@@ -704,7 +725,7 @@ async function handleAudioMessage(m) {
         logger.info(`Handling audio message from ${m.sender}`);
         const { type, mimetype } = getMediaInfo(m);
         logger.info(`Audio details: type=${type}, mimetype=${mimetype || 'unknown'}`);
-        
+
         // Download audio
         let audioBuffer;
         try {
@@ -717,20 +738,20 @@ async function handleAudioMessage(m) {
                     reuploadRequest: m.waUploadToServer
                 }
             );
-            
+
             logger.info(`Downloaded audio: ${(audioBuffer.length / 1024).toFixed(2)}KB`);
         } catch (downloadError) {
             logger.error(`Failed to download audio: ${downloadError.message}`);
             await m.reply('Waduh, gw gagal download voice note-nya nih. Coba kirim ulang ya! 🙏');
             return;
         }
-        
+
         if (!audioBuffer || audioBuffer.length === 0) {
             logger.error('Downloaded audio buffer is empty');
             await m.reply('Voice note yang kamu kirim kosong atau rusak. Coba kirim lagi ya! 🙏');
             return;
         }
-        
+
         // Buat context untuk GeminiHandler
         const context = {
             id: m.key.id,
@@ -739,14 +760,14 @@ async function handleAudioMessage(m) {
             type: type,
             isAudio: true // Flag khusus
         };
-        
+
         // Tunggu indikator recording
         await m.startTyping();
-        
+
         // Proses audio dengan GeminiHandler
         logger.info(`Processing audio with GeminiHandler...`);
         const result = await geminiHandler.analyzeAudio(audioBuffer, m.body || '', context);
-        
+
         if (result.success) {
             await m.reply(result.message);
         } else {
@@ -764,7 +785,7 @@ async function handleImageMessage(m) {
         logger.info(`Handling image message from ${m.sender}`);
         const { type, mimetype } = getMediaInfo(m);
         logger.info(`Image details: type=${type}, mimetype=${mimetype || 'unknown'}`);
-        
+
         // Download image
         let imageBuffer;
         try {
@@ -777,14 +798,14 @@ async function handleImageMessage(m) {
                     reuploadRequest: m.waUploadToServer
                 }
             );
-            
+
             logger.info(`Downloaded image: ${(imageBuffer.length / 1024).toFixed(2)}KB`);
         } catch (downloadError) {
             logger.error(`Failed to download image: ${downloadError.message}`);
             await m.reply('Waduh, gw gagal download gambarnya nih. Coba kirim ulang ya! 🙏');
             return;
         }
-        
+
         // Buat context untuk GeminiHandler
         const context = {
             id: m.key.id,
@@ -793,14 +814,14 @@ async function handleImageMessage(m) {
             type: type,
             isImage: true // Flag khusus
         };
-        
+
         // Tunggu indikator typing
         await m.startTyping();
-        
+
         // Proses gambar dengan GeminiHandler
         logger.info(`Processing image with GeminiHandler...`);
         const result = await geminiHandler.analyzeImage(imageBuffer, m.body || '', context);
-        
+
         if (result.success) {
             if (result.command && result.skipAnalysis) {
                 // Jika ada command terdeteksi (misal sticker), jalankan
@@ -818,30 +839,3 @@ async function handleImageMessage(m) {
     }
 }
 
-// Update event handler pesan utama
-client.ev.on('messages.upsert', async chatUpdate => {
-    // ... existing code ...
-    
-    // Deteksi media dengan fungsi yang sudah diperbaiki
-    if (m.hasMedia) {
-        // Cek tipe media secara spesifik
-        if (isAudioMessage(m)) {
-            logger.info(`Detected audio/voice note from ${m.sender}`);
-            await handleAudioMessage(m);
-            return;
-        }
-        
-        if (isImageMessage(m)) {
-            logger.info(`Detected image from ${m.sender}`);
-            await handleImageMessage(m);
-            return;
-        }
-        
-        // Untuk tipe media lain yang belum ditangani khusus
-        logger.info(`Detected other media type from ${m.sender}`);
-        await m.reply('Media jenis ini belum didukung. Coba kirim gambar atau voice note ya! 🙏');
-        return;
-    }
-    
-    // ... rest of the handler for text messages ...
-});
