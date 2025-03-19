@@ -762,8 +762,6 @@ async function handleAudioMessage(m) {
             isAudio: true // Flag khusus
         };
 
-        // Tunggu indikator recording
-        await m.startTyping();
 
         // Proses audio dengan GeminiHandler
         logger.info(`Processing audio with GeminiHandler...`);
