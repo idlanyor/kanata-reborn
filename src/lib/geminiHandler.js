@@ -469,8 +469,6 @@ HANYA berikan JSON, tanpa teks lain.`;
                 // Konversi buffer menjadi format yang sesuai untuk Gemini
                 const imagePart = this.bufferToGenerativePart(imageBuffer);
                 
-                // PERUBAHAN: Gunakan model gemini-1.5-pro untuk analisis gambar
-                // bukan gemini-2.0-flash-lite yang tidak mendukung gambar
                 const visionModel = this.genAI.getGenerativeModel({ 
                     model: "gemini-2.0-flash-lite",
                     generationConfig: {
@@ -633,26 +631,39 @@ HANYA berikan JSON, tanpa teks lain.`;
         };
     }
     
-    // Fungsi untuk mengecek tipe media
+    // Fungsi untuk mengecek tipe media - pastikan ini diperbarui
     isAudioMessage(context) {
         try {
+            // Cek flag khusus
+            if (context && context.isAudio === true) {
+                return true;
+            }
+            
             if (!context || !context.m) return false;
             
             const m = context.m;
-            const type = Object.keys(m.message || {})[0];
+            // Cek dari tipe pesan
+            const message = m.message || {};
             
-            // Cek tipe pesan audio atau voice note
+            // Cek berbagai cara audio bisa muncul di pesan WhatsApp
+            if (message.audioMessage) return true;
+            if (message.pttMessage) return true;
+            
+            // Cek juga dari context type dan mimetype
+            const type = context.type || '';
+            const mimetype = context.mimetype || '';
+            
             return (
-                type === 'audioMessage' || 
-                type === 'pttMessage' || 
-                (context.mimetype && (
-                    context.mimetype.includes('audio') || 
-                    context.mimetype.includes('ogg') || 
-                    context.mimetype.includes('opus')
-                ))
+                type.includes('audio') || 
+                type.includes('ptt') || 
+                mimetype.includes('audio') || 
+                mimetype.includes('ogg') || 
+                mimetype.includes('opus') || 
+                mimetype.includes('mp3') || 
+                mimetype.includes('wav')
             );
         } catch (error) {
-            logger.error(`Error checking audio message type: ${error.message}`);
+            logger.error(`Error checking audio message: ${error.message}`);
             return false;
         }
     }
@@ -680,17 +691,25 @@ HANYA berikan JSON, tanpa teks lain.`;
         }
     }
     
-    // Fungsi untuk memproses media (dispatcher)
+    // Perbarui juga fungsi processMedia untuk menggunakan fungsi-fungsi baru
     async processMedia(mediaBuffer, message, context) {
         try {
-            // Tambahkan logging untuk debuging
-            const m = context?.m || {};
-            const type = Object.keys(m.message || {})[0] || 'unknown';
-            const mimetype = context?.mimetype || 'unknown';
+            // Tambahkan logging untuk debugging
+            logger.info(`ProcessMedia called with: context.type=${context.type}, context.mimetype=${context.mimetype || 'unknown'}`);
+            logger.info(`Context flags: isAudio=${!!context.isAudio}, isImage=${!!context.isImage}`);
             
-            logger.info(`Processing media: type=${type}, mimetype=${mimetype}`);
+            // Cek tipe media berdasarkan flag khusus dulu
+            if (context.isAudio === true) {
+                logger.info(`Processing as audio (explicit flag)`);
+                return await this.analyzeAudio(mediaBuffer, message, context);
+            }
             
-            // Cek tipe media
+            if (context.isImage === true) {
+                logger.info(`Processing as image (explicit flag)`);
+                return await this.analyzeImage(mediaBuffer, message, context);
+            }
+            
+            // Cek menggunakan fungsi helper
             if (this.isAudioMessage(context)) {
                 logger.info(`Detected as audio/voice note`);
                 return await this.analyzeAudio(mediaBuffer, message, context);
@@ -699,6 +718,8 @@ HANYA berikan JSON, tanpa teks lain.`;
                 return await this.analyzeImage(mediaBuffer, message, context);
             } else {
                 // Jika tipe tidak terdeteksi, coba deteksi dari MIME type
+                const mimetype = context.mimetype || '';
+                
                 if (mimetype.includes('audio') || mimetype.includes('ogg') || mimetype.includes('opus')) {
                     logger.info(`Detected as audio from mimetype`);
                     return await this.analyzeAudio(mediaBuffer, message, context);
@@ -707,10 +728,10 @@ HANYA berikan JSON, tanpa teks lain.`;
                     return await this.analyzeImage(mediaBuffer, message, context);
                 } else {
                     // Default fallback
-                    logger.warn(`Unknown media type, defaulting to image analysis`);
+                    logger.warn(`Unknown media type, defaulting to media error response`);
                     return {
                         success: false,
-                        message: "Maaf bestie, gw gak bisa proses media ini. Coba kirim format yang lain ya? 🙏",
+                        message: "Maaf bestie, gw gak bisa proses media jenis ini. Coba kirim format lain ya? 🙏",
                         isUnknownMedia: true
                     };
                 }

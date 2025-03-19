@@ -580,3 +580,268 @@ server.listen(3000, '0.0.0.0', () => {
     console.log('server running at http://0.0.0.0:3000');
 });
 startBot()
+
+// Fungsi untuk mendapatkan info media dari pesan dengan deteksi yang lebih baik
+function getMediaInfo(m) {
+    try {
+        if (!m || !m.message) {
+            return { type: 'unknown', mimetype: null };
+        }
+        
+        // Cek berbagai jenis pesan media yang umum
+        const message = m.message;
+        
+        if (message.audioMessage) {
+            return { 
+                type: 'audioMessage', 
+                mimetype: message.audioMessage.mimetype || 'audio/mp4',
+                duration: message.audioMessage.seconds
+            };
+        }
+        
+        if (message.pttMessage) {
+            return { 
+                type: 'pttMessage', 
+                mimetype: message.pttMessage.mimetype || 'audio/ogg; codecs=opus',
+                duration: message.pttMessage.seconds
+            };
+        }
+        
+        // WhatsApp juga bisa menyimpan audio di audioMessage dengan ptt=true
+        if (message.audioMessage && message.audioMessage.ptt === true) {
+            return { 
+                type: 'pttMessage', 
+                mimetype: message.audioMessage.mimetype || 'audio/ogg; codecs=opus',
+                duration: message.audioMessage.seconds
+            };
+        }
+        
+        if (message.imageMessage) {
+            return { 
+                type: 'imageMessage', 
+                mimetype: message.imageMessage.mimetype || 'image/jpeg'
+            };
+        }
+        
+        if (message.videoMessage) {
+            return { 
+                type: 'videoMessage', 
+                mimetype: message.videoMessage.mimetype || 'video/mp4'
+            };
+        }
+        
+        if (message.documentMessage) {
+            return { 
+                type: 'documentMessage', 
+                mimetype: message.documentMessage.mimetype
+            };
+        }
+        
+        // Fallback: coba cek dengan Object.keys
+        const keys = Object.keys(message);
+        if (keys.length > 0) {
+            // Coba tentukan tipe dan mimetype dari key pertama
+            const type = keys[0];
+            let mimetype = null;
+            
+            if (message[type] && message[type].mimetype) {
+                mimetype = message[type].mimetype;
+            }
+            
+            // Tambahan deteksi khusus untuk tipe audio
+            if (type.includes('audio') || (mimetype && mimetype.includes('audio'))) {
+                return { type: 'audioMessage', mimetype: mimetype || 'audio/mp4' };
+            }
+            
+            if (type.includes('ptt') || type.includes('voice')) {
+                return { type: 'pttMessage', mimetype: mimetype || 'audio/ogg; codecs=opus' };
+            }
+            
+            return { type, mimetype };
+        }
+        
+        return { type: 'unknown', mimetype: null };
+    } catch (error) {
+        logger.error(`Error getting media info: ${error.message}`);
+        return { type: 'unknown', mimetype: null };
+    }
+}
+
+// Buat fungsi khusus untuk deteksi apakah pesan adalah audio/VN
+function isAudioMessage(m) {
+    const { type, mimetype } = getMediaInfo(m);
+    
+    return (
+        type === 'audioMessage' || 
+        type === 'pttMessage' || 
+        (mimetype && (
+            mimetype.includes('audio') || 
+            mimetype.includes('ogg') || 
+            mimetype.includes('opus') || 
+            mimetype.includes('mp3') || 
+            mimetype.includes('wav')
+        ))
+    );
+}
+
+function isImageMessage(m) {
+    const { type, mimetype } = getMediaInfo(m);
+    
+    return (
+        type === 'imageMessage' || 
+        (mimetype && (
+            mimetype.includes('image') || 
+            mimetype.includes('jpg') || 
+            mimetype.includes('jpeg') || 
+            mimetype.includes('png')
+        ))
+    );
+}
+
+// Handler untuk audio/voice note khusus
+async function handleAudioMessage(m) {
+    try {
+        logger.info(`Handling audio message from ${m.sender}`);
+        const { type, mimetype } = getMediaInfo(m);
+        logger.info(`Audio details: type=${type}, mimetype=${mimetype || 'unknown'}`);
+        
+        // Download audio
+        let audioBuffer;
+        try {
+            audioBuffer = await downloadMediaMessage(
+                m,
+                'buffer',
+                {},
+                {
+                    logger,
+                    reuploadRequest: m.waUploadToServer
+                }
+            );
+            
+            logger.info(`Downloaded audio: ${(audioBuffer.length / 1024).toFixed(2)}KB`);
+        } catch (downloadError) {
+            logger.error(`Failed to download audio: ${downloadError.message}`);
+            await m.reply('Waduh, gw gagal download voice note-nya nih. Coba kirim ulang ya! 🙏');
+            return;
+        }
+        
+        if (!audioBuffer || audioBuffer.length === 0) {
+            logger.error('Downloaded audio buffer is empty');
+            await m.reply('Voice note yang kamu kirim kosong atau rusak. Coba kirim lagi ya! 🙏');
+            return;
+        }
+        
+        // Buat context untuk GeminiHandler
+        const context = {
+            id: m.key.id,
+            m: m,
+            mimetype: mimetype,
+            type: type,
+            isAudio: true // Flag khusus
+        };
+        
+        // Tunggu indikator recording
+        await m.startTyping();
+        
+        // Proses audio dengan GeminiHandler
+        logger.info(`Processing audio with GeminiHandler...`);
+        const result = await geminiHandler.analyzeAudio(audioBuffer, m.body || '', context);
+        
+        if (result.success) {
+            await m.reply(result.message);
+        } else {
+            await m.reply(result.message); // Error message
+        }
+    } catch (error) {
+        logger.error(`Error handling audio message: ${error.message}`);
+        await m.reply('Error nih pas proses voice note! Coba lagi ntar ya bestie! 🙏');
+    }
+}
+
+// Handler untuk gambar khusus
+async function handleImageMessage(m) {
+    try {
+        logger.info(`Handling image message from ${m.sender}`);
+        const { type, mimetype } = getMediaInfo(m);
+        logger.info(`Image details: type=${type}, mimetype=${mimetype || 'unknown'}`);
+        
+        // Download image
+        let imageBuffer;
+        try {
+            imageBuffer = await downloadMediaMessage(
+                m,
+                'buffer',
+                {},
+                {
+                    logger,
+                    reuploadRequest: m.waUploadToServer
+                }
+            );
+            
+            logger.info(`Downloaded image: ${(imageBuffer.length / 1024).toFixed(2)}KB`);
+        } catch (downloadError) {
+            logger.error(`Failed to download image: ${downloadError.message}`);
+            await m.reply('Waduh, gw gagal download gambarnya nih. Coba kirim ulang ya! 🙏');
+            return;
+        }
+        
+        // Buat context untuk GeminiHandler
+        const context = {
+            id: m.key.id,
+            m: m,
+            mimetype: mimetype,
+            type: type,
+            isImage: true // Flag khusus
+        };
+        
+        // Tunggu indikator typing
+        await m.startTyping();
+        
+        // Proses gambar dengan GeminiHandler
+        logger.info(`Processing image with GeminiHandler...`);
+        const result = await geminiHandler.analyzeImage(imageBuffer, m.body || '', context);
+        
+        if (result.success) {
+            if (result.command && result.skipAnalysis) {
+                // Jika ada command terdeteksi (misal sticker), jalankan
+                await prosesPerintah(m, result.command, result.args);
+            } else {
+                // Kirim hasil analisis
+                await m.reply(result.message);
+            }
+        } else {
+            await m.reply(result.message); // Error message
+        }
+    } catch (error) {
+        logger.error(`Error handling image message: ${error.message}`);
+        await m.reply('Error nih pas proses gambar! Coba lagi ntar ya bestie! 🙏');
+    }
+}
+
+// Update event handler pesan utama
+client.ev.on('messages.upsert', async chatUpdate => {
+    // ... existing code ...
+    
+    // Deteksi media dengan fungsi yang sudah diperbaiki
+    if (m.hasMedia) {
+        // Cek tipe media secara spesifik
+        if (isAudioMessage(m)) {
+            logger.info(`Detected audio/voice note from ${m.sender}`);
+            await handleAudioMessage(m);
+            return;
+        }
+        
+        if (isImageMessage(m)) {
+            logger.info(`Detected image from ${m.sender}`);
+            await handleImageMessage(m);
+            return;
+        }
+        
+        // Untuk tipe media lain yang belum ditangani khusus
+        logger.info(`Detected other media type from ${m.sender}`);
+        await m.reply('Media jenis ini belum didukung. Coba kirim gambar atau voice note ya! 🙏');
+        return;
+    }
+    
+    // ... rest of the handler for text messages ...
+});
