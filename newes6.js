@@ -1,21 +1,23 @@
 import { execSync } from "child_process";
+import random from "random";
 
 const author = "prasbhara0604@gmail.com";
 const branch = "main";
 
-for (let year = 2019; year <= 2025; year++) {
-    const endMonth = year === 2025 ? 2 : 12; // Sampai Februari 2025 saja
-    for (let month = 1; month <= endMonth; month++) {
-        const daysInMonth = new Date(year, month, 0).getDate();
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T12:00:00+08:00`;
-            const message = `Commit #${day} on ${date}`;
+for (let day = 1; day <= 9; day++) {
+    const date = `2025-03-${String(day).padStart(2, "0")}T12:00:00+08:00`;
+    const commitCount = random.int(10, 25); // Random 10 - 25 commit per hari
 
-            execSync(`echo "Fake commit for ${date}" > fake_commit.txt`);
-            execSync("git add fake_commit.txt");
-            execSync(`GIT_COMMITTER_DATE="${date}" git commit -m "${message}" --date "${date}" --author="${author}"`);
-        }
+    for (let commit = 1; commit <= commitCount; commit++) {
+        const commitTime = `2025-03-${String(day).padStart(2, "0")}T${random.int(0, 23)}:${random.int(0, 59)}:${random.int(0, 59)}+08:00`;
+        const message = `Commit #${commit} on ${commitTime}`;
+
+        execSync(`echo "Fake commit for ${commitTime}" > fake_commit.txt`);
+        execSync("git add fake_commit.txt");
+        execSync(`GIT_COMMITTER_DATE="${commitTime}" git commit -m "${message}" --date "${commitTime}" --author="${author}"`);
     }
+
+    console.log(`✅ ${commitCount} commits created for ${date}`);
 }
 
-console.log("Fake commits created from 2019 to February 2025!");
+console.log("🎉 Fake commits from 1 - 9 Maret 2025 created successfully!");

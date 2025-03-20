@@ -413,13 +413,13 @@ export async function startBot() {
                 }
                 if (mediaType.image.buffer || mediaType.audio.buffer) {
                     // Cek tipe media secara spesifik
-                    if (isAudioMessage(m)) {
+                    if (mediaType.image.buffer) {
                         logger.info(`Detected audio/voice note from ${m.sender}`);
                         await handleAudioMessage(m);
                         return;
                     }
 
-                    if (isImageMessage(m)) {
+                    if (mediaType.image.buffer) {
                         if (!m.body) return
                         logger.info(`Detected image from ${m.sender}`);
                         await handleImageMessage(m);
