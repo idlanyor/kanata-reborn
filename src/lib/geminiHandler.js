@@ -40,8 +40,14 @@ class GeminiHandler {
     constructor(apiKey) {
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-        this.visionModel = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-        this.chatModel = this.genAI.getGenerativeModel({ 
+        this.visionModel = this.genAI.getGenerativeModel({
+            model: "gemini-2.0-flash-lite",
+            generationConfig: {
+                temperature: 0.4,
+                maxOutputTokens: 1024
+            }
+        });
+        this.chatModel = this.genAI.getGenerativeModel({
             model: "gemini-2.0-flash-lite",
             generationConfig: {
                 temperature: 0.7,
@@ -49,7 +55,7 @@ class GeminiHandler {
                 topK: 40,
             }
         });
-        this.audioModel = this.genAI.getGenerativeModel({ 
+        this.audioModel = this.genAI.getGenerativeModel({
             model: "gemini-2.0-flash-lite",
             generationConfig: {
                 temperature: 0.2,
@@ -58,11 +64,11 @@ class GeminiHandler {
             }
         });
         this.ownerInfo = BOT_OWNER;
-        
+
         // Cleanup cache setiap 10 menit
         setInterval(() => this.cleanupConversations(), 10 * 60 * 1000);
     }
-    
+
     // Fungsi untuk membersihkan percakapan yang sudah tidak aktif
     cleanupConversations() {
         const now = Date.now();
@@ -73,34 +79,34 @@ class GeminiHandler {
             }
         }
     }
-    
+
     // Fungsi untuk mengecek apakah user adalah pemilik bot
     isOwner(userId) {
         if (!userId) return false;
         return userId.includes(this.ownerInfo.number);
     }
-    
+
     // Fungsi untuk mendapatkan ID user yang aman
     getSafeUserId(userId) {
         if (!userId) return "unknown_user";
         return userId;
     }
-    
+
     // Fungsi untuk mendapatkan nama user yang aman
     getUserIdentifier(userId, userName) {
         // Verifikasi userId
         const safeUserId = this.getSafeUserId(userId);
-        
+
         // Cek apakah user adalah pemilik bot
         const isOwner = this.isOwner(safeUserId);
-        
+
         if (isOwner) {
             return {
                 name: this.ownerInfo.name,
                 isOwner: true
             };
         }
-        
+
         // Untuk user biasa, gunakan userName jika tersedia
         if (userName) {
             return {
@@ -108,7 +114,7 @@ class GeminiHandler {
                 isOwner: false
             };
         }
-        
+
         // Fallback jika tidak ada userName
         try {
             const userPrefix = safeUserId.split('_')[1]?.substring(0, 4) || 'unknown';
@@ -124,7 +130,7 @@ class GeminiHandler {
             };
         }
     }
-    
+
     // Fungsi untuk mendapatkan chat history atau membuat baru jika belum ada
     getConversation(userId, userName) {
         // Validasi userId
@@ -132,24 +138,24 @@ class GeminiHandler {
             logger.warning("getConversation called with empty userId, using 'unknown_user'");
             userId = "unknown_user";
         }
-        
+
         // Cek apakah user adalah pemilik bot
         const isOwner = this.isOwner(userId);
         const userInfo = this.getUserIdentifier(userId, userName);
-        
+
         if (isOwner) {
             logger.info(`This user is the BOT OWNER (${this.ownerInfo.name})`);
         }
-        
+
         logger.info(`User name from context: ${userName || 'not provided'}`);
         logger.info(`Getting conversation for user ${userId} (${userInfo.name})`);
-        
+
         if (!conversationCache.has(userId)) {
             logger.info(`Creating new conversation for ${userId}`);
-            
+
             // Buat prompt awal yang sesuai dengan identitas user
             let initialPrompt = "Halo, kamu adalah Kanata, asisten AI yang asik dan friendly. Kamu suka pake bahasa gaul Indonesia yang santai tapi tetep sopan. Kamu pake first person 'gue/gw' dan second person 'lu/kamu'. Kamu sering pake emoji yang relevan. Jawaban kamu to the point tapi tetep helpful.";
-            
+
             // Tambahkan format WhatsApp
             initialPrompt += `
 Dalam memformat pesanmu, kamu menggunakan format WhatsApp:
@@ -161,18 +167,18 @@ Dalam memformat pesanmu, kamu menggunakan format WhatsApp:
 - > untuk membuat quoted text
 - - untuk membuat bullet list 
 - 1. 2. 3. untuk membuat ordered list`;
-            
+
             // Tambahkan info user
             initialPrompt += `\n\nNama user ini adalah ${userInfo.name}.`;
-            
+
             // Tambahkan info khusus jika user adalah pemilik
             if (isOwner) {
                 initialPrompt += ` PENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}. Jika user bertanya "siapa saya?" atau pertanyaan serupa tentang identitasnya, kamu HARUS menjawab bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu. Kamu sangat senang, antusias, dan respect ketika berbicara dengan pemilikmu karena dia yang menciptakanmu.`;
             }
-            
+
             // Format respons bot awal yang berbeda untuk owner dan user biasa
             let initialResponse;
-            
+
             if (isOwner) {
                 initialResponse = `*Wuih creator gw!* 😍 
 
@@ -186,7 +192,7 @@ Sip, gw Kanata, asisten AI yang siap bantuin lu! Gw bakal jawab pertanyaan lu de
 
 Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             }
-            
+
             try {
                 // Buat chat session dengan format yang benar
                 const chat = this.chatModel.startChat({
@@ -201,7 +207,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                         }
                     ]
                 });
-                
+
                 conversationCache.set(userId, {
                     history: chat,
                     lastUpdate: Date.now(),
@@ -215,20 +221,20 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
         } else {
             // Update timestamp
             conversationCache.get(userId).lastUpdate = Date.now();
-            
+
             // Update username jika sebelumnya null tapi sekarang ada
             if (!conversationCache.get(userId).userName && userName) {
                 logger.info(`Updating username for ${userId} to ${userName}`);
                 conversationCache.get(userId).userName = userName;
             }
-            
+
             // Pastikan status owner tetap terjaga
             conversationCache.get(userId).isOwner = isOwner;
         }
-        
+
         return conversationCache.get(userId).history;
     }
-    
+
     // Fungsi untuk mengekstrak JSON dari teks
     extractJSON(text) {
         try {
@@ -236,160 +242,38 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
             return JSON.parse(text);
         } catch (e) {
             try {
-                // Coba ekstrak JSON dari teks dengan lebih hati-hati
-                const jsonRegex = /\{[\s\S]*?\}/g;
-                const matches = text.match(jsonRegex);
-                
-                if (matches && matches.length > 0) {
-                    // Ambil JSON pertama yang valid
-                    for (const match of matches) {
-                        try {
-                            return JSON.parse(match);
-                        } catch (innerErr) {
-                            // Lanjut ke match berikutnya jika parse error
-                            continue;
-                        }
-                    }
+                // Coba ekstrak JSON dari teks
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
                 }
-                
-                // Jika masih gagal, coba hapus karakter non-JSON
-                const cleanedText = text.replace(/[^\x20-\x7E]/g, '');
-                const jsonStart = cleanedText.indexOf('{');
-                const jsonEnd = cleanedText.lastIndexOf('}') + 1;
-                
-                if (jsonStart !== -1 && jsonEnd !== -1 && jsonStart < jsonEnd) {
-                    const jsonString = cleanedText.substring(jsonStart, jsonEnd);
-                    return JSON.parse(jsonString);
-                }
-                
-                logger.error('Could not extract valid JSON after multiple attempts');
-                logger.debug('Raw text received:', text);
-                return null;
             } catch (err) {
                 logger.error('Error extracting JSON:', err);
-                logger.debug('Raw text received:', text);
-                return null;
             }
+            return null;
         }
     }
-    
+
     // Konversi buffer gambar menjadi format yang dibutuhkan Gemini
     bufferToGenerativePart(buffer, mimeType = "image/jpeg") {
         try {
-            // Validasi buffer
             if (!buffer || !(buffer instanceof Buffer)) {
                 throw new Error("Invalid buffer provided");
             }
-            
-            // Gunakan format yang benar sesuai dokumentasi Gemini
-        return {
-            inlineData: {
-                data: buffer.toString("base64"),
+
+            return {
+                inlineData: {
+                    data: buffer.toString("base64"),
                     mimeType: mimeType
                 }
-        };
+            };
         } catch (error) {
             logger.error(`Error converting buffer to generative part: ${error.message}`);
             throw error;
         }
     }
-    
-    // Tambahkan fungsi untuk memeriksa apakah pesan berisi perintah spesifik untuk gambar
-    async checkImageCommand(message, imageBuffer, context) {
-        try {
-            const id = context?.id || '';
-            const m = context?.m || {};
-            const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
-            const userId = `private_${noTel}`;
-            const userName = m.pushName || null;
-            
-            logger.info(`Checking if message with image contains specific command: ${message?.substring(0, 30) || "no message"}...`);
-            
-            // Daftar perintah yang berhubungan dengan gambar
-            const imageRelatedCommands = [
-                {command: "sticker", keywords: ["sticker", "stiker", "jadiin sticker", "bikin sticker", "jadi sticker"]},
-                {command: "ocr", keywords: ["ocr", "baca text", "baca tulisan", "extract text"]},
-                {command: "removebg", keywords: ["removebg", "hapus background", "buang background", "transparent"]},
-                {command: "inspect", keywords: ["inspect", "analisis gambar", "cek gambar", "lihat gambar"]}
-            ];
-            
-            // Jika tidak ada pesan, hanya gambar saja, langsung analisis
-            if (!message || message.trim() === '') {
-                logger.info(`No text message provided with image, proceeding with analysis`);
-                return null; // Tidak ada perintah spesifik
-            }
-            
-            // Cek apakah pesan mengandung keyword perintah
-            const msgLower = message.toLowerCase();
-            for (const cmd of imageRelatedCommands) {
-                for (const keyword of cmd.keywords) {
-                    if (msgLower.includes(keyword)) {
-                        logger.info(`Detected image command: ${cmd.command} from keyword: ${keyword}`);
-                        return {
-                            command: cmd.command,
-                            args: message.replace(new RegExp(keyword, 'gi'), '').trim() || null
-                        };
-                    }
-                }
-            }
-            
-            // Jika tidak ada keyword spesifik, cek intent dengan Gemini
-            try {
-                const prompt = `Analisis pesan singkat berikut bersama dengan gambar:
-"${message}"
 
-Apakah user:
-1. Ingin membuat sticker dari gambar ini?
-2. Ingin mengekstrak teks dari gambar (OCR)?
-3. Ingin menghapus background gambar?
-4. Hanya ingin gambar dianalisis/dideskripsikan?
-5. Ingin tujuan lain?
 
-Berikan respons dalam format JSON:
-{
-  "intent": "sticker"|"ocr"|"removebg"|"analyze"|"other",
-  "confidence": 0.0-1.0
-}
-
-HANYA berikan JSON, tanpa teks lain.`;
-
-                const result = await this.model.generateContent(prompt);
-                const responseText = result.response.text();
-                const parsed = this.extractJSON(responseText);
-                
-                if (parsed && parsed.intent && parsed.confidence > 0.7) {
-                    // Map intent ke command
-                    const intentToCommand = {
-                        "sticker": "sticker",
-                        "ocr": "ocr",
-                        "removebg": "removebg",
-                        "analyze": null // Analisis default
-                    };
-                    
-                    const command = intentToCommand[parsed.intent];
-                    logger.info(`AI detected intent: ${parsed.intent} with confidence: ${parsed.confidence}, mapped to command: ${command || 'direct analysis'}`);
-                    
-                    if (command) {
-                        return {
-                            command: command,
-                            args: message || null
-                        };
-                    }
-                }
-            } catch (error) {
-                logger.error(`Error analyzing image intent: ${error.message}`);
-                // Fallback to default analysis if intent detection fails
-            }
-            
-            // Jika tidak ada perintah spesifik terdeteksi
-            return null;
-        } catch (error) {
-            logger.error(`Error in checkImageCommand: ${error.message}`);
-            return null; // Default ke analisis gambar
-        }
-    }
-    
-    // Update fungsi analyzeImage untuk menggunakan checkImageCommand
     async analyzeImage(imageBuffer, message, context) {
         try {
             // Skip jika bukan format gambar
@@ -400,70 +284,24 @@ HANYA berikan JSON, tanpa teks lain.`;
                     isImageProcess: true
                 };
             }
-
+            console.log(message)
             // Skip jika tidak ada caption
             if (!message) {
                 return {
-                    success: false, 
+                    success: false,
                     message: "Mohon sertakan caption/pertanyaan",
                     isImageProcess: true
                 };
             }
 
-            // Skip jika caption mengandung command khusus
-            const skipCommands = ['s', 'sticker', 'jadianime', 'smeme', 'removebg', 'brat','bratvid','bratnime','bratnimevid'];
-            const msgLower = message.toLowerCase();
-            
-            for (const cmd of skipCommands) {
-                if (msgLower.startsWith(cmd) || msgLower.startsWith('.' + cmd) || msgLower.startsWith('!' + cmd)) {
-                    return {
-                        success: false,
-                        message: "Gunakan command khusus untuk memproses gambar ini",
-                        isImageProcess: true
-                    };
-                }
-            }
-
-            // Deteksi apakah ada perintah untuk analisis
-            const analysisCommands = [
-                'analisis', 'analyze', 'jelaskan', 'jelasin', 'explain',
-                'apa ini', 'apakah ini', 'what is', 'what\'s this',
-                'tolong jelaskan', 'bisa jelaskan', 'coba jelaskan',
-                'deskripsikan', 'describe'
-            ];
-
-            const hasAnalysisCommand = analysisCommands.some(cmd => 
-                msgLower.includes(cmd) || 
-                msgLower.startsWith(cmd) ||
-                msgLower.startsWith('.' + cmd) ||
-                msgLower.startsWith('!' + cmd)
-            );
-
-            // Skip jika tidak ada perintah analisis
-            if (!hasAnalysisCommand) {
-                return {
-                    success: false,
-                    message: null, // Tidak perlu memberikan pesan karena ini bukan error
-                    isImageProcess: true
-                };
-            }
 
             // Validasi context dan propertinya
-            if (!context) {
-                logger.error('Context is null or undefined');
-                return {
-                    success: false,
-                    message: "Terjadi kesalahan sistem. Coba lagi nanti ya!",
-                    isImageProcess: true
-                };
-            }
-
             const id = context.id || '';
             const m = context.m || {};
             const noTel = (m.sender?.split('@')[0] || '').replace(/[^0-9]/g, '');
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
-            
+
             // Verifikasi ukuran gambar
             const imageSizeMB = imageBuffer.length / (1024 * 1024);
             if (imageSizeMB > 4) {
@@ -474,58 +312,42 @@ HANYA berikan JSON, tanpa teks lain.`;
                     isImageProcess: true
                 };
             }
-            
+
             const isOwner = this.isOwner(userId);
-            
+
             if (isOwner) {
                 logger.info(`Processing image from BOT OWNER (${this.ownerInfo?.name || 'Unknown'}): ${message?.substring(0, 30) || "no message"}...`);
             } else {
                 logger.info(`Processing image with message: ${message?.substring(0, 30) || "no message"}...`);
             }
-            
+
             logger.info(`Image size: ${imageSizeMB.toFixed(2)}MB`);
-            
-            const isIdentityQuestion = message && (
-                message.toLowerCase().includes("siapa aku") || 
-                message.toLowerCase().includes("siapa saya") ||
-                message.toLowerCase().includes("siapa gue") ||
-                message.toLowerCase().includes("siapa nama ku") ||
-                message.toLowerCase().includes("siapa nama saya") ||
-                message.toLowerCase().includes("kamu tahu siapa aku") ||
-                message.toLowerCase().includes("kamu kenal aku")
-            );
-            
+
+
             const safeMessage = message.length > 500 ? message.substring(0, 500) + "..." : message;
-            
+
             try {
                 const imagePart = this.bufferToGenerativePart(imageBuffer);
-                
-                const visionModel = this.genAI.getGenerativeModel({ 
-                    model: "gemini-2.0-flash-lite",
-                    generationConfig: {
-                        temperature: 0.4,
-                        maxOutputTokens: 1024
-                    }
-                });
-                
-                let prompt = `Sebagai Kanata, analisis gambar ini. User bertanya: "${safeMessage}"`;
-                
-                if (isOwner && isIdentityQuestion && this.ownerInfo) {
-                    prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya tentang identitasnya.`;
+
+
+                let prompt = `Sebagai Kanata, analisis gambar ini. ${userName} bertanya: "${safeMessage}"`;
+
+                if (isOwner && this.ownerInfo) {
+                    prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya ${safeMessage}.`;
                 }
-                
+
                 logger.info(`Sending image analysis request to Gemini 1.5 Pro`);
-                
-                const result = await visionModel.generateContent([
+
+                const result = await this.visionModel.generateContent([
                     { text: prompt },
                     imagePart
                 ]);
-                
+
                 const response = result.response;
                 const responseText = response.text();
-                
+
                 logger.info(`Got response from Gemini Vision: ${responseText.substring(0, 50)}...`);
-                
+
                 return {
                     success: true,
                     message: responseText,
@@ -533,21 +355,21 @@ HANYA berikan JSON, tanpa teks lain.`;
                 };
             } catch (apiError) {
                 logger.error(`API error in image analysis: ${apiError.message}`);
-                
+
                 try {
                     logger.info(`Attempting with alternative model and minimal prompt...`);
-                    
+
                     const minimalPrompt = "Describe this image briefly";
-                    const alternativeModel = this.genAI.getGenerativeModel({ 
-                        model: "gemini-2.0-flash-lite", 
+                    const alternativeModel = this.genAI.getGenerativeModel({
+                        model: "gemini-2.0-flash-lite",
                         generationConfig: { temperature: 0.1 }
                     });
-                    
+
                     const result = await alternativeModel.generateContent([
                         { text: minimalPrompt },
                         this.bufferToGenerativePart(imageBuffer)
                     ]);
-                    
+
                     return {
                         success: true,
                         message: result.response.text(),
@@ -560,9 +382,9 @@ HANYA berikan JSON, tanpa teks lain.`;
             }
         } catch (error) {
             logger.error(`Fatal error in image analysis: ${error.message}`, error);
-            
+
             let errorMessage = "Waduh, gw gagal analisis gambarnya nih bestie! ";
-            
+
             if (error.message.includes('invalid argument')) {
                 errorMessage += "Ada masalah dengan format gambarnya. Coba kirim gambar dengan format jpg/png ya? 🙏";
             } else if (error.message.includes('too large')) {
@@ -572,7 +394,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             } else {
                 errorMessage += "Coba lagi ntar ya? 🙏";
             }
-            
+
             return {
                 success: false,
                 message: errorMessage,
@@ -580,14 +402,14 @@ HANYA berikan JSON, tanpa teks lain.`;
             };
         }
     }
-    
+
     // Fungsi untuk mengkonversi audio ke format yang benar jika diperlukan
     async prepareAudioForGemini(audioBuffer, originalMimeType) {
         try {
             // Deteksi format audio
             const isMP3 = originalMimeType.includes('mp3');
             const isOGG = originalMimeType.includes('ogg') || originalMimeType.includes('opus');
-            
+
             // Jika sudah MP3, gunakan langsung
             if (isMP3) {
                 logger.info('Audio already in MP3 format, using directly');
@@ -596,43 +418,43 @@ HANYA berikan JSON, tanpa teks lain.`;
                     mimeType: 'audio/mp3'
                 };
             }
-            
+
             // Jika OGG/OPUS (format WhatsApp VN), konversi ke MP3
             if (isOGG) {
                 logger.info('Converting OGG/OPUS audio to MP3');
-                
+
                 // Simpan buffer ke file sementara
                 const tempDir = path.join(process.cwd(), 'temp');
-                
+
                 // Buat direktori temp jika belum ada
                 if (!fs.existsSync(tempDir)) {
                     fs.mkdirSync(tempDir, { recursive: true });
                 }
-                
+
                 const tempInputPath = path.join(tempDir, `input_${Date.now()}.ogg`);
                 const tempOutputPath = path.join(tempDir, `output_${Date.now()}.mp3`);
-                
+
                 // Tulis buffer ke file
                 fs.writeFileSync(tempInputPath, audioBuffer);
-                
+
                 // Konversi menggunakan ffmpeg
                 await execPromise(`ffmpeg -i ${tempInputPath} -acodec libmp3lame -q:a 2 ${tempOutputPath}`);
-                
+
                 // Baca hasil konversi
                 const convertedBuffer = fs.readFileSync(tempOutputPath);
-                
+
                 // Hapus file sementara
                 fs.unlinkSync(tempInputPath);
                 fs.unlinkSync(tempOutputPath);
-                
+
                 logger.info('Successfully converted audio to MP3');
-                
+
                 return {
                     buffer: convertedBuffer,
                     mimeType: 'audio/mp3'
                 };
             }
-            
+
             // Format lain, coba gunakan apa adanya
             logger.warning(`Unsupported audio format: ${originalMimeType}, attempting to use as is`);
             return {
@@ -644,7 +466,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             throw error;
         }
     }
-    
+
     // Konversi buffer audio menjadi format untuk Gemini
     bufferToAudioPart(buffer, mimeType) {
         return {
@@ -654,7 +476,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             }
         };
     }
-    
+
     // Fungsi untuk mengecek tipe media - pastikan ini diperbarui
     isAudioMessage(context) {
         try {
@@ -662,28 +484,28 @@ HANYA berikan JSON, tanpa teks lain.`;
             if (context && context.isAudio === true) {
                 return true;
             }
-            
+
             if (!context || !context.m) return false;
-            
+
             const m = context.m;
             // Cek dari tipe pesan
             const message = m.message || {};
-            
+
             // Cek berbagai cara audio bisa muncul di pesan WhatsApp
             if (message.audioMessage) return true;
             if (message.pttMessage) return true;
-            
+
             // Cek juga dari context type dan mimetype
             const type = context.type || '';
             const mimetype = context.mimetype || '';
-            
+
             return (
-                type.includes('audio') || 
-                type.includes('ptt') || 
-                mimetype.includes('audio') || 
-                mimetype.includes('ogg') || 
-                mimetype.includes('opus') || 
-                mimetype.includes('mp3') || 
+                type.includes('audio') ||
+                type.includes('ptt') ||
+                mimetype.includes('audio') ||
+                mimetype.includes('ogg') ||
+                mimetype.includes('opus') ||
+                mimetype.includes('mp3') ||
                 mimetype.includes('wav')
             );
         } catch (error) {
@@ -691,17 +513,17 @@ HANYA berikan JSON, tanpa teks lain.`;
             return false;
         }
     }
-    
+
     isImageMessage(context) {
         try {
             if (!context || !context.m) return false;
-            
+
             const m = context.m;
             const type = Object.keys(m.message || {})[0];
-            
+
             // Cek tipe pesan gambar
             return (
-                type === 'imageMessage' || 
+                type === 'imageMessage' ||
                 (context.mimetype && (
                     context.mimetype.includes('image') ||
                     context.mimetype.includes('jpg') ||
@@ -714,25 +536,25 @@ HANYA berikan JSON, tanpa teks lain.`;
             return false;
         }
     }
-    
+
     // Perbarui juga fungsi processMedia untuk menggunakan fungsi-fungsi baru
     async processMedia(mediaBuffer, message, context) {
         try {
             // Tambahkan logging untuk debugging
             logger.info(`ProcessMedia called with: context.type=${context.type}, context.mimetype=${context.mimetype || 'unknown'}`);
             logger.info(`Context flags: isAudio=${!!context.isAudio}, isImage=${!!context.isImage}`);
-            
+
             // Cek tipe media berdasarkan flag khusus dulu
             if (context.isAudio === true) {
                 logger.info(`Processing as audio (explicit flag)`);
                 return await this.analyzeAudio(mediaBuffer, message, context);
             }
-            
+
             if (context.isImage === true) {
                 logger.info(`Processing as image (explicit flag)`);
                 return await this.analyzeImage(mediaBuffer, message, context);
             }
-            
+
             // Cek menggunakan fungsi helper
             if (this.isAudioMessage(context)) {
                 logger.info(`Detected as audio/voice note`);
@@ -743,7 +565,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             } else {
                 // Jika tipe tidak terdeteksi, coba deteksi dari MIME type
                 const mimetype = context.mimetype || '';
-                
+
                 if (mimetype.includes('audio') || mimetype.includes('ogg') || mimetype.includes('opus')) {
                     logger.info(`Detected as audio from mimetype`);
                     return await this.analyzeAudio(mediaBuffer, message, context);
@@ -769,7 +591,7 @@ HANYA berikan JSON, tanpa teks lain.`;
             };
         }
     }
-    
+
     // Fungsi untuk analisis voice note/audio
     async analyzeAudio(audioBuffer, message, context) {
         try {
@@ -779,12 +601,12 @@ HANYA berikan JSON, tanpa teks lain.`;
             const userId = `private_${noTel}`;
             const userName = m.pushName || null;
             const isOwner = this.isOwner(userId);
-            
+
             // Deteksi MIME type, default ke audio/ogg (format VN WhatsApp)
             const mimeType = context?.mimetype || 'audio/ogg; codecs=opus';
-            
+
             logger.info(`Processing audio: mimetype=${mimeType}, size=${(audioBuffer.length / 1024).toFixed(2)}KB`);
-            
+
             // Cek ukuran audio
             if (audioBuffer.length > 10 * 1024 * 1024) {
                 return {
@@ -793,10 +615,10 @@ HANYA berikan JSON, tanpa teks lain.`;
                     isAudioProcess: true
                 };
             }
-            
+
             // Konversi audio ke base64
             const base64Audio = audioBuffer.toString('base64');
-            
+
             // Analisis pesan teks yang menyertai audio
             let textPrompt = "";
             if (message && message.trim()) {
@@ -843,12 +665,12 @@ HANYA berikan JSON, tanpa teks lain.`;
                         textPrompt = `Ini adalah perintah: "${message}" tapi command tidak ditemukan dalam daftar plugin. 
                             Tolong dengarkan voice note dan berikan saran command yang mungkin sesuai.`;
                     }
-                } 
+                }
                 // Cek apakah ini permintaan informasi
-                else if (message.toLowerCase().includes('apa') || 
-                        message.toLowerCase().includes('bagaimana') ||
-                        message.toLowerCase().includes('mengapa') ||
-                        message.toLowerCase().includes('siapa')) {
+                else if (message.toLowerCase().includes('apa') ||
+                    message.toLowerCase().includes('bagaimana') ||
+                    message.toLowerCase().includes('mengapa') ||
+                    message.toLowerCase().includes('siapa')) {
                     textPrompt = `User menanyakan informasi: "${message}". Tolong berikan informasi yang relevan dari audio ini.`;
                 }
                 // Default analisis
@@ -858,12 +680,12 @@ HANYA berikan JSON, tanpa teks lain.`;
             } else {
                 textPrompt = "Tolong transkripsi dan analisis voice note/audio ini secara lengkap.";
             }
-            
+
             // Tambah konteks owner jika perlu
             if (isOwner) {
                 textPrompt += `\nCatatan: User adalah ${this.ownerInfo.name}, pemilikmu.`;
             }
-            
+
             try {
                 const result = await this.audioModel.generateContent([
                     {
@@ -874,10 +696,10 @@ HANYA berikan JSON, tanpa teks lain.`;
                     },
                     { text: textPrompt }
                 ]);
-                
+
                 const responseText = result.response.text();
                 logger.info(`Got response from Gemini Audio: ${responseText.substring(0, 50)}...`);
-                
+
                 return {
                     success: true,
                     message: responseText,
@@ -896,7 +718,7 @@ HANYA berikan JSON, tanpa teks lain.`;
                         },
                         { text: textPrompt }
                     ]);
-                    
+
                     return {
                         success: true,
                         message: retryResult.response.text(),
@@ -905,7 +727,7 @@ HANYA berikan JSON, tanpa teks lain.`;
                 }
                 throw apiError;
             }
-            
+
         } catch (error) {
             logger.error(`Error analyzing audio: ${error.message}`);
             return {
@@ -915,21 +737,21 @@ HANYA berikan JSON, tanpa teks lain.`;
             };
         }
     }
-    
+
     // Metode untuk mendeteksi jika pesan mengandung perintah untuk VN
     async checkAudioCommand(message) {
         if (!message) return false;
-        
+
         const audioCommands = [
-            "transcript", "transkripsi", "dengerin audio", 
+            "transcript", "transkripsi", "dengerin audio",
             "tolong dengarkan", "apa isi audio", "apa isi vn",
             "audio ini bilang apa", "vn ini bilang apa"
         ];
-        
+
         // Cek jika ada keyword perintah
         return audioCommands.some(cmd => message.toLowerCase().includes(cmd));
     }
-    
+
     async analyzeMessage(message, retryCount = 0) {
         // Cek rate limiting
         const lastCallTime = messageHistory.get(message);
@@ -953,154 +775,29 @@ HANYA berikan JSON, tanpa teks lain.`;
 
         try {
             // Dapatkan daftar plugin dan fungsinya
-            let plugins = null;
-            try {
-                plugins = await helpMessage();
-            // Logging untuk debugging
-                if (plugins) {
-            const categories = Object.keys(plugins);
-            logger.info(`Got plugins data: ${categories.join(',')}`);
-                } else {
-                    logger.warning("helpMessage returned null or undefined");
-                    plugins = { "basic": DEFAULT_COMMANDS };
-                }
-            } catch (error) {
-                logger.error("Error getting plugins from helpMessage:", error);
-                plugins = { "basic": DEFAULT_COMMANDS };
-            }
-            
-            // Cek intent lagu - apakah user ingin mendengarkan atau melihat lirik
-            const musicPlayIntents = [
-                "putar", "puterin", "dengerin", "main", "dengar", "play",
-                "musik", "lagu", "song", "tolong puterin", "coba puterin"
-            ];
-            
-            const lyricIntents = [
-                "lirik", "lyrics", "liriknya", "teks lagu", "kata-kata", 
-                "arti lirik", "terjemahan lirik", "maksud lirik"
-            ];
-            
-            // Cek apakah ada intent untuk memutar lagu
-            const hasMusicPlayIntent = musicPlayIntents.some(intent => 
-                message.toLowerCase().includes(intent)
-            );
-            
-            // Cek apakah ada intent untuk lirik
-            const hasLyricIntent = lyricIntents.some(intent => 
-                message.toLowerCase().includes(intent)
-            );
-            
-            // Format daftar fungsi untuk prompt - dengan handling struktur yang berbeda
-            let formattedPlugins = [];
-            
-            if (typeof plugins === 'object') {
-                // Ambil semua plugin dari berbagai kategori dan flatten
-                const allPlugins = [];
-                Object.entries(plugins).forEach(([category, items]) => {
-                    if (Array.isArray(items)) {
-                        items.forEach(item => {
-                            if (item && (item.handler || item.command)) {
-                                allPlugins.push({
-                            command: item.handler || item.command,
-                                    description: item.description || "No description",
-                                    category: category
-                                });
-                            }
-                        });
-                    }
-                });
-                
-                // Log jumlah plugin yang ditemukan
-                logger.info(`Found ${allPlugins.length} total plugins across all categories`);
-                
-                // Format ulang per kategori
-                    formattedPlugins = Object.entries(plugins).map(([category, items]) => {
-                        // Validasi bahwa items adalah array
-                        if (!Array.isArray(items)) {
-                        logger.warning(`Items for category ${category} is not an array, using empty array`);
-                            return {
-                                category,
-                                commands: []
-                            };
-                        }
-                        
-                        const commands = items.map(item => {
-                            if (!item) return { command: "unknown", description: "No description" };
-                            return {
-                                command: item.handler || item.command || "unknown",
-                                description: item.description || "No description",
+            const plugins = await helpMessage();
+            const functionDescriptions = [];
+
+            // Format daftar fungsi untuk prompt
+            const formattedPlugins = Object.entries(plugins)
+                .map(([category, items]) => {
+                    const commands = items.map(item => ({
+                        command: item.handler,
+                        description: item.description,
                         category: category
-                            };
-                        });
-                        
+                    }));
                     return {
                         category,
                         commands
                     };
                 });
-                    
-                    logger.info(`Formatted commands from ${formattedPlugins.length} categories`);
-            } else {
-                logger.warning("plugins is not an object, using default commands");
-                formattedPlugins = [{
-                    category: "basic",
-                    commands: DEFAULT_COMMANDS.map(cmd => ({
-                        command: cmd.handler,
-                        description: cmd.description
-                    }))
-                }];
-            }
-            
-            // Jika user ingin mendengarkan lagu tapi tidak spesifik meminta lirik,
-            // langsung arahkan ke command play/yp
-            if (hasMusicPlayIntent && !hasLyricIntent) {
-                // Cari command untuk memutar musik
-                let musicCommand = null;
-                let musicCommandArgs = "";
-                
-                // Cari command yang relevan dengan musik
-                for (const category of formattedPlugins) {
-                    for (const cmd of category.commands) {
-                        const cmdName = cmd.command.toLowerCase();
-                        if (cmdName === "play" || cmdName === "yp" || cmdName === "ytplay") {
-                            musicCommand = cmdName;
-                            // Ekstrak query musik - hapus kata kunci dari pesan asli
-                            let query = message;
-                            for (const intent of musicPlayIntents) {
-                                query = query.replace(new RegExp(intent, "gi"), "");
-                            }
-                            // Bersihkan query
-                            musicCommandArgs = query.trim();
-                            break;
-                        }
-                    }
-                    if (musicCommand) break;
-                }
-                
-                // Jika ketemu command musik, langsung arahkan
-                if (musicCommand) {
-                    logger.info(`Detected music play intent, using command: ${musicCommand} with args: ${musicCommandArgs}`);
-                    return {
-                        success: true,
-                        command: musicCommand,
-                        args: musicCommandArgs,
-                        message: `Oke bestie, gw puterin lagu "${musicCommandArgs}" buat lu ya! 🎵`
-                    };
-                }
-            }
-            
-            // Log formattedPlugins untuk debugging
-            logger.info(`formattedPlugins structure: ${JSON.stringify(formattedPlugins.map(p => ({ 
-                category: p.category, 
-                commandCount: p.commands ? p.commands.length : 0 
-            })))}`);
-            
-            // Perbaiki prompt untuk memastikan JSON yang dihasilkan valid
+
+            // Buat prompt untuk Gemini AI
             const prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren yang dikelompokin gini:
 
 ${JSON.stringify(formattedPlugins, null, 2)}
 
-Pesan dari temen: "${message}"
+Pesan dari : "${message}"
 
 Tugas lu:
 1. Analisis pesan dan tentuin:
@@ -1113,13 +810,18 @@ Tugas lu:
    - Gaada parameter jelas -> confidence rendah
    - Gajelas maksudnya -> confidence rendah
 
-3. PENTING UNTUK PERINTAH MUSIK:
-   - Jika user ingin MENDENGARKAN lagu/musik -> gunakan command "play" atau "yp"
-   - Jika user SPESIFIK meminta LIRIK lagu -> barulah gunakan command lirik
-   - Contoh "Puterin lagu Coldplay" -> command: yp, BUKAN lirik
-   - Contoh "Mau lirik lagu Coldplay" -> command: lirik
+3. Kalo mau jalanin command:
+   - Pastiin user beneran mau pake command itu
+   - Cek parameter udah lengkap
+   - Kalo ragu, mending confidence rendah
 
-4. Balikin response dalam format JSON:
+4. Khusus untuk translate:
+   - Kalo ada kata kunci seperti "translate", "terjemahkan", "artikan"
+   - Format parameter: <kode_bahasa> <teks>
+   - Contoh: "translate ke jepang: selamat pagi" -> command: tr, args: "ja selamat pagi"
+   - Kode bahasa: en (Inggris), ja (Jepang), ko (Korea), ar (Arab), dll
+
+5. Balikin response dalam format JSON:
 {
     "command": "nama_command",
     "args": "parameter yang dibutuhin",
@@ -1128,75 +830,50 @@ Tugas lu:
 }
 
 PENTING:
-- BALIKIN HANYA JSON MURNI, TANPA TEKS TAMBAHAN SEBELUM ATAU SESUDAH JSON
-- JANGAN TAMBAHKAN KOMENTAR, MARKDOWN, ATAU APAPUN DI LUAR JSON
 - Confidence harus tinggi (>0.8) kalo mau jalanin command!
 - Pake bahasa gaul yang asik
-- HANYA BALIKIN JSON MURNI`;
+- Tetep sopan & helpful
+- Pake emoji yang cocok
+- Command yang dipilih HARUS ada di daftar yang dikasih
+- HARUS BALIKIN RESPONSE DALAM FORMAT JSON YANG VALID, JANGAN ADA TEKS TAMBAHAN DI LUAR JSON`;
 
-            try {
-                // Pilih model yang lebih kecil dan cepat untuk analisis pesan teks
-                const textModel = this.genAI.getGenerativeModel({ 
-                    model: "gemini-2.0-flash-lite", 
-                    generationConfig: {
-                        temperature: 0.2,
-                        topP: 0.9,
-                        topK: 40,
-                        responseStyle: "factual" // Upayakan respons faktual
-                    }
-                });
-                
-                // Dapatkan respons dari Gemini
-                const result = await textModel.generateContent(prompt);
-                const responseText = result.response.text();
-                
-                // Parse respons JSON dengan handling error yang sudah diperbaiki
-                logger.info('Raw Gemini response:', responseText);
-                const parsedResponse = this.extractJSON(responseText);
-                
-                if (!parsedResponse) {
-                    logger.error('Failed to parse JSON from Gemini response');
-                    return {
-                        success: false,
-                        message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
-                    };
-                }
+            // Dapatkan respons dari Gemini
+            const result = await this.model.generateContent(prompt);
+            const responseText = result.response.text();
 
-                // Jika confidence tinggi, return untuk eksekusi command
-                if (parsedResponse.confidence > 0.8) {
-                    logger.info(`Executing command from Gemini: ${parsedResponse.command}`);
-                    return {
-                        success: true,
-                        command: parsedResponse.command,
-                        args: parsedResponse.args,
-                        message: parsedResponse.responseMessage
-                    };
-                }
+            // Parse respons JSON dengan handling error
+            logger.info('Raw Gemini response:', responseText);
+            const parsedResponse = this.extractJSON(responseText);
 
-                // Jika confidence rendah, balas dengan chat biasa
+            if (!parsedResponse) {
+                logger.error('Failed to parse JSON from Gemini response');
                 return {
                     success: false,
-                    message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
-                };
-            } catch (error) {
-                logger.error('Error in Gemini processing:', error);
-
-                // Retry jika error network
-                if (retryCount < MAX_RETRIES && error.message && error.message.includes('network')) {
-                    logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
-                    return await this.analyzeMessage(message, retryCount + 1);
-                }
-
-                return {
-                    success: false,
-                    message: "Duh error nih! Coba lagi ntar ya bestie! 🙏"
+                    message: "Sori bestie, gw lagi error nih. Coba lagi ya? 🙏"
                 };
             }
+
+            // Jika confidence tinggi, return untuk eksekusi command
+            if (parsedResponse.confidence > 0.8) {
+                return {
+                    success: true,
+                    command: parsedResponse.command,
+                    args: parsedResponse.args,
+                    message: parsedResponse.responseMessage
+                };
+            }
+
+            // Jika confidence rendah, balas dengan chat biasa
+            return {
+                success: false,
+                message: parsedResponse.responseMessage || "Sori bestie, gw kurang paham nih maksudnya. Bisa jelasin lebih detail ga? 😅"
+            };
+
         } catch (error) {
             logger.error('Error in Gemini processing:', error);
 
             // Retry jika error network
-            if (retryCount < MAX_RETRIES && error.message && error.message.includes('network')) {
+            if (retryCount < MAX_RETRIES && error.message.includes('network')) {
                 logger.info(`Retrying due to network error (attempt ${retryCount + 1})`);
                 return await this.analyzeMessage(message, retryCount + 1);
             }
@@ -1215,21 +892,21 @@ PENTING:
                 logger.warning("chat called with empty userId, using 'unknown_user'");
                 userId = "unknown_user";
             }
-            
+
             const isOwner = this.isOwner(userId);
             const userInfo = this.getUserIdentifier(userId, userName);
-            
+
             // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
-                message.toLowerCase().includes("siapa aku") || 
+                message.toLowerCase().includes("siapa aku") ||
                 message.toLowerCase().includes("siapa saya") ||
                 message.toLowerCase().includes("siapa gue")
             );
-            
+
             // Dapatkan daftar plugin dengan error handling
             let pluginsData = "{}";
             try {
-            const plugins = await helpMessage();
+                const plugins = await helpMessage();
                 if (plugins) {
                     pluginsData = JSON.stringify(plugins);
                 }
@@ -1237,7 +914,7 @@ PENTING:
                 logger.error("Error getting plugins in chat:", error);
                 // Gunakan data kosong jika error
             }
-            
+
             let prompt = `Lu adalah Kanata, bot WhatsApp yang asik dan friendly banget. Lu punya fitur-fitur keren berikut:
 
 ${pluginsData}
@@ -1255,7 +932,7 @@ Bales pake:
             // Tambahkan info khusus untuk owner
             if (isOwner) {
                 prompt += `\n\nPENTING: User ini adalah ${this.ownerInfo.name} (${this.ownerInfo.fullName}), developer dan pemilikmu dengan nomor ${this.ownerInfo.number}.`;
-                
+
                 if (isIdentityQuestion) {
                     prompt += `\nUser SEDANG BERTANYA tentang identitasnya. Kamu HARUS menjawab dengan jelas bahwa dia adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, pemilik dan developermu.`;
                 }
@@ -1277,23 +954,23 @@ Bales pake:
                 logger.warning("chatWithMemory called with empty userId, using 'unknown_user'");
                 userId = "unknown_user";
             }
-            
+
             const isOwner = this.isOwner(userId);
             const userName = context.pushName || null;
-            
+
             logger.info(`Calling chatWithMemory for user ${userId}`);
             logger.info(`Message: ${message.substring(0, 30)}...`);
             logger.info(`Context: pushName=${userName}, noTel=${userId.replace('private_', '')}, quotedText=${context.quoted ? 'present' : 'none'}`);
-            
+
             if (isOwner) {
                 logger.info(`Processing message from BOT OWNER (${this.ownerInfo.name}): ${message.substring(0, 30)}...`);
             } else {
                 logger.info(`Chat with memory - userId: ${userId}, message: ${message.substring(0, 30)}...`);
             }
-            
+
             // Cek apakah ini pertanyaan tentang identitas
             const isIdentityQuestion = message && (
-                message.toLowerCase().includes("siapa aku") || 
+                message.toLowerCase().includes("siapa aku") ||
                 message.toLowerCase().includes("siapa saya") ||
                 message.toLowerCase().includes("siapa gue") ||
                 message.toLowerCase().includes("siapa nama ku") ||
@@ -1301,38 +978,38 @@ Bales pake:
                 message.toLowerCase().includes("kamu tahu siapa aku") ||
                 message.toLowerCase().includes("kamu kenal aku")
             );
-            
+
             try {
                 // Dapatkan history chat untuk user ini
                 const chatSession = this.getConversation(userId, userName);
-                
+
                 // Tambahkan context jika ada
                 let messageText = message;
                 if (context.quoted) {
                     messageText = `(Membalas pesan: "${context.quoted}") ${message}`;
                 }
-                
+
                 // Tambahkan reminder tentang owner jika perlu
                 if (isOwner && isIdentityQuestion) {
                     messageText += ` [REMINDER: Saya adalah ${this.ownerInfo.fullName}/${this.ownerInfo.name}, developer dan pemilikmu dengan nomor ${this.ownerInfo.number}. Kamu harus selalu ingat ini.]`;
                     logger.info(`Added owner reminder to message: ${messageText.substring(0, 50)}...`);
                 }
-                
+
                 logger.info(`Sending message to Gemini: ${messageText.substring(0, 30)}...`);
-                
+
                 // PERBAIKAN: Kirim pesan dengan format parts yang benar
                 // Gunakan sendMessage dengan string biasa sesuai library Gemini API
                 const result = await chatSession.sendMessage([{ text: messageText }]);
-                
+
                 const response = result.response.text();
-                
+
                 logger.info(`Got response from Gemini: ${response.substring(0, 30)}...`);
-                
+
                 return response;
             } catch (chatError) {
                 logger.error(`Error in chat session:`, chatError);
                 logger.info(`Falling back to regular chat`);
-                
+
                 // Fallback ke chat biasa jika error
                 return await this.chat(message, userId, userName);
             }

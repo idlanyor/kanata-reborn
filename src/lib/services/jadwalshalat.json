@@ -2,26 +2,26 @@
   "status": 200,
   "content": "Success",
   "result": {
-    "date": "16 Maret 2025",
+    "date": "20 Maret 2025",
     "location": "7°23' LS 109°22' BT",
     "direction": "294.86 °",
     "distance": "8229.989 km",
     "city": "purbalingga",
     "cityTimezone": "Asia/Jakarta",
-    "citycurrentTime": "2025-03-16 13:41:43",
-    "localcurrentTime": "2025-03-16 14:41:43",
-    "citynextPrayer": "Ashr in 1 hours, 21 minutes, 17 seconds",
-    "localnextPrayer": "Ashr in 0 hours, 21 minutes, 17 seconds",
+    "citycurrentTime": "2025-03-20 10:56:59",
+    "localcurrentTime": "2025-03-20 11:56:59",
+    "citynextPrayer": "Dzuhur in 0 hours, 55 minutes, 1 seconds",
+    "localnextPrayer": "Ashr in 3 hours, 7 minutes, 1 seconds",
     "todaySchedule": {
-      "date": "16",
-      "imsyak": "04:22",
-      "shubuh": "04:32",
+      "date": "20",
+      "imsyak": "04:21",
+      "shubuh": "04:31",
       "terbit": "05:45",
       "dhuha": "06:09",
-      "dzuhur": "11:54",
-      "ashr": "15:03",
-      "maghrib": "17:58",
-      "isya": "19:07"
+      "dzuhur": "11:52",
+      "ashr": "15:04",
+      "maghrib": "17:56",
+      "isya": "19:05"
     },
     "monthSchedule": [
       {
