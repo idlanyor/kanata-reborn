@@ -4,7 +4,7 @@ import { uploadGambar2 } from "../../helper/uploader.js";
 export const description = "📤 *Image Analyzer* 📤";
 export const handler = ['jelasin', 'tulis', 'kanata', 'bacakan', 'bacain', 'kerjain', 'kerjakan', 'jelaskan', `terjemahkan`, 'mangsud', 'maksud']
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
-
+console.log(attf)
   if (Buffer.isBuffer(attf)) {
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
     try {

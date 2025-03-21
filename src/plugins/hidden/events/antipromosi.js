@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const PROMO_PATTERNS = [

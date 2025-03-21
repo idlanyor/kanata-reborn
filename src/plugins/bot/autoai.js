@@ -1,17 +1,16 @@
 import Group from '../../database/models/Group.js';
 
 export const description = "🤖 Pengaturan Auto AI untuk grup";
-export const handler = "autoai";
+export const handler = "aiswitch";
 
 export default async ({ sock, m, id, psn,noTel }) => {
     try {
-        if (!globalThis.isOwner(noTel)) return;
-        // if (!id.endsWith('@g.us')) {
-        //     await sock.sendMessage(id, {
-        //         text: '❌ Perintah ini hanya bisa digunakan di grup!'
-        //     });
-        //     return;
-        // }
+        if (!m.isGroup) {
+            await sock.sendMessage(id, {
+                text: '❌ Perintah ini hanya bisa digunakan di grup!'
+            });
+            return;
+        }
 
         // Inisialisasi pengaturan grup jika belum ada
         await Group.initGroup(id);

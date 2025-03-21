@@ -1,4 +1,4 @@
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@seaavey/baileys';
 const { generateWAMessageFromContent, proto } = pkg;
 export const handler = "listmg"
 export const description = "🎮 *List Mini Games* 🎮";

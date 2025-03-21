@@ -1,4 +1,4 @@
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg
 import moment from 'moment';
 import os from 'os';

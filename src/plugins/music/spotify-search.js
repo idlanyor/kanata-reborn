@@ -1,4 +1,4 @@
-import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+import pkg, { generateWAMessageFromContent } from '@seaavey/baileys';
 const { proto, prepareWAMessageMedia } = pkg
 import { spotifySearch } from '../../lib/neoxr/spotify.js';
 export const handler = "spotifysearch"

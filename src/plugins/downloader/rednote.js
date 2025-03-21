@@ -4,7 +4,7 @@
  * @name : RedNote (Xiaohongshu) Downloader
  * @module : ES6 Module
  */
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 import { rednote } from '../../lib/scraper/rednote.js';
 

@@ -89,20 +89,20 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     }
 
     // Pesan jika tidak ada gambar
-    await sock.sendMessage(id, {
-        text: `⚠️ *Tidak ada gambar yang ditemukan!*\n\n` +
-            `📝 *Cara penggunaan:*\n` +
-            `• Kirim gambar dengan caption *!upload*\n` +
-            `• Reply gambar dengan *!upload*\n\n` +
-            `_Powered by Kanata Bot_`,
-        contextInfo: {
-            externalAdReply: {
-                title: 'Image Uploader',
-                body: 'Upload your images easily',
-                thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
-                sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                mediaType: 1,
-            }
-        }
-    });
+    // await sock.sendMessage(id, {
+    //     text: `⚠️ *Tidak ada gambar yang ditemukan!*\n\n` +
+    //         `📝 *Cara penggunaan:*\n` +
+    //         `• Kirim gambar dengan caption *!upload*\n` +
+    //         `• Reply gambar dengan *!upload*\n\n` +
+    //         `_Powered by Kanata Bot_`,
+    //     contextInfo: {
+    //         externalAdReply: {
+    //             title: 'Image Uploader',
+    //             body: 'Upload your images easily',
+    //             thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+    //             sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+    //             mediaType: 1,
+    //         }
+    //     }
+    // });
 };

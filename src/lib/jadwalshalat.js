@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import cron from 'node-cron';
 import { setTimeout } from 'timers';
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@seaavey/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const URL = 'https://fastrestapis.fasturl.cloud/religious/prayerschedule?city=Purbalingga';
@@ -174,4 +174,4 @@ async function getPrayerImage(name) {
 }
 
 cron.schedule('0 0 */28 * *', fetchPrayerSchedule);
-fetchPrayerSchedule();
+// fetchPrayerSchedule();

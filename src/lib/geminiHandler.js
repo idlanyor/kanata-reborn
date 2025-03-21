@@ -952,7 +952,7 @@ Bales pake:
             // Validasi userId
             if (!userId) {
                 logger.warning("chatWithMemory called with empty userId, using 'unknown_user'");
-                userId = "unknown_user";
+                userId = `private_${noTel}`;
             }
 
             const isOwner = this.isOwner(userId);

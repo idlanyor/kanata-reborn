@@ -4,7 +4,7 @@
  * @name : Pinterest Search with Carousel
  * @module : ES6 Module
  */
-import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+import pkg, { generateWAMessageFromContent } from '@seaavey/baileys';
 const { proto, prepareWAMessageMedia } = pkg
 import { pinSearch } from '../../lib/scraper/pinterest.js';
 

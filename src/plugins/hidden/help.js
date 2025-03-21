@@ -1,4 +1,4 @@
-import { fetchLatestBaileysVersion } from '@fizzxydev/baileys-pro/lib/Utils/generics.js';
+import { fetchLatestBaileysVersion } from '@seaavey/baileys/lib/Utils/generics.js';
 import { helpMessage } from '../../helper/help.js'
 import loadAssets from '../../helper/loadAssets.js';
 
@@ -71,7 +71,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
 │
 ├ *Bot Info:*
 ├ Version: 3.0
-├ Library: @fizzxydev/baileys-pro
+├ Library: @seaavey/baileys
 ├ Platform: NodeJS
 ├ Type : ES6 Module
 │
