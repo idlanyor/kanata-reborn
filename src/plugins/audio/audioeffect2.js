@@ -117,19 +117,7 @@ export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
             mimetype: 'audio/mp4',
             ptt: false, // Set true jika ingin dikirim sebagai voice note
             caption: `✨ ${effectName} Effect (${fileSize.toFixed(2)}MB) 🎵`
-        }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+        }, { quoted:m });
 
         // Cleanup
         fs.unlinkSync(inputFile);

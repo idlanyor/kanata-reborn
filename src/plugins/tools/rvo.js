@@ -21,19 +21,7 @@ export default async ({ sock, m, id }) => {
             await sock.sendMessage(id, {
                 image: attf,
                 caption: ViewOnceImg.caption || '',
-            }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+            }, { quoted:m });
 
         } else if (ViewOnceVid?.viewOnce) {
             attf = await getMedia({ message: { videoMessage: ViewOnceVid } });
@@ -41,19 +29,7 @@ export default async ({ sock, m, id }) => {
             await sock.sendMessage(id, {
                 video: attf,
                 caption: ViewOnceVid.caption || '',
-            }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+            }, { quoted:m });
         }
 
         // Hapus pesan view once setelah berhasil dikirim

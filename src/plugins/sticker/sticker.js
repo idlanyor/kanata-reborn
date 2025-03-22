@@ -14,19 +14,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
     try {
       const generateSticker = await createSticker(attf, stickerOption);
-      await sock.sendMessage(id, { sticker: generateSticker }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+      await sock.sendMessage(id, { sticker: generateSticker }, { quoted:m });
     } catch (error) {
       console.log('Error creating sticker:', error);
       await sock.sendMessage(id, { text: `Error creating sticker\n Reason :\n ${error}` });

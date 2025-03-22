@@ -66,19 +66,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 })
             }
         }
-    }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+    }, { quoted:m });
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
     await sock.relayMessage(id, msg.message, {
         messageId: msg.key.id

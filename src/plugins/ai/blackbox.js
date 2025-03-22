@@ -33,32 +33,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             ingfo += `\n`;
         });
         // console.log(ingfo.trim())
-        await sock.sendMessage(id, { text: data.result }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
-        await sock.sendMessage(id, { text: ingfo.trim() }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+        await sock.sendMessage(id, { text: data.result }, { quoted:m });
+        await sock.sendMessage(id, { text: ingfo.trim() }, { quoted:m });
     } catch (error) {
         console.log(error);
         await sock.sendMessage(id, { text: `Terjadi kesalahan di sisi server ${error}` });

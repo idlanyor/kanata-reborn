@@ -11,19 +11,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             await sock.sendMessage(id, {
                 image: { url },
                 caption: '📷 HD Image berhasil, Gambar burikmu telah dikonversi ke kualitas HD 🎉'
-            }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+            }, { quoted:m });
             return
         } catch (error) {
             console.log(error)

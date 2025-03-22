@@ -81,45 +81,9 @@ export async function autoAI(m, sock) {
     console.log(song)
     if (song) {
         const reply = `🎶 Lagu ditemukan di ${source.toUpperCase()}: *${song.title}* oleh *${song.author || song.channel || 'Unknown'}*`;
-        await sock.sendMessage(m.chat, { text: reply }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
-        await sock.sendMessage(m.chat, { audio: { url: song.audio }, mimetype: 'audio/mpeg' }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+        await sock.sendMessage(m.chat, { text: reply }, { quoted:m });
+        await sock.sendMessage(m.chat, { audio: { url: song.audio }, mimetype: 'audio/mpeg' }, { quoted:m });
     } else {
-        await sock.sendMessage(msg.key.remoteJid, { text: '❌ Lagu tidak ditemukan di Spotify maupun YouTube.' }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        }sg });
+        await sock.sendMessage(msg.key.remoteJid, { text: '❌ Lagu tidak ditemukan di Spotify maupun YouTube.' }, { quoted:msg });
     }
 }

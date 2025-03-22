@@ -21,19 +21,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             document: { url: data.videoUrl },
             mimetype: 'video/mp4',
             fileName: `${data.title}-${Math.floor(Math.random(2 * 5))}.mp4`
-        }, { quoted: {
-            key: {
-                remoteJid: 'status@broadcast',
-                participant: "13135550002@s.whatsapp.net",
-            },
-            message: {
-                newsletterAdminInviteMessage: {
-                    newsletterJid: '120363293401077915@newsletter',
-                    newsletterName: 'Roy',
-                    caption: 'Kanata V3'
-                }
-            }
-        } });
+        }, { quoted:m });
         await m.react('success')
         // await sock.sendMessage(id, { video: { url: video } });
     } catch (error) {
