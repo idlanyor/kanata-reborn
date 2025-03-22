@@ -2,6 +2,7 @@ import { createSticker, StickerTypes } from "wa-sticker-formatter";
 import { createCanvas, registerFont } from 'canvas';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import random from 'random';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,11 @@ export const handler = 'ttp'
 export default async ({ sock, m, id, psn }) => {
     if (!psn) return m.reply('Teksnya mana kak?')
     
-    sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
+    // Emoji berwarna
+    const coloredEmojis = ['🌈', '🎨', '✨', '🔥', '💫', '⭐', '💖', '💙', '💚', '💛', '💜', '🧡'];
+    const randomEmoji = coloredEmojis[random.int(0, coloredEmojis.length - 1)];
+    
+    sock.sendMessage(id, { react: { text: randomEmoji, key: m.key } })
     
     try {
         // Daftarkan font display yang jenaka
@@ -27,7 +32,6 @@ export default async ({ sock, m, id, psn }) => {
         
         // Konfigurasi teks
         ctx.font = '70px DisplayFont';
-        ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
@@ -55,9 +59,26 @@ export default async ({ sock, m, id, psn }) => {
         const lineHeight = 80;
         const startY = (canvas.height - (lines.length * lineHeight)) / 2;
         
+        // Warna-warna cerah untuk teks
+        const colors = [
+            '#FF5733', // Merah-oranye
+            '#33FF57', // Hijau cerah
+            '#3357FF', // Biru
+            '#FF33A8', // Pink
+            '#33FFF5', // Cyan
+            '#F033FF', // Ungu
+            '#FFF033', // Kuning
+            '#FF8C33', // Oranye
+            '#8C33FF', // Ungu kebiruan
+            '#33FF8C'  // Hijau mint
+        ];
+        
         lines.forEach((line, i) => {
             const x = canvas.width / 2;
             const y = startY + (i * lineHeight);
+            
+            // Pilih warna acak untuk setiap baris
+            ctx.fillStyle = colors[random.int(0, colors.length - 1)];
             
             // Tambahkan outline
             ctx.strokeText(line.trim(), x, y);
