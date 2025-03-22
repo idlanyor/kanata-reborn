@@ -35,7 +35,7 @@ export default async ({ sock, m, id, psn }) => {
                     externalAdReply: {
                         title: surah.name,
                         body: `Qori: ${result.data.reciter}`,
-                        thumbnailUrl: 'https://i.ibb.co/FKhkZrB/quran.jpg',
+                        thumbnailUrl: 'https://files.catbox.moe/mv2mq4.jpg',
                         sourceUrl: surah.url,
                         mediaType: 1,
                         renderLargerThumbnail: true
@@ -46,7 +46,7 @@ export default async ({ sock, m, id, psn }) => {
             // Kirim audio
             await sock.sendMessage(id, {
                 audio: { url: surah.url },
-                mimetype: 'audio/mp4',
+                mimetype: 'audio/mpeg',
                 ptt: false
             });
             
@@ -54,7 +54,6 @@ export default async ({ sock, m, id, psn }) => {
             return;
         }
 
-        // Buat list message dengan format yang sama seperti tes2.js
         const listRows = result.data.files.map(file => {
             const surahNum = parseInt(file.file.split("_")[0]);
             return {
