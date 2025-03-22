@@ -53,55 +53,68 @@ export default async ({ sock, m, id, psn }) => {
             return;
         }
 
-        // Buat sections untuk list message
-        const sections = [];
-        let currentSection = { rows: [] };
-        let currentTitle = "";
-
-        result.data.files.forEach(file => {
-            // Ambil nomor surah dari nama file
+        // Buat list message dengan format yang sama seperti tes2.js
+        const listRows = result.data.files.map(file => {
             const surahNum = parseInt(file.file.split("_")[0]);
-            // Tentukan kategori berdasarkan nomor surah
-            const sectionTitle = surahNum <= 38 ? "Juz 1-4" :
-                               surahNum <= 76 ? "Juz 5-8" :
-                               "Juz 9-12";
-
-            // Jika section title berubah, buat section baru
-            if (currentTitle !== sectionTitle) {
-                if (currentTitle !== "") {
-                    sections.push({
-                        title: currentTitle,
-                        rows: currentSection.rows
-                    });
-                }
-                currentTitle = sectionTitle;
-                currentSection = { rows: [] };
-            }
-
-            currentSection.rows.push({
-                title: file.name,
+            return {
+                header: file.name,
+                title: '',
                 description: `Ukuran: ${file.size}`,
-                rowId: `.murrotal ${surahNum}`
-            });
+                id: `murrotal ${surahNum}`,
+            };
         });
 
-        // Tambahkan section terakhir
-        if (currentSection.rows.length > 0) {
-            sections.push({
-                title: currentTitle,
-                rows: currentSection.rows
-            });
-        }
+        // Bagi menjadi beberapa section berdasarkan juz
+        const sections = [
+            {
+                title: "Juz 1-4",
+                highlight_label: "📖",
+                rows: listRows.filter(row => {
+                    const surahNum = parseInt(row.id.split(" ")[1]);
+                    return surahNum <= 38;
+                })
+            },
+            {
+                title: "Juz 5-8",
+                highlight_label: "📖",
+                rows: listRows.filter(row => {
+                    const surahNum = parseInt(row.id.split(" ")[1]);
+                    return surahNum > 38 && surahNum <= 76;
+                })
+            },
+            {
+                title: "Juz 9-12",
+                highlight_label: "📖",
+                rows: listRows.filter(row => {
+                    const surahNum = parseInt(row.id.split(" ")[1]);
+                    return surahNum > 76;
+                })
+            }
+        ];
 
-        const listMessage = {
+        await sock.sendMessage(id, {
             text: "*MURROTAL AL-QURAN*\n\n" +
                   "🎙️ Qori: Misyari Rasyid Al-Afasy\n" +
                   "📚 Total Surah: " + result.data.total + "\n\n" +
                   "Silahkan pilih surah yang ingin didengarkan:",
-            footer: "© 2024 Kanata Bot",
-            title: "Daftar Surah Al-Quran",
-            buttonText: "Daftar Surah 📖",
-            sections,
+            footer: '© 2024 Kanata Bot',
+            buttons: [
+                {
+                    buttonId: 'action',
+                    buttonText: {
+                        displayText: 'Daftar Surah 📖'
+                    },
+                    type: 4,
+                    nativeFlowInfo: {
+                        name: 'single_select',
+                        paramsJson: JSON.stringify({
+                            title: 'Daftar Surah Al-Quran',
+                            sections: sections
+                        }),
+                    },
+                },
+            ],
+            headerType: 1,
             viewOnce: true,
             contextInfo: {
                 externalAdReply: {
@@ -113,9 +126,8 @@ export default async ({ sock, m, id, psn }) => {
                     renderLargerThumbnail: true
                 }
             }
-        };
-
-        await sock.sendMessage(id, listMessage);
+        }, { quoted: m });
+        
         await m.react('📖');
 
     } catch (error) {
