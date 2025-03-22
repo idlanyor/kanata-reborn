@@ -303,9 +303,9 @@ export async function startBot() {
                         isMediaProcessed = true;
                         const messageKey = `${type}Message`;
                         const mediaMessage = m.message?.[messageKey] || m.quoted?.message?.[messageKey];
-                        
+
                         if (!mediaMessage) continue;
-                        
+
                         try {
                             const mediaBuffer = await getMedia({ message: { [messageKey]: mediaMessage } });
                             const caption = mediaMessage.caption || m.message?.extendedTextMessage?.text || '';
@@ -315,12 +315,12 @@ export async function startBot() {
                                 // Handle media dengan command
                                 if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
                                     const command = caption.startsWith('!') || caption.startsWith('.') ? caption : m.body;
-                                    await prosesPerintah({ 
-                                        command, 
-                                        sock, m, id, 
-                                        sender, noTel, 
-                                        attf: mediaBuffer, 
-                                        mime 
+                                    await prosesPerintah({
+                                        command,
+                                        sock, m, id,
+                                        sender, noTel,
+                                        attf: mediaBuffer,
+                                        mime
                                     });
                                     return;
                                 }
@@ -330,19 +330,30 @@ export async function startBot() {
                                     if (isGroupChat) {
                                         // Di grup harus di-mention/reply
                                         if (!botMentioned && !m.quoted?.participant?.includes(botId)) continue;
-                                        
+
                                         // Cek apakah autoai diaktifkan di grup
                                         const settings = await Group.getSettings(id);
                                         if (settings.autoai !== 1) continue;
                                     }
 
                                     const imageResponse = await geminiHandler.analyzeImage(
-                                        mediaBuffer, 
+                                        mediaBuffer,
                                         caption || m.body || '',
                                         { id, m }
                                     );
                                     await sock.sendMessage(id, {
                                         text: imageResponse.message
+                                    }, { quoted: m });
+                                    return;
+                                }
+                                if (type === 'audio') {
+                                    const audioResponse = await geminiHandler.analyzeAudio(
+                                        mediaBuffer,
+                                        caption || m.body || '',
+                                        { id, m }
+                                    );
+                                    await sock.sendMessage(id, {
+                                        text: audioResponse.message
                                     }, { quoted: m });
                                     return;
                                 }
@@ -364,7 +375,7 @@ export async function startBot() {
                     // Auto AI untuk mention bot
                     if (botMentioned) {
                         if (m.key.fromMe) return;
-                        
+
                         try {
                             // Cek apakah ini private chat atau grup
                             if (!isGroupChat) {
@@ -445,7 +456,7 @@ export async function startBot() {
                         try {
                             logger.info(`Processing message: ${m.body.substring(0, 30)}...`);
                             const response = await geminiHandler.analyzeMessage(m.body);
-                            
+
                             if (response.success && response.command) {
                                 // Jika ada command yang terdeteksi
                                 const pluginsDir = path.join(__dirname, 'src/plugins');
@@ -461,12 +472,12 @@ export async function startBot() {
 
                                 if (plugins[response.command]) {
                                     await sock.sendMessage(id, { text: response.message });
-                                    await plugins[response.command]({ 
-                                        sock, m, id, 
-                                        psn: response.args, 
-                                        sender, noTel, 
-                                        attf: null, 
-                                        cmd: response.command 
+                                    await plugins[response.command]({
+                                        sock, m, id,
+                                        psn: response.args,
+                                        sender, noTel,
+                                        attf: null,
+                                        cmd: response.command
                                     });
                                 } else {
                                     // Command tidak ditemukan, gunakan chat biasa
