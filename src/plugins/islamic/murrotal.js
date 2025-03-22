@@ -17,8 +17,9 @@ export default async ({ sock, m, id, psn }) => {
         // Jika ada nomor surah spesifik
         if (psn) {
             const surahNumber = psn.trim();
-            const surah = result.data.files.find(file => file.file.startsWith(surahNumber + "_"));
-            
+            // Cari surah berdasarkan nomor dengan format 3 digit (001, 002, dll)
+            const paddedNumber = surahNumber.padStart(3, '0');
+            const surah = result.data.files.find(file => file.file.startsWith(paddedNumber + "_"));
             if (!surah) {
                 await m.reply(`❌ Surah dengan nomor ${surahNumber} tidak ditemukan`);
                 return;

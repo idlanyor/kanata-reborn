@@ -63,4 +63,4 @@ export const getMp3Murotal = async () => {
     }
 };
 
-// (async () => console.log(await getMp3Murotal()))()
+(async () => console.log((await getMp3Murotal()).data.files))()
