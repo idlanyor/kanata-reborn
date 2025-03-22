@@ -12,8 +12,32 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { text: '🔄 *Sedang Memproses...* Mohon tunggu sebentar...' });
         let { thumbnail, title, audio, author } = await spotifySong(psn);
         let caption = `🎵 *Judul:* ${title}\n🎤 *Artis:* ${author || 'YNTKTS'}\n⏳ `
-        await sock.sendMessage(id, { image: { url: thumbnail }, caption }, { quoted: m })
-        await sock.sendMessage(id, { audio: { url: audio }, mimetype: 'audio/mpeg' }, { quoted: m });
+        await sock.sendMessage(id, { image: { url: thumbnail }, caption }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } })
+        await sock.sendMessage(id, { audio: { url: audio }, mimetype: 'audio/mpeg' }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
     } catch (error) {
         await sock.sendMessage(id, { text: '❌ *Terjadi kesalahan:* \n' + error });
     }

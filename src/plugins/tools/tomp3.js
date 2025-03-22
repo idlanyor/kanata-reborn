@@ -56,7 +56,19 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(m.key.remoteJid, { 
             audio: audioBuffer, 
             mimetype: 'audio/mpeg' 
-        }, { quoted: m });
+        }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
 
     } catch (error) {
         logger.error('Error converting to MP3:', error);

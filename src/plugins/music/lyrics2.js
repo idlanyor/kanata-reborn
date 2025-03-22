@@ -26,7 +26,19 @@ ${data.result.lyrics.map(lyric => lyric.text).join("\n")}`;
         return await sock.sendMessage(id, {
             image: { url: data.result.albumCover },
             caption: text
-        }, { quoted: m })
+        }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } })
     } catch (error) {
         return await m.reply('Terjadi Kesalahan' + error.message)
     }

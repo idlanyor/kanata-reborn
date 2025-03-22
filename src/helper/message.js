@@ -268,7 +268,19 @@ export function addMessageHandler(m, sock) {
         }
 
         let msg = await generateWAMessageFromContent(m.chat, messageContent, {
-            quoted: m
+            quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        }
         })
 
         return await sock.relayMessage(msg.key.remoteJid, msg.message, {

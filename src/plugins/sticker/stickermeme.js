@@ -197,7 +197,19 @@ export default async ({ sock, m, id, psn, attf }) => {
         await sock.sendMessage(id, { 
             sticker: sticker 
         }, { 
-            quoted: m 
+            quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } 
         });
 
         await m.react('✨');

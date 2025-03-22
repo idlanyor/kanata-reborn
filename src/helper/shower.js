@@ -65,7 +65,19 @@ export const smsg = (sock, m, store) => {
         sock.appenTextMessage = async (text, chatUpdate) => {
             let messages = await generateWAMessage(m.chat, { text: text, mentions: m.mentionedJid }, {
                 userJid: sock.user.id,
-                quoted: m.quoted && m.quoted.fakeObj
+                quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        }.quoted && m.quoted.fakeObj
             });
             messages.key.fromMe = areJidsSameUser(m.sender, sock.user.id);
             messages.key.id = m.key.id;

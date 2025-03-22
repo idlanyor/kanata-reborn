@@ -14,7 +14,19 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
                 document: { url },
                 mimetype: 'image/png',
                 fileName: `KanataGhoib-${Math.floor(Math.random(2 * 5))}.png`
-            }, { quoted: m });
+            }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
 
         } catch (error) {
             // Penanganan kesalahan dengan pesan lebih informatif

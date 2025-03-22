@@ -216,7 +216,19 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         // if (expResult.levelUp) {
         //     await sock.sendMessage(id, {
         //         text: `🎉 Selamat! Level kamu naik ke level ${expResult.newLevel}!`
-        //     }, { quoted: m });
+        //     }, { quoted: {
+        //     key: {
+        //         remoteJid: 'status@broadcast',
+        //         participant: "13135550002@s.whatsapp.net",
+        //     },
+        //     message: {
+        //         newsletterAdminInviteMessage: {
+        //             newsletterJid: '120363293401077915@newsletter',
+        //             newsletterName: 'Roy',
+        //             caption: 'Kanata V3'
+        //         }
+        //     }
+        // } });
         // }
 
         // Jika ada command, increment counter command
@@ -343,7 +355,19 @@ export async function startBot() {
                                     );
                                     await sock.sendMessage(id, {
                                         text: imageResponse.message
-                                    }, { quoted: m });
+                                    }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                     return;
                                 }
                                 if (type === 'audio') {
@@ -354,7 +378,19 @@ export async function startBot() {
                                     );
                                     await sock.sendMessage(id, {
                                         text: audioResponse.message
-                                    }, { quoted: m });
+                                    }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                     return;
                                 }
                             }
@@ -393,12 +429,36 @@ export async function startBot() {
                                             quoted: quotedText
                                         }
                                     );
-                                    await sock.sendMessage(id, { text: response }, { quoted: m });
+                                    await sock.sendMessage(id, { text: response }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                 } catch (aiError) {
                                     logger.error(`Error di autoAI private chat:`, aiError);
                                     await sock.sendMessage(id, {
                                         text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                                    }, { quoted: m });
+                                    }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                 }
                                 return;
                             }
@@ -420,12 +480,36 @@ export async function startBot() {
                                             quoted: quotedText
                                         }
                                     );
-                                    await sock.sendMessage(id, { text: response }, { quoted: m });
+                                    await sock.sendMessage(id, { text: response }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                 } catch (aiError) {
                                     logger.error(`Error di autoAI grup:`, aiError);
                                     await sock.sendMessage(id, {
                                         text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                                    }, { quoted: m });
+                                    }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                 }
                             } else {
                                 logger.info(`AutoAI tidak aktif di grup ${id}`);
@@ -434,7 +518,19 @@ export async function startBot() {
                             logger.error(`Error umum di handler botMentioned:`, error);
                             await sock.sendMessage(id, {
                                 text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi nanti ya!'
-                            }, { quoted: m });
+                            }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                         }
                         return;
                     }
@@ -482,18 +578,54 @@ export async function startBot() {
                                 } else {
                                     // Command tidak ditemukan, gunakan chat biasa
                                     const chatResponse = await geminiHandler.chat(m.body);
-                                    await sock.sendMessage(id, { text: chatResponse }, { quoted: m });
+                                    await sock.sendMessage(id, { text: chatResponse }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                                 }
                             } else {
                                 // Tidak ada command, gunakan chat biasa
                                 const chatResponse = await geminiHandler.chat(m.body);
-                                await sock.sendMessage(id, { text: chatResponse }, { quoted: m });
+                                await sock.sendMessage(id, { text: chatResponse }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                             }
                         } catch (error) {
                             logger.error('Error in message processing:', error);
                             await sock.sendMessage(id, {
                                 text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                            }, { quoted: m });
+                            }, { quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: 'Roy',
+                    caption: 'Kanata V3'
+                }
+            }
+        } });
                         }
                     }
                 }
