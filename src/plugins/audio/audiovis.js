@@ -8,17 +8,16 @@ const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const handler = ["audiovis", "av"];
-export const description = "🎵 Visualisasi audio cepat (pilih style: 1-3)\n*.av 1* = wave\n*.av 2* = bars\n*.av 3* = circle";
+export const description = "🎵 Visualisasi audio (pilih style: 1-3)\n*.av 1* = wave\n*.av 2* = bars\n*.av 3* = spectrum";
 
 export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
     if (!Buffer.isBuffer(attf)) {
         await sock.sendMessage(id, {
-            text: "🎵 Kirim atau reply audio/voice note dengan caption:\n\n*.av 1* = gelombang\n*.av 2* = batang\n*.av 3* = lingkaran"
+            text: "🎵 Kirim atau reply audio/voice note dengan caption:\n\n*.av 1* = gelombang\n*.av 2* = batang\n*.av 3* = spektrum"
         });
         return;
     }
 
-    // Default style adalah 1 (wave)
     let style = "1";
     if (psn && ["1", "2", "3"].includes(psn.trim())) {
         style = psn.trim();
@@ -38,21 +37,24 @@ export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
         
         fs.writeFileSync(inputFile, attf);
 
-        // Pilih command berdasarkan style dengan perbaikan format video
-        let ffmpegCommand;
-        const baseFilters = "scale=640:360,format=yuv420p"; // Memastikan format video kompatibel
+        // Optimasi untuk ukuran file lebih kecil
+        const resolution = "480x270"; // Resolusi lebih kecil
+        const baseFilters = `scale=${resolution},format=yuv420p`; // Format scaling
+        const videoCodecSettings = "-c:v libx264 -preset ultrafast -crf 28 -maxrate 800k -bufsize 1600k"; // Kompresi video
+        const audioCodecSettings = "-c:a aac -b:a 96k"; // Kompresi audio
 
+        let ffmpegCommand;
         switch (style) {
-            case "1": // Wave
-                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showwaves=s=640x360:mode=line:rate=25:colors=white[wave];[wave]${baseFilters}[v]" -map "[v]" -map 0:a -c:v libx264 -preset ultrafast -pix_fmt yuv420p -r 25 -g 50 -c:a aac -b:a 128k -shortest -y "${outputFile}"`;
+            case "1": // Wave - Paling ringan
+                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showwaves=s=${resolution}:mode=line:rate=15:colors=white[wave];[wave]${baseFilters}[v]" -map "[v]" -map 0:a ${videoCodecSettings} ${audioCodecSettings} -r 15 -g 30 -shortest -y "${outputFile}"`;
                 break;
                 
             case "2": // Bars
-                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showwaves=s=640x360:mode=cline:rate=25:colors=white[wave];[wave]${baseFilters}[v]" -map "[v]" -map 0:a -c:v libx264 -preset ultrafast -pix_fmt yuv420p -r 25 -g 50 -c:a aac -b:a 128k -shortest -y "${outputFile}"`;
+                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showwaves=s=${resolution}:mode=cline:rate=15:colors=white[wave];[wave]${baseFilters}[v]" -map "[v]" -map 0:a ${videoCodecSettings} ${audioCodecSettings} -r 15 -g 30 -shortest -y "${outputFile}"`;
                 break;
                 
-            case "3": // Circle
-                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showcqt=size=640x360:count=1:rate=25:bar_g=2:sono_g=4:bar_v=9:sono_v=13:sono_h=0:tc=0.33:tlength=1:toffset=0:font=mono:fontcolor=white:axis_h=0:count=1:csp=bt709:fps=25[cqt];[cqt]${baseFilters}[v]" -map "[v]" -map 0:a -c:v libx264 -preset ultrafast -pix_fmt yuv420p -r 25 -g 50 -c:a aac -b:a 128k -shortest -y "${outputFile}"`;
+            case "3": // Spectrum
+                ffmpegCommand = `ffmpeg -i "${inputFile}" -filter_complex "[0:a]showspectrum=s=${resolution}:mode=combined:color=rainbow:scale=log:slide=scroll:fps=15[spectrum];[spectrum]${baseFilters}[v]" -map "[v]" -map 0:a ${videoCodecSettings} ${audioCodecSettings} -r 15 -g 30 -shortest -y "${outputFile}"`;
                 break;
         }
 
@@ -67,23 +69,23 @@ export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
         }
 
         const videoBuffer = fs.readFileSync(outputFile);
+        const fileSize = videoBuffer.length / (1024 * 1024); // Size in MB
         
         const styleNames = {
-            "1": "Wave Style",
-            "2": "Bars Style",
-            "3": "Circle Style"
+            "1": "Wave",
+            "2": "Bars",
+            "3": "Spectrum"
         };
 
-        // Kirim video dengan parameter yang lebih lengkap
+        // Kirim video
         await sock.sendMessage(id, {
             video: videoBuffer,
-            caption: `✨ Visualisasi audio (${styleNames[style]}) 🎵`,
+            caption: `✨ Visualisasi ${styleNames[style]} (${fileSize.toFixed(2)}MB) 🎵`,
             mimetype: 'video/mp4',
-            gifPlayback: false, // Pastikan tidak diputar sebagai GIF
-            ptt: false, // Pastikan tidak diputar sebagai voice note
+            gifPlayback: false,
         }, { 
             quoted: m,
-            mediaUploadTimeoutMs: 1000 * 60 // 60 detik timeout
+            mediaUploadTimeoutMs: 1000 * 60
         });
 
         // Cleanup
@@ -91,20 +93,9 @@ export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
         fs.unlinkSync(outputFile);
 
     } catch (error) {
-        console.error("Error in audio visualization:", error);
-        
-        let errorMessage = "⚠️ Waduh error nih bestie! ";
-        
-        if (error.message.includes('No such file')) {
-            errorMessage += "File audionya bermasalah nih. Coba kirim ulang ya?";
-        } else if (error.message.includes('Invalid data')) {
-            errorMessage += "Format audionya gak didukung. Coba kirim MP3 atau voice note biasa ya?";
-        } else if (error.message.includes('Output file not created')) {
-            errorMessage += "Gagal bikin videonya nih. Coba style lain atau audio yang lebih pendek ya?";
-        } else {
-            errorMessage += "Coba lagi ntar ya? 🙏\n\nError: " + error.message;
-        }
-
-        await sock.sendMessage(id, { text: errorMessage });
+        console.error("Error:", error);
+        await sock.sendMessage(id, { 
+            text: "⚠️ Waduh error nih bestie! Coba lagi ntar ya? 🙏" 
+        });
     }
 }; 
