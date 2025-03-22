@@ -1,5 +1,5 @@
 import { createSticker, StickerTypes } from "wa-sticker-formatter";
-import { createCanvas, loadImage } from 'canvas';
+import { createCanvas, loadImage, registerFont } from 'canvas';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, unlink } from 'fs/promises';
@@ -7,6 +7,9 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 
 const execAsync = promisify(exec);
+
+// Daftarkan font system
+registerFont('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', { family: 'DejaVu Sans' });
 
 export const handler = "smeme"
 export const description = "Sticker Meme maker";
@@ -22,12 +25,27 @@ async function createMemeFrame(image, topText, bottomText, width = 512, height =
     
     ctx.drawImage(image, x, y, image.width * scale, image.height * scale);
     
-    // Konfigurasi teks
-    ctx.font = 'bold 40px Impact';
+    // Konfigurasi teks yang lebih mudah dibaca
+    ctx.font = 'bold 46px DejaVu Sans';
     ctx.textAlign = 'center';
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 3;
-    ctx.fillStyle = 'white';
+    ctx.lineWidth = 8; // Stroke lebih tebal
+    
+    // Fungsi untuk render teks dengan multiple stroke untuk efek lebih jelas
+    function drawText(text, x, y) {
+        // Outer stroke hitam
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 8;
+        ctx.strokeText(text, x, y);
+        
+        // Inner stroke putih
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 4;
+        ctx.strokeText(text, x, y);
+        
+        // Fill teks
+        ctx.fillStyle = 'white';
+        ctx.fillText(text, x, y);
+    }
     
     // Helper untuk wrap teks
     function wrapText(text, maxWidth) {
@@ -48,23 +66,29 @@ async function createMemeFrame(image, topText, bottomText, width = 512, height =
         return lines;
     }
     
-    // Render teks atas
+    // Render teks atas dengan shadow
     if (topText) {
-        const topLines = wrapText(topText, canvas.width - 40);
+        const topLines = wrapText(topText, canvas.width - 60);
         topLines.forEach((line, i) => {
-            const y = 50 + (i * 40);
-            ctx.strokeText(line, canvas.width/2, y);
-            ctx.fillText(line, canvas.width/2, y);
+            const y = 60 + (i * 46);
+            // Tambah shadow
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            drawText(line.trim(), canvas.width/2, y);
         });
     }
     
+    // Reset shadow untuk teks bawah
+    ctx.shadowColor = 'transparent';
+    
     // Render teks bawah
     if (bottomText) {
-        const bottomLines = wrapText(bottomText, canvas.width - 40);
+        const bottomLines = wrapText(bottomText, canvas.width - 60);
         bottomLines.reverse().forEach((line, i) => {
-            const y = canvas.height - 30 - (i * 40);
-            ctx.strokeText(line, canvas.width/2, y);
-            ctx.fillText(line, canvas.width/2, y);
+            const y = canvas.height - 30 - (i * 46);
+            drawText(line.trim(), canvas.width/2, y);
         });
     }
     
