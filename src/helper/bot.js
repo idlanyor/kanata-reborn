@@ -89,7 +89,7 @@ class Kanata {
 
                 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
                 let retryCount = 0;
-                const maxRetries = 1;
+                const maxRetries = 3;
 
                 while (retryCount < maxRetries) {
                     try {
@@ -102,7 +102,7 @@ class Kanata {
                         retryCount++;
                         if (retryCount >= maxRetries) {
                             logger.error("Failed to get pairing code, removing session and restarting...");
-                            await fs.remove(`./${this.sessionId}`);
+                            // await fs.remove(`./${this.sessionId}`);
                             await startBot();
                         }
                     }
@@ -188,10 +188,10 @@ async function clearMessages(m) {
 
 const sanitizeBotId = botId => botId.split(":")[0] + "@s.whatsapp.net";
 
-const getPpUrl = async (sock, id) => {
+const getPpUrl = async (sock, noTel) => {
     const ppUrl = globalThis.defaultProfilePic
     try {
-        return await sock.profilePictureUrl(id, "image")
+        return await sock.profilePictureUrl(noTel+"@s.whatsapp.net", "image")
     } catch {
         return ppUrl
     }

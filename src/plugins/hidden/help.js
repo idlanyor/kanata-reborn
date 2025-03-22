@@ -1,13 +1,12 @@
-import { fetchLatestBaileysVersion } from '@seaavey/baileys/lib/Utils/generics.js';
+import { getPpUrl } from '../../helper/bot.js';
 import { helpMessage } from '../../helper/help.js'
-import loadAssets from '../../helper/loadAssets.js';
-
+import { menuCard } from '../../lib/canvas/menu.js'
 export const handler = ["menu", "help", "h", "hai"]
 export const description = "List All Menu";
 
 export default async ({ sock, id, m, noTel, sender }) => {
     const { caption, plugins } = await helpMessage()
-
+    const menuImage = await menuCard(m.pushName, noTel, new Date().toLocaleDateString(), await getPpUrl(sock, noTel))
     // Generate sections dengan format yang lebih menarik
     let sections = []
     const emojis = {
@@ -91,9 +90,7 @@ ${caption}
 
     await sock.sendMessage(id, {
         caption: menuMessage,
-        image: {
-            url: globalThis.kanataCover,
-        },
+        image: menuImage,
         buttons: [
             {
                 buttonId: 'ping',
@@ -139,7 +136,7 @@ ${caption}
             }
         },
     }, {
-        quoted:m
+        quoted: m
     })
 }
 
