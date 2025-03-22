@@ -506,8 +506,8 @@ export async function startBot() {
         // schedulePrayerReminders(sock, globalThis.newsLetterJid);
         schedulePrayerReminders(sock, globalThis.groupJid);
 
-        // sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
-        // sock.ev.on('groups.update', ev => groupUpdate(ev, sock));
+        sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
+        sock.ev.on('groups.update', ev => groupUpdate(ev, sock));
         sock.ev.on('call', (callEv) => {
             call(callEv, sock)
         })
