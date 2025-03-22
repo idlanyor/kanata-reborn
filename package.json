@@ -22,6 +22,7 @@
     "@seaavey/baileys": "^6.6.5",
     "@vreden/youtube_scraper": "latest",
     "axios": "latest",
+    "canvas": "^3.1.0",
     "chalk": "latest",
     "cheerio": "latest",
     "dotenv": "latest",
