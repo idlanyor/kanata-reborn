@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import express from 'express'
 import { Server } from 'socket.io'
 import { Kanata } from './src/helper/bot.js';
-// import { groupParticipants, groupUpdate } from './src/lib/group.js';
+import { groupParticipants, groupUpdate } from './src/lib/group.js';
 // import { checkAnswer, tebakSession } from './src/lib/tebak/index.js';
 import { getMedia } from './src/helper/mediaMsg.js';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -447,7 +447,6 @@ export async function startBot() {
                             if (settings.autoai !== 1) return;
 
                             // Di grup harus di-mention atau di-reply
-                            if (!m.body.startsWith('!') || !m.body.startsWith('.')) return;
                             if (!botMentioned && !m.quoted?.participant?.includes(botId)) return;
                         }
 
