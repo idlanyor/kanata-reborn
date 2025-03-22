@@ -52,13 +52,13 @@ export async function helpMessage() {
     let caption = "🌟 Hai, aku Kanata! Berikut daftar perintah yang tersedia:\n\n";
     
     for (const category in plugins) {
-        caption += `📂 *${category.toUpperCase()}*\n`;
+        caption += `╭─「 ${category.toUpperCase()} 」\n`;
         
         plugins[category].forEach(plugin => {
-            caption += `   • *${plugin.handler}*\n`;
+            caption += `├ • *${plugin.handler}*\n`;
         });
         
-        caption += '\n';
+        caption += `╰──────────────────\n\n`;
     }
     
     caption += "Ketik perintah yang kamu butuhkan! 🚀";
