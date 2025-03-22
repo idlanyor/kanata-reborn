@@ -6,7 +6,7 @@ export const description = "List All Menu";
 
 export default async ({ sock, id, m, noTel, sender }) => {
     const { caption, plugins } = await helpMessage()
-    const menuImage = await menuCard(m.pushName, noTel, new Date().toLocaleDateString(), await getPpUrl(sock, noTel))
+    const menuImage = await menuCard(m.pushName || 'User', noTel, await getPpUrl(sock, noTel))
     // Generate sections dengan format yang lebih menarik
     let sections = []
     const emojis = {
