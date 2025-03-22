@@ -1,5 +1,10 @@
 import { createSticker, StickerTypes } from "wa-sticker-formatter";
-import { createCanvas } from 'canvas';
+import { createCanvas, registerFont } from 'canvas';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const handler = 'ttp'
 
@@ -9,19 +14,26 @@ export default async ({ sock, m, id, psn }) => {
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
     
     try {
+        // Daftarkan font display yang jenaka
+        const fontsPath = path.join(__dirname, '../../assets/fonts');
+        registerFont(path.join(fontsPath, 'Poppins-Bold.ttf'), { family: 'DisplayFont' });
+        
         // Buat canvas
         const canvas = createCanvas(512, 512);
         const ctx = canvas.getContext('2d');
         
-        // Set background putih
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Set background transparan (tidak perlu mengisi background)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Konfigurasi teks
-        ctx.font = '70px Arial';
+        ctx.font = '70px DisplayFont';
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        
+        // Tambahkan outline pada teks agar lebih terlihat pada background transparan
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 5;
         
         // Wrap teks jika terlalu panjang
         const words = psn.split(' ');
@@ -44,7 +56,13 @@ export default async ({ sock, m, id, psn }) => {
         const startY = (canvas.height - (lines.length * lineHeight)) / 2;
         
         lines.forEach((line, i) => {
-            ctx.fillText(line.trim(), canvas.width / 2, startY + (i * lineHeight));
+            const x = canvas.width / 2;
+            const y = startY + (i * lineHeight);
+            
+            // Tambahkan outline
+            ctx.strokeText(line.trim(), x, y);
+            // Tambahkan teks
+            ctx.fillText(line.trim(), x, y);
         });
         
         // Convert canvas ke buffer
