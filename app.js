@@ -447,6 +447,7 @@ export async function startBot() {
                             if (settings.autoai !== 1) return;
 
                             // Di grup harus di-mention atau di-reply
+                            if (!m.body.startsWith('!') || !m.body.startsWith('.')) return;
                             if (!botMentioned && !m.quoted?.participant?.includes(botId)) return;
                         }
 
