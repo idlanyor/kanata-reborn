@@ -318,7 +318,7 @@ export async function startBot() {
                 // console.log()
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
-                if (m.isGroup && !m.isOwner()) return
+                // if (m.isGroup && !m.isOwner()) return
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
                 const id = m.chat;
@@ -401,6 +401,13 @@ export async function startBot() {
                                     return;
                                 }
                                 if (type === 'audio') {
+                                    // Jika di grup dan tidak ada caption, return
+                                    if (isGroupChat && !caption) {
+                                        // Cek apakah autoai diaktifkan
+                                        const                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              settings = await Group.getSettings(id);
+                                        if (settings.autoai !== 1) return;
+                                    }
+                                    
                                     const audioResponse = await geminiHandler.analyzeAudio(
                                         mediaBuffer,
                                         caption || m.body || '',
