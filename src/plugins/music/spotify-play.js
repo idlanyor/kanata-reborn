@@ -136,7 +136,7 @@ export default async ({ sock, m, id, psn }) => {
         }, { quoted:m });
 
         await m.react('✨');
-        
+
     } catch (error) {
         console.error('Error in spotify play:', error);
         await sock.sendMessage(id, { 

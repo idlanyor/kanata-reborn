@@ -253,6 +253,46 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             logger.success(`Command ${cmd} executed successfully`);
         }
 
+        // Handler untuk cek jawaban game tebak
+        if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+            const answer = global.tebakGame[id].answer.toLowerCase();
+            const userAnswer = m.body.toLowerCase();
+            
+            // Jika jawaban benar
+            if (userAnswer === answer) {
+                // Clear timeout
+                clearTimeout(global.tebakGame[id].timeout);
+                
+                // Tambah point ke user (jika ada sistem point)
+                await User.addPoints(noTel, 100);
+                
+                // Hapus sesi game
+                delete global.tebakGame[id];
+                
+                // Kirim pesan berhasil
+                await sock.sendMessage(id, { 
+                    text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan 100 points!`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: '🏆 Jawaban Benar',
+                            body: '+100 points',
+                            thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                            sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                            mediaType: 1,
+                        }
+                    }
+                });
+                
+                // Kirim reaksi sukses
+                await sock.sendMessage(id, { 
+                    react: { 
+                        text: '🎮', 
+                        key: m.key 
+                    } 
+                });
+            }
+        }
+
     } catch (error) {
         logger.error('Error in message processing:', error);
         await sock.sendMessage(id, {
@@ -278,7 +318,7 @@ export async function startBot() {
                 // console.log()
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
-                // if (m.isGroup && !m.isOwner()) return
+                if (m.isGroup && !m.isOwner()) return
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
                 const id = m.chat;

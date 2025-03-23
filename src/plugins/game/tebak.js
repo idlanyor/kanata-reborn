@@ -1,0 +1,180 @@
+import { tebak } from '../../lib/tebak/index.js';
+import User from '../../models/user.js';
+
+export const handler = 'tebak';
+export const description = 'Game tebak-tebakan (gambar, lagu, kata, dll)';
+
+export default async ({ sock, m, id, psn, sender, noTel }) => {
+    try {
+        // Cek parameter game
+        const gameTypes = ['gambar', 'lagu', 'kata', 'bendera', 'lirik', 'kalimat', 'kimia', 'siapa'];
+        const usageText = `⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.tebak [tipe]*\n\n📌 Contoh:\n*.tebak gambar*\n\n🎮 *Tipe Game:*\n${gameTypes.map(type => `• ${type}`).join('\n')}`;
+
+        // Jika tidak ada parameter atau parameter tidak valid
+        if (!psn || !gameTypes.includes(psn.toLowerCase())) {
+            await sock.sendMessage(id, { 
+                text: usageText,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '🎮 Game Tebak-tebakan',
+                        body: 'Berbagai game tebak-tebakan seru!',
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                        sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            });
+            return;
+        }
+
+        // Ambil jenis game
+        const gameType = psn.toLowerCase();
+
+        // Cek apakah user sedang dalam game
+        const isPlaying = global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session === true;
+        if (isPlaying) {
+            await sock.sendMessage(id, { 
+                text: '⚠️ Game sedang berlangsung di chat ini, silahkan selesaikan dulu atau ketik *.nyerah* untuk menyerah.',
+            });
+            return;
+        }
+
+        // Dapatkan data game dari lib tebak
+        const gameData = await tebak(gameType);
+        if (!gameData) {
+            await sock.sendMessage(id, { 
+                text: '❌ Terjadi kesalahan saat memuat game.',
+            });
+            return;
+        }
+
+        // Inisialisasi global state untuk game
+        if (!global.tebakGame) global.tebakGame = {};
+        
+        // Set data game untuk chat ini
+        global.tebakGame[id] = {
+            session: true,
+            type: gameType,
+            answer: gameData.jawaban.toLowerCase(),
+            timeout: setTimeout(() => {
+                if (global.tebakGame[id] && global.tebakGame[id].session) {
+                    sock.sendMessage(id, { 
+                        text: `⏱️ Waktu habis!\n\n🔍 Jawaban: *${global.tebakGame[id].answer}*`,
+                    });
+                    delete global.tebakGame[id];
+                }
+            }, 60000) // 60 detik
+        };
+
+        // Siapkan pesan berdasarkan jenis game
+        let mediaMessage = {};
+        let caption = '';
+
+        switch (gameType) {
+            case 'gambar':
+                caption = '🖼️ *TEBAK GAMBAR*\n\nApa yang ditunjukkan pada gambar ini?';
+                mediaMessage = {
+                    image: { url: gameData.img },
+                    caption: caption
+                };
+                break;
+            case 'lagu':
+                caption = '🎵 *TEBAK LAGU*\n\nLagu apa ini? (Dengarkan dengan seksama)';
+                mediaMessage = {
+                    audio: { url: gameData.lagu },
+                    mimetype: 'audio/mp4',
+                    caption: caption
+                };
+                break;
+            case 'bendera':
+                caption = '🏁 *TEBAK BENDERA*\n\nBendera negara apa ini?';
+                mediaMessage = {
+                    image: { url: gameData.img },
+                    caption: caption
+                };
+                break;
+            case 'lirik':
+                caption = `🎤 *TEBAK LIRIK*\n\n${gameData.soal}`;
+                mediaMessage = {
+                    text: caption
+                };
+                break;
+            case 'kalimat':
+                caption = `📝 *TEBAK KALIMAT*\n\n${gameData.soal}`;
+                mediaMessage = {
+                    text: caption
+                };
+                break;
+            case 'kata':
+                caption = `📚 *TEBAK KATA*\n\n${gameData.soal}`;
+                mediaMessage = {
+                    text: caption
+                };
+                break;
+            case 'kimia':
+                caption = `🧪 *TEBAK UNSUR KIMIA*\n\n${gameData.soal}`;
+                mediaMessage = {
+                    text: caption
+                };
+                break;
+            case 'siapa':
+                caption = `👤 *TEBAK SIAPA*\n\n${gameData.soal}`;
+                mediaMessage = {
+                    image: { url: gameData.img },
+                    caption: caption
+                };
+                break;
+            default:
+                caption = `🎮 *TEBAK ${gameType.toUpperCase()}*\n\n${gameData.soal || 'Silahkan tebak'}`;
+                mediaMessage = {
+                    text: caption
+                };
+        }
+
+        // Tambahkan contextInfo ke pesan
+        if (mediaMessage.text) {
+            mediaMessage.contextInfo = {
+                externalAdReply: {
+                    title: `🎮 Tebak ${gameType.charAt(0).toUpperCase() + gameType.slice(1)}`,
+                    body: 'Waktu menjawab: 60 detik',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            };
+        }
+
+        // Kirim pertanyaan game
+        await sock.sendMessage(id, mediaMessage);
+
+    } catch (error) {
+        console.error('Error in tebak game:', error);
+        await sock.sendMessage(id, { 
+            text: `❌ *Terjadi kesalahan:*\n${error.message}`,
+            contextInfo: {
+                externalAdReply: {
+                    title: '❌ Game Error',
+                    body: 'An error occurred while loading the game',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            }
+        });
+        
+        // Kirim reaksi error
+        await sock.sendMessage(id, { 
+            react: { 
+                text: '❌', 
+                key: m.key 
+            } 
+        });
+    }
+};
+
+export const help = {
+    name: 'tebak',
+    description: 'Game tebak-tebakan berbagai jenis',
+    usage: '.tebak [gambar/lagu/kata/bendera/lirik/kalimat/kimia/siapa]'
+}; 

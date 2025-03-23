@@ -21,9 +21,21 @@ export default async ({ sock, m, id, psn }) => {
             return;
         }
 
-        if (!psn) {
+        // Dapatkan user yang akan di-kick
+        let userToKick = '';
+        
+        // Cek jika ada mention
+        if (psn) {
+            userToKick = psn.replace('@', '') + '@s.whatsapp.net';
+        } 
+        // Cek jika ada reply
+        else if (m.quoted) {
+            userToKick = m.quoted.sender;
+        } 
+        // Jika tidak ada mention atau reply
+        else {
             await m.reply({
-                text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.kick @user*\n\n📌 Contoh:\n*.kick @user*',
+                text: '⚠️ *Format Salah!*\n\n📝 Gunakan:\n*.kick @user*\natau reply pesan dengan *.kick*\n\n📌 Contoh:\n*.kick @user*',
                 contextInfo: {
                     externalAdReply: {
                         title: '乂 Group Manager 乂',
@@ -39,10 +51,13 @@ export default async ({ sock, m, id, psn }) => {
         }
 
         // Proses kick member
-        await sock.groupParticipantsUpdate(id, [psn.replace('@', '') + '@s.whatsapp.net'], 'remove');
+        await sock.groupParticipantsUpdate(id, [userToKick], 'remove');
+
+        // Dapatkan nama yang di-kick untuk pesan konfirmasi
+        const kickedName = psn ? psn.trim() : (m.quoted ? `@${m.quoted.sender.split('@')[0]}` : 'user');
 
         await m.reply({
-            text: `✅ Berhasil mengeluarkan *${psn.trim()}* dari grup!`,
+            text: `✅ Berhasil mengeluarkan *${kickedName}* dari grup!`,
             contextInfo: {
                 externalAdReply: {
                     title: '✅ Member Kicked',

@@ -26,7 +26,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
         if (plugin.toUpperCase() !== 'HIDDEN') {
             sections.push({
                 header: '╭─「 KANATA BOT MENU 」',
-                highlight_label: '2.0',
+                highlight_label: '3.0',
                 title: `${emojis[plugin.toUpperCase()] || '📌'} ${plugin.toUpperCase()} MENU`,
                 rows: plugins[plugin].map((command) => {
                     const cmdName = Array.isArray(command.handler)
@@ -136,7 +136,19 @@ ${caption}
             }
         },
     }, {
-        quoted: m
+        quoted: {
+            key: {
+                remoteJid: 'status@broadcast',
+                participant: "13135550002@s.whatsapp.net",
+            },
+            message: {
+                newsletterAdminInviteMessage: {
+                    newsletterJid: '120363293401077915@newsletter',
+                    newsletterName: sender || 'User',
+                    caption: `${m.pushName} - ${noTel}` || 'Kanata V3'
+                }
+            }
+        }
     })
 }
 
