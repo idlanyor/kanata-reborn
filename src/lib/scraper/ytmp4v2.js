@@ -85,11 +85,11 @@ export const ytVideo2 = async (url) => {
             status: false,
             message: "Failed to scrape YouTube video",
             data: null,
-            error: error.message
+            error: error
         };
     }
 };
 
 (async () => {
-    console.log((await ytVideo2('https://www.youtube.com/watch?v=e-ORhEE9VVg')).data)
+    console.log((await ytVideo2('https://www.youtube.com/watch?v=e-ORhEE9VVg')))
 })()
