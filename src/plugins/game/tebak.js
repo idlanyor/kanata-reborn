@@ -1,5 +1,5 @@
 import { tebak } from '../../lib/tebak/index.js';
-import User from '../../database/models/user.js';
+// import User from '../../database/models/User.js';
 
 export const handler = 'tebak';
 export const description = 'Game tebak-tebakan (gambar, lagu, kata, dll)';
