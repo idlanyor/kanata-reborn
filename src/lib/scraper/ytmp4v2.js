@@ -35,7 +35,7 @@ export const ytVideo2 = async (url) => {
         });
 
 
-        await page.goto('https://en1.savefrom.net/1-youtube-video-downloader-7ON/', { waitUntil: 'networkidle0' });
+        await page.goto('https://en1.savefrom.net/1-youtube-video-downloader-7ON/', { waitUntil: 'networkidle2' });
 
         const inputSelector = '#sf_url';
         await page.waitForSelector(inputSelector);
