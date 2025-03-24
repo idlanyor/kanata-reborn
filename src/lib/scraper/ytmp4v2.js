@@ -90,6 +90,6 @@ export const ytVideo2 = async (url) => {
     }
 };
 
-// (async () => {
-//     console.log((await ytVideo2('https://www.youtube.com/watch?v=e-ORhEE9VVg')).data)
-// })()
+(async () => {
+    console.log((await ytVideo2('https://www.youtube.com/watch?v=e-ORhEE9VVg')).data)
+})()
