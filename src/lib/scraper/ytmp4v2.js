@@ -15,11 +15,11 @@ export const ytVideo2 = async (url) => {
     await page.screenshot({ path: 'debug.png' }); // Cek apakah halaman benar-benar terbuka
 
     const inputSelector = '#sf_url';
-    if (await page.$(inputSelector) === null) {
-        console.log('Selector tidak ditemukan, kemungkinan situs memblokir bot.');
-        await browser.close();
-        return { status: false, message: 'Selector not found', data: null };
-    }
+    // if (await page.$(inputSelector) === null) {
+    //     console.log('Selector tidak ditemukan, kemungkinan situs memblokir bot.');
+    //     await browser.close();
+    //     return { status: false, message: 'Selector not found', data: null };
+    // }
 
     await page.type(inputSelector, url);
     await page.click('#sf_submit');
