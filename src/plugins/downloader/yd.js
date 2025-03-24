@@ -1,4 +1,7 @@
-import { ytVideo2 } from "../../lib/scraper/ytmp4v2.js";
+import { exec } from 'child_process';
+import { promisify } from 'util';
+const execAsync = promisify(exec);
+
 export const description = "YouTube Video Downloader provided by *Roy*";
 export const handler = "yd"
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
@@ -20,28 +23,34 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             psn = psn.replace(/--\d+/, '').trim()
         }
 
-        let { data } = await ytVideo2(psn)
+        // Generate random filename to avoid conflicts
+        const randomName = Math.random().toString(36).substring(7);
+        const outputPath = `./temp/${randomName}.mp4`;
+
+        // Build yt-dlp command
+        const command = `yt-dlp -f "bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]" "${psn}" -o "${outputPath}"`;
+
+        // Execute yt-dlp
+        const { stdout } = await execAsync(command);
         
-        // Find matching quality video link
-        let videoUrl = data.downloadLinks[0].url // default to first link
-        const matchingQuality = data.downloadLinks.find(link => 
-            link.quality === quality && (link.type === 'mp4' || link.type === 'mp4 dash')
-        )
-        if (matchingQuality) {
-            videoUrl = matchingQuality.url
-        }
+        // Extract video info using yt-dlp
+        const { stdout: info } = await execAsync(`yt-dlp -j "${psn}"`);
+        const videoInfo = JSON.parse(info);
 
         caption = '*🎬 Hasil Video YouTube:*'
-        caption += '\n📛 *Title:* ' + `*${data.title}*`
-        caption += '\n⏱️ *Duration:* ' + `*${data.duration}*`
+        caption += '\n📛 *Title:* ' + `*${videoInfo.title}*`
+        caption += '\n⏱️ *Duration:* ' + `*${Math.floor(videoInfo.duration / 60)}:${(videoInfo.duration % 60).toString().padStart(2, '0')}*`
         caption += '\n📺 *Quality:* ' + `*${quality}p*`
         
         await sock.sendMessage(id, {
-            document: { url: videoUrl },
+            document: { url: outputPath },
             mimetype: 'video/mp4',
-            fileName: `${data.title}-${quality}p.mp4`,
+            fileName: `${videoInfo.title}-${quality}p.mp4`,
             caption: caption
         }, { quoted:m });
+        
+        // Clean up downloaded file
+        await execAsync(`rm "${outputPath}"`);
         
         await m.react('success')
     } catch (error) {
