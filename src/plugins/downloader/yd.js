@@ -1,6 +1,4 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-const execAsync = promisify(exec);
+import axios from 'axios';
 
 export const description = "YouTube Video Downloader provided by *Roy*";
 export const handler = "yd"
@@ -23,35 +21,35 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             psn = psn.replace(/--\d+/, '').trim()
         }
 
-        // Generate random filename
-        const randomName = Math.random().toString(36).substring(7);
-        const outputPath = `./temp/${randomName}.mp4`;
+        // Call FastURL API
+        const response = await axios.get(`https://fastrestapis.fasturl.cloud/downup/ytmp4`, {
+            params: {
+                url: psn,
+                quality: quality,
+                server: 'auto'
+            },
+            headers: {
+                'accept': 'application/json'
+            }
+        });
 
-        // Build simplified yt-dlp command
-        const command = `yt-dlp -f "b[height<=${quality}]/w[height<=${quality}]" "${psn}" -o "${outputPath}" --no-warnings --no-playlist`;
-
-        // Get basic info first
-        const { stdout: info } = await execAsync(`yt-dlp -j "${psn}" --no-warnings --no-playlist`);
-        const videoInfo = JSON.parse(info);
-
-        // Download video
-        await execAsync(command);
+        const result = response.data.result;
         
         caption = '*🎬 Hasil Video YouTube:*'
-        caption += '\n📛 *Title:* ' + `*${videoInfo.title}*`
-        caption += '\n⏱️ *Duration:* ' + `*${Math.floor(videoInfo.duration / 60)}:${(videoInfo.duration % 60).toString().padStart(2, '0')}*`
-        caption += '\n📺 *Quality:* ' + `*${quality}p*`
+        caption += '\n📛 *Title:* ' + `*${result.title}*`
+        caption += '\n⏱️ *Duration:* ' + `*${result.metadata.duration}*`
+        caption += '\n📺 *Quality:* ' + `*${result.quality}*`
+        caption += '\n👁️ *Views:* ' + `*${result.metadata.views}*`
+        caption += '\n📅 *Upload:* ' + `*${result.metadata.uploadDate}*`
+        caption += '\n👤 *Channel:* ' + `*${result.author.name}*`
         
         await sock.sendMessage(id, {
-            document: { url: outputPath },
+            document: { url: result.media },
             mimetype: 'video/mp4',
-            fileName: `${videoInfo.title}-${quality}p.mp4`,
+            fileName: `${result.title}-${result.quality}.mp4`,
             caption: caption
         }, { quoted:m });
-        
-        // Clean up
-        await execAsync(`rm "${outputPath}"`);
-        
+
         await m.react('success')
     } catch (error) {
         await m.react('error')
