@@ -1,5 +1,4 @@
-import { ytVideo } from "../../lib/scraper/ytmp4.js";
-import { ytsearch } from "../../lib/youtube.js";
+import axios from 'axios';
 
 export const description = "YouTube Short Downloader provided by *Roy*";
 export const handler = ['ysd', 'yd2']
@@ -11,31 +10,44 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         return;
     }
     try {
+        await m.react('wait')
         await sock.sendMessage(id, { text: '🔄 *Sedang diproses...* \n_Mohon tunggu sebentar_ ...' });
 
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const result = await ytVideo(psn)
-            const videoInfo = await ytsearch(psn);
+            const response = await axios.get(`https://fastrestapis.fasturl.cloud/downup/ytmp4`, {
+                params: {
+                    url: psn,
+                    quality: '360',
+                    server: 'auto'
+                },
+                headers: {
+                    'accept': 'application/json'
+                }
+            });
 
+            const result = response.data.result;
+            
             caption = '*YouTube Shorts Downloader*';
-            caption += `\n\n📹 *Judul:* ${videoInfo[0].title}`;
-            caption += `\n📺 *Channel:* ${videoInfo[0].author}`;
-            caption += `\n🔗 *URL:* ${videoInfo[0].url}`;
-
-            // await sock.sendMessage(id, {
-            //     image: { url: videoInfo[0].image },
-            //     caption
-            // });
+            caption += '\n\n📹 *Judul:* ' + result.title;
+            caption += '\n📺 *Channel:* ' + result.author.name;
+            caption += '\n⏱️ *Durasi:* ' + result.metadata.duration;
+            caption += '\n👁️ *Views:* ' + result.metadata.views;
+            caption += '\n📅 *Upload:* ' + result.metadata.uploadDate;
+            caption += '\n🔗 *URL:* ' + result.url;
 
             await sock.sendMessage(id, {
-                video: { url: result.data.videoUrl },
-                caption: `*${videoInfo[0].title}*\n\nBerhasil diunduh menggunakan Kanata V3`
-            });
+                video: { url: result.media },
+                caption: caption
+            }, { quoted: m });
+
+            await m.react('success')
         } else {
+            await m.react('error')
             await sock.sendMessage(id, { text: '❌ *URL tidak valid! Masukkan URL YouTube yang benar.*' });
         }
     } catch (error) {
+        await m.react('error')
         await sock.sendMessage(id, { text: '❌ *Ups,Terjadi kesalahan Silahkan coba beberapa saat lagi*' });
         throw error
     }

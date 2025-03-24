@@ -1,4 +1,5 @@
-import { yutubVideo } from '../../lib/downloader.js';
+import axios from 'axios';
+import yts from 'yt-search';
 
 export const description = "YouTube Video Player";
 export const handler = "ypv";
@@ -8,11 +9,12 @@ export default async ({ sock, m, id, psn, sender }) => {
         await sock.sendMessage(id, {
             text: `🎥 *YouTube Video Downloader*\n\n` +
                   `*Cara Penggunaan:*\n` +
-                  `- Ketik: yv <url video atau judul>\n\n` +
+                  `- Ketik: ypv <url video atau judul>\n` +
+                  `- Untuk kualitas: ypv <url/judul> --360/--480/--720\n\n` +
                   `*Contoh:*\n` +
-                  `yv JKT48 Heavy Rotation\n\n` +
+                  `ypv JKT48 Heavy Rotation --480\n\n` +
                   `*Fitur:*\n` +
-                  `- Resolusi 480p\n` +
+                  `- Resolusi 360p/480p/720p\n` +
                   `- Format MP4\n` +
                   `- Proses Cepat`
         });
@@ -21,48 +23,80 @@ export default async ({ sock, m, id, psn, sender }) => {
 
     try {
         // Kirim reaction mulai
-        await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
+        await m.react('wait');
         
+        // Extract quality flag if present
+        let quality = '360' // default quality
+        const qualityMatch = psn.match(/--(\d+)/)
+        if (qualityMatch) {
+            quality = qualityMatch[1]
+            psn = psn.replace(/--\d+/, '').trim()
+        }
+
         await sock.sendMessage(id, { 
-            text: ` *Memproses Video*\n\n` +
+            text: `🔄 *Memproses Video*\n\n` +
                   `Query: ${psn}\n` +
-                  `Status: Mengunduh & Encoding...\n` +
-                  `Estimasi: 2-3 menit`
+                  `Kualitas: ${quality}p\n` +
+                  `Status: Mencari & Mengunduh...\n` +
+                  `Estimasi: 1-2 menit`
         });
 
-        const result = await yutubVideo(psn);
-        
-        if (result.error) {
-            throw new Error(result.error);
+        let videoUrl;
+        // Cek apakah input adalah URL YouTube
+        if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
+            videoUrl = psn;
+        } else {
+            // Jika bukan URL, cari video berdasarkan keyword
+            const results = await yts(psn);
+            if (!results?.videos.length) throw new Error('Video tidak ditemukan');
+            videoUrl = results.videos[0].url;
         }
+
+        // Get video from FastURL API
+        const response = await axios.get(`https://fastrestapis.fasturl.cloud/downup/ytmp4`, {
+            params: {
+                url: videoUrl,
+                quality: quality,
+                server: 'auto'
+            },
+            headers: {
+                'accept': 'application/json'
+            }
+        });
+
+        const result = response.data.result;
 
         // Kirim info sebelum video
         await sock.sendMessage(id, { 
             text: `✅ *Video Siap Dikirim*\n\n` +
                   `📌 Judul: ${result.title}\n` +
-                  `👤 Channel: ${result.channel}\n` +
-                  `📺 Resolusi: 480p\n` +
-                  `🎞️ Format: MP4`
+                  `👤 Channel: ${result.author.name}\n` +
+                  `⏱️ Durasi: ${result.metadata.duration}\n` +
+                  `👁️ Views: ${result.metadata.views}\n` +
+                  `📅 Upload: ${result.metadata.uploadDate}\n` +
+                  `📺 Resolusi: ${result.quality}`
         });
 
         // Kirim video
         await sock.sendMessage(id, { 
-            video: { url: result.video }, 
+            video: { url: result.media },
             mimetype: 'video/mp4',
-            fileName: `${result.title}.mp4`
-        }, { quoted:m });
+            fileName: `${result.title}-${result.quality}.mp4`,
+            caption: `${result.title} - ${result.quality}`
+        }, { quoted: m });
 
-        // Kirim reaction selesai
-        await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
+        await m.react('success');
 
     } catch (error) {
+        await m.react('error');
         await sock.sendMessage(id, { 
             text: `❌ *GAGAL MEMPROSES*\n\n` +
                   `*Pesan Error:* ${error.message}\n\n` +
                   `*Solusi:*\n` +
                   `- Coba video lain\n` +
+                  `- Pastikan URL/judul video benar\n` +
+                  `- Coba kualitas video yang lebih rendah\n` +
                   `- Laporkan ke owner jika masih error`
         });
-        await sock.sendMessage(id, { react: { text: '❌', key: m.key } });
     }
 };
