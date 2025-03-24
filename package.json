@@ -46,6 +46,8 @@
     "node-emoji": "^2.2.0",
     "node-fetch": "latest",
     "puppeteer": "latest",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode": "^1.5.4",
     "random": "^5.3.0",
     "remove.bg": "latest",
