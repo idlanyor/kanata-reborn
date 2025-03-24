@@ -83,7 +83,7 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
                 caption = '🎵 *TEBAK LAGU*\n\nLagu apa ini? (Dengarkan dengan seksama)';
                 mediaMessage = {
                     audio: { url: gameData.lagu },
-                    mimetype: 'audio/mp4',
+                    mimetype: 'audio/mpeg',
                     caption: caption
                 };
                 break;

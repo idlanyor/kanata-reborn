@@ -78,7 +78,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
         } else if (contentType.includes('audio')) {
             await sock.sendMessage(id, {
                 audio: Buffer.from(response.data),
-                mimetype: 'audio/mp4',
+                mimetype: 'audio/mpeg',
                 fileName: `${fileName}.mp3`,
             });
         } else if (contentType.includes('application') || contentType.includes('text/csv')) {

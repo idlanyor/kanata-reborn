@@ -116,7 +116,7 @@ export default async ({ sock, m, id, psn, sender, noTel, attf }) => {
         // Kirim audio
         await sock.sendMessage(id, {
             audio: audioBuffer,
-            mimetype: 'audio/mp4',
+            mimetype: 'audio/mpeg',
             ptt: false, // Set true jika ingin dikirim sebagai voice note
             caption: `✨ ${effectName} Effect (${fileSize.toFixed(2)}MB) 🎵`
         }, { quoted:m });

@@ -1,9 +1,9 @@
 /**
- * @author : Roy~VC~
+ * @author : Roy
  * @Channel : https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m
  * @name : Spotify Downloader
  * @module : ES6 Module
- * bebas pake, jangan cabut wmnya jir 🙇
+ * bebas pake, jangan cabut wmnya jir,spesial buat Hikaru boleh hapus we em 🙇
  */
 
 import puppeteer from 'puppeteer';
