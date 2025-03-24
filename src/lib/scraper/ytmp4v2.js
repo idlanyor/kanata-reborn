@@ -8,17 +8,19 @@
 
 import puppeteer from 'puppeteer';
 
-
 export const ytVideo2 = async (url) => {
     try {
         const browser = await puppeteer.launch({
             headless: true,
             args: [
                 '--no-sandbox',
-                '--disable-setuid-sandbox',
+                '--disable-setuid-sandbox', 
                 '--disable-blink-features=AutomationControlled',
                 '--disable-web-security',
                 '--disable-features=IsolateOrigins,site-per-process',
+                '--disable-gpu',
+                '--no-zygote',
+                '--single-process'
             ],
         });
         const page = await browser.newPage();
@@ -34,18 +36,23 @@ export const ytVideo2 = async (url) => {
             Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
         });
 
-
-        await page.goto('https://en1.savefrom.net/1-youtube-video-downloader-7ON/', { waitUntil: 'networkidle2' });
+        await page.goto('https://en1.savefrom.net/1-youtube-video-downloader-7ON/', { 
+            waitUntil: 'networkidle2',
+            timeout: 60000 // Timeout navigasi 60 detik
+        });
 
         const inputSelector = '#sf_url';
-        await page.waitForSelector(inputSelector);
+        await page.waitForSelector(inputSelector, { timeout: 60000 });
         await page.type(inputSelector, url);
 
         const submitButtonSelector = '#sf_submit';
         await page.click(submitButtonSelector);
 
         const resultSelector = '.media-result';
-        await page.waitForSelector(resultSelector, { visible: true });
+        await page.waitForSelector(resultSelector, { 
+            visible: true,
+            timeout: 60000 
+        });
 
         const result = await page.evaluate(() => {
             const video = document.querySelector('.media-result .result-box.video');
@@ -62,6 +69,7 @@ export const ytVideo2 = async (url) => {
 
             return { title, thumbnail, duration, downloadLinks };
         });
+
         await browser.close();
 
         if (!result) {
@@ -75,7 +83,7 @@ export const ytVideo2 = async (url) => {
 
         return {
             status: true,
-            message: "Success scraping YouTube video",
+            message: "Success scraping YouTube video", 
             data: result,
             error: null
         };
