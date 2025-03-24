@@ -5,7 +5,7 @@ export const description = 'Resolve Information from Pddikti by NIM/Name'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (psn == "") return await sock.sendMessage(id, { text: 'Masukkan Nim/Nama untuk dicari,contoh `pddikti SSI202203088`' })
     await sock.sendMessage(id, { text: 'Tunggu sebentar,ini sedikit memakan waktu ...' })
-    const result = await pddiktiSearch(psn)
+    const result = (await pddiktiSearch(psn)).data
     const rows = []
     result.forEach((d, i) => {
         rows.push({

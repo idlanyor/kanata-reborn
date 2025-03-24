@@ -16,7 +16,7 @@ export default async ({ sock, m, id, psn }) => {
     });
 
     try {
-        const result = await mahasiswaDetail(psn);
+        const result = (await mahasiswaDetail(psn)).data;
         if (!result) {
             return await sock.sendMessage(id, {
                 text: "❌ Data tidak ditemukan. Pastikan NIM atau Nama yang dimasukkan benar."

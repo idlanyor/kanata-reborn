@@ -98,7 +98,7 @@ export const mahasiswaDetail = async (link) => {
     }
 };
 
-// (async () => {
+(async () => {
 //     // console.log(await pddiktiSearch('STMIK Widya Utama'))
-//     // console.log(await pddiktiSearch('SSI202203088').then(async (res) => { return await mahasiswaDetail(res[0].link) }))
-// })()
+    console.log(await pddiktiSearch('SSI202203088').then(async (res) => { return await mahasiswaDetail(res.data[0].link) }))
+})()
