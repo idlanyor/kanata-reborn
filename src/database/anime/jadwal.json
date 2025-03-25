@@ -1,0 +1,274 @@
+[
+  {
+    "hari": "Senin",
+    "anime": [
+      {
+        "judul": "Jibaku Shounen Hanako-kun Season 2",
+        "slug": "jibaku-hanako-kun-s2-sub-indo"
+      },
+      {
+        "judul": "Kono Kaisha ni Suki na Hito ga Imasu",
+        "slug": "kono-kaisha-suki-imasu-sub-indo"
+      },
+      {
+        "judul": "Sentai Red Isekai de Boukensha ni Naru",
+        "slug": "sentai-red-isekai-sub-indo"
+      },
+      {
+        "judul": "The iDOLM@STER Shiny Colors Season 2",
+        "slug": "the-imas-shiny-colors-s2-sub-indo"
+      },
+      {
+        "judul": "Watashi no Shiawase na Kekkon Season 2",
+        "slug": "watashi-shiawase-s2-sub-indo"
+      },
+      {
+        "judul": "Zenshuu.",
+        "slug": "zensu-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Selasa",
+    "anime": [
+      {
+        "judul": "Botsuraku Yotei no Kizoku dakedo",
+        "slug": "botsuraku-yotei-kizoku-sub-indo"
+      },
+      {
+        "judul": "Fate/strange Fake",
+        "slug": "fate-fake-whisper-sub-indo"
+      },
+      {
+        "judul": "Kuroiwa Medaka ni Watashi no Kawaii ga Tsuujinai",
+        "slug": "kuroiwa-watashi-kawaii-sub-indo"
+      },
+      {
+        "judul": "Salaryman ga Isekai ni Ittara Shitennou ni Natta Hanashi",
+        "slug": "salaryman-isekai-sub-indo"
+      },
+      {
+        "judul": "Youkai Gakkou no Sensei Hajimemashita!",
+        "slug": "yokai-sensei-hajmeshita-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Rabu",
+    "anime": [
+      {
+        "judul": "Amagami-san Chi no Enmusubi",
+        "slug": "amagami-chi-sub-indo"
+      },
+      {
+        "judul": "Hazure Skill \"Kinomi Master\"",
+        "slug": "kinomi-master-sub-indo"
+      },
+      {
+        "judul": "Ishura Season 2",
+        "slug": "ishra-s2-sub-indo"
+      },
+      {
+        "judul": "Kimisen Season 2",
+        "slug": "kimi-boku-saigo-senjou-s2-sub-indo"
+      },
+      {
+        "judul": "Re:Zero kara Hajimeru Isekai Seikatsu Season 3",
+        "slug": "re-zero-s3-sub-indo"
+      },
+      {
+        "judul": "Unnamed Memory Season 2",
+        "slug": "unnamed-memo-s2-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Kamis",
+    "anime": [
+      {
+        "judul": "Ameku Takao no Suiri Karte",
+        "slug": "ameku-karte-sub-indo"
+      },
+      {
+        "judul": "Dr. Stone: Science Future",
+        "slug": "ds-future-sub-indo"
+      },
+      {
+        "judul": "Grisaia: Phantom Trigger",
+        "slug": "grisaia-phantom-trigger-sub-indo"
+      },
+      {
+        "judul": "Honey Lemon Soda",
+        "slug": "honey-lesoda-sub-indo"
+      },
+      {
+        "judul": "Izure Saikyou no Renkinjutsushi?",
+        "slug": "izure-saikysushi-sub-indo"
+      },
+      {
+        "judul": "Kinoko Inu",
+        "slug": "knko-inu-sub-indo"
+      },
+      {
+        "judul": "Magic Maker: Isekai Mahou no Tsukurikata",
+        "slug": "magic-maker-isekai-sub-indo"
+      },
+      {
+        "judul": "Touhai: Ura Rate Mahjong Touhai Roku",
+        "slug": "touharate-mahjong-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Jumat",
+    "anime": [
+      {
+        "judul": "Akuyaku Reijou Tensei Ojisan",
+        "slug": "akuyaku-ojisan-sub-indo"
+      },
+      {
+        "judul": "Around 40 Otoko no Isekai Tsuuhan",
+        "slug": "around-40-otoko-isekai-tsuuhan-sub-indo"
+      },
+      {
+        "judul": "BanG Dream! Ave Mujica",
+        "slug": "bang-dream-ave-mujica-sub-indo"
+      },
+      {
+        "judul": "Douse, Koishite Shimaunda.",
+        "slug": "douse-shimaunda-sub-indo"
+      },
+      {
+        "judul": "Fuguushoku \"Kanteishi\" ga Jitsu wa Saikyou Datta",
+        "slug": "kanteishi-sub-indo"
+      },
+      {
+        "judul": "Mecha-ude (TV)",
+        "slug": "meca-ude-sub-indo"
+      },
+      {
+        "judul": "Nihon e Youkoso Elf-san.",
+        "slug": "elf-san-sub-indo"
+      },
+      {
+        "judul": "Rurouni Kenshin: Meiji Kenkaku Romantan - Kyoto Douran",
+        "slug": "rurouni-kenshin-s2-sub-indo"
+      },
+      {
+        "judul": "Senpai wa Otokonoko",
+        "slug": "senpai-otokonoko-sub-indo"
+      },
+      {
+        "judul": "Trillion Game",
+        "slug": "trilion-game-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Sabtu",
+    "anime": [
+      {
+        "judul": "Astro Note",
+        "slug": "astro-n-sub-indo"
+      },
+      {
+        "judul": "Class no Daikirai na Joshi to Kekkon suru Koto ni Natta.",
+        "slug": "class-daikirai-joshi-to-kekkon-sub-indo"
+      },
+      {
+        "judul": "Farmagia",
+        "slug": "farmagia-sub-indo"
+      },
+      {
+        "judul": "Girumasu",
+        "slug": "girumasu-sub-indo"
+      },
+      {
+        "judul": "Kusuriya no Hitorigoto Season 2",
+        "slug": "kusuriya-hitorigoto-s2-sub-indo"
+      },
+      {
+        "judul": "Momentary Lily",
+        "slug": "momentary-lily-sub-indo"
+      },
+      {
+        "judul": "S-Rank Monster no \"Behemoth\" dakedo",
+        "slug": "s-rank-monster-behemoth-sub-indo"
+      },
+      {
+        "judul": "Übel Blatt",
+        "slug": "ubel-blat-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Minggu",
+    "anime": [
+      {
+        "judul": "A-Rank Party wo Ridatsu shita Ore wa",
+        "slug": "a-rank-party-sub-indo"
+      },
+      {
+        "judul": "Ao no Exorcist Season 5",
+        "slug": "ao-exorcist-yosuga-sub-indo"
+      },
+      {
+        "judul": "Hyakkano Season 2",
+        "slug": "hyakkano-s2-sub-indo"
+      },
+      {
+        "judul": "Medalist",
+        "slug": "medalist-sub-indo"
+      },
+      {
+        "judul": "Nanatsu no Taizai: Mokushiroku no Yonkishi S2",
+        "slug": "nanatsu-taizai-my-s2-sub-indo"
+      },
+      {
+        "judul": "Okinawa de Suki ni Natta Ko ga Hougen Sugite Tsurasugiru",
+        "slug": "okitsura-sub-indo"
+      },
+      {
+        "judul": "One Piece",
+        "slug": "1piece-sub-indo"
+      },
+      {
+        "judul": "Shangri-La Frontier Season 2",
+        "slug": "shangri-frontier-s2-sub-indo"
+      },
+      {
+        "judul": "Solo Leveling Season 2",
+        "slug": "solo-level-s2-sub-indo"
+      }
+    ]
+  },
+  {
+    "hari": "Random",
+    "anime": [
+      {
+        "judul": "Aru Majo ga Shinu Made",
+        "slug": "aru-majo-shinu-made-sub-indo"
+      },
+      {
+        "judul": "Hana wa Saku, Shura no Gotoku",
+        "slug": "hana-saku-shura-gotoku-sub-indo"
+      },
+      {
+        "judul": "NEET Kunoichi to Nazeka Dousei Hajimemashita",
+        "slug": "neet-kuoichi-sub-indo"
+      },
+      {
+        "judul": "Sorairo Utility (TV)",
+        "slug": "sorairo-util-sub-indo"
+      },
+      {
+        "judul": "Tasokare Hotel",
+        "slug": "tasokare-hotel-sub-indo"
+      },
+      {
+        "judul": "Tonari no Youkai-san",
+        "slug": "tonari-youkai-sub-indo"
+      }
+    ]
+  }
+]

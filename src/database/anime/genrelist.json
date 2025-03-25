@@ -1,0 +1,146 @@
+[
+  {
+    "judul": "Action",
+    "slug": "action"
+  },
+  {
+    "judul": "Adventure",
+    "slug": "adventure"
+  },
+  {
+    "judul": "Comedy",
+    "slug": "comedy"
+  },
+  {
+    "judul": "Demons",
+    "slug": "demons"
+  },
+  {
+    "judul": "Drama",
+    "slug": "drama"
+  },
+  {
+    "judul": "Ecchi",
+    "slug": "ecchi"
+  },
+  {
+    "judul": "Fantasy",
+    "slug": "fantasy"
+  },
+  {
+    "judul": "Game",
+    "slug": "game"
+  },
+  {
+    "judul": "Harem",
+    "slug": "harem"
+  },
+  {
+    "judul": "Historical",
+    "slug": "historical"
+  },
+  {
+    "judul": "Horror",
+    "slug": "horror"
+  },
+  {
+    "judul": "Josei",
+    "slug": "josei"
+  },
+  {
+    "judul": "Magic",
+    "slug": "magic"
+  },
+  {
+    "judul": "Martial Arts",
+    "slug": "martial-arts"
+  },
+  {
+    "judul": "Mecha",
+    "slug": "mecha"
+  },
+  {
+    "judul": "Military",
+    "slug": "military"
+  },
+  {
+    "judul": "Music",
+    "slug": "music"
+  },
+  {
+    "judul": "Mystery",
+    "slug": "mystery"
+  },
+  {
+    "judul": "Psychological",
+    "slug": "psychological"
+  },
+  {
+    "judul": "Parody",
+    "slug": "parody"
+  },
+  {
+    "judul": "Police",
+    "slug": "police"
+  },
+  {
+    "judul": "Romance",
+    "slug": "romance"
+  },
+  {
+    "judul": "Samurai",
+    "slug": "samurai"
+  },
+  {
+    "judul": "School",
+    "slug": "school"
+  },
+  {
+    "judul": "Sci-Fi",
+    "slug": "sci-fi"
+  },
+  {
+    "judul": "Seinen",
+    "slug": "seinen"
+  },
+  {
+    "judul": "Shoujo",
+    "slug": "shoujo"
+  },
+  {
+    "judul": "Shoujo Ai",
+    "slug": "shoujo-ai"
+  },
+  {
+    "judul": "Shounen",
+    "slug": "shounen"
+  },
+  {
+    "judul": "Slice of Life",
+    "slug": "slice-of-life"
+  },
+  {
+    "judul": "Sports",
+    "slug": "sports"
+  },
+  {
+    "judul": "Space",
+    "slug": "space"
+  },
+  {
+    "judul": "Super Power",
+    "slug": "super-power"
+  },
+  {
+    "judul": "Supernatural",
+    "slug": "supernatural"
+  },
+  {
+    "judul": "Thriller",
+    "slug": "thriller"
+  },
+  {
+    "judul": "Vampire",
+    "slug": "vampire"
+  }
+]

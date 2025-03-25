@@ -189,11 +189,10 @@ async function clearMessages(m) {
 const sanitizeBotId = botId => botId.split(":")[0] + "@s.whatsapp.net";
 
 const getPpUrl = async (sock, noTel) => {
-    const ppUrl = globalThis.defaultProfilePic
     try {
-        return await sock.profilePictureUrl(noTel+"@s.whatsapp.net", "image")
+        return await sock.profilePictureUrl(noTel+"@s.whatsapp.net", "image");
     } catch {
-        return ppUrl
+        return globalThis.defaultProfilePic
     }
 }
 

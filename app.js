@@ -257,18 +257,18 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         // if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
         //     const answer = global.tebakGame[id].answer.toLowerCase();
         //     const userAnswer = m.body.toLowerCase();
-            
+
         //     // Jika jawaban benar
         //     if (userAnswer === answer) {
         //         // Clear timeout
         //         clearTimeout(global.tebakGame[id].timeout);
-                
+
         //         // Tambah point ke user (jika ada sistem point)
         //         await User.addPoints(noTel, 100);
-                
+
         //         // Hapus sesi game
         //         delete global.tebakGame[id];
-                
+
         //         // Kirim pesan berhasil
         //         await sock.sendMessage(id, { 
         //             text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan 100 points!`,
@@ -282,7 +282,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         //                 }
         //             }
         //         });
-                
+
         //         // Kirim reaksi sukses
         //         await sock.sendMessage(id, { 
         //             react: { 
@@ -318,6 +318,7 @@ export async function startBot() {
                 // console.log()
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
+                if (m.isGroup) return
                 // if (m.isGroup && !m.isOwner()) return
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
@@ -404,10 +405,10 @@ export async function startBot() {
                                     // Jika di grup dan tidak ada caption, return
                                     if (isGroupChat && !caption) {
                                         // Cek apakah autoai diaktifkan
-                                        const                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              settings = await Group.getSettings(id);
+                                        const settings = await Group.getSettings(id);
                                         if (settings.autoai !== 1) return;
                                     }
-                                    
+
                                     const audioResponse = await geminiHandler.analyzeAudio(
                                         mediaBuffer,
                                         caption || m.body || '',
