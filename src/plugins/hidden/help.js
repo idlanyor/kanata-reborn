@@ -70,7 +70,7 @@ export default async ({ sock, id, m, noTel, sender }) => {
 │
 ├ *Bot Info:*
 ├ Version: 3.0
-├ Library: @seaavey/baileys
+├ Library: @fizzxydev/baileys-pro
 ├ Platform: NodeJS
 ├ Type : ES6 Module
 │

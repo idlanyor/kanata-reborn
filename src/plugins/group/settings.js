@@ -1,5 +1,5 @@
 import Group from '../../database/models/Group.js';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = 'settings';

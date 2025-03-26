@@ -1,4 +1,4 @@
-import baileys from '@seaavey/baileys'
+import baileys from '@fizzxydev/baileys-pro'
 export const handler = 'tesalb'
 export const description = ''
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {

@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const SPAM_INTERVAL = 3000; // 3 detik

@@ -1,4 +1,4 @@
-import { downloadMediaMessage } from "@seaavey/baileys/lib/Utils/messages.js";
+import { downloadMediaMessage } from "@fizzxydev/baileys-pro/lib/Utils/messages.js";
 import ffmpeg from 'fluent-ffmpeg';
 import { Readable } from 'stream';
 import { randomBytes } from 'crypto';

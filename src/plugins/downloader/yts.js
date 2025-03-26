@@ -1,4 +1,4 @@
-import pkg, { generateWAMessageFromContent } from '@seaavey/baileys';
+import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 const { proto, prepareWAMessageMedia } = pkg
 import { ytsearch } from "../../lib/youtube.js";
 export const handler = "yts"

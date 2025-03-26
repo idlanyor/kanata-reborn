@@ -16,6 +16,7 @@
   "author": "Roynaldi",
   "license": "MIT",
   "dependencies": {
+    "@fizzxydev/baileys-pro": "^8.6.11",
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
@@ -45,6 +46,7 @@
     "node-cron": "latest",
     "node-emoji": "^2.2.0",
     "node-fetch": "latest",
+    "node-schedule": "^2.1.1",
     "puppeteer": "latest",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

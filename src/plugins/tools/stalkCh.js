@@ -1,5 +1,5 @@
 import { unixToDate } from "../../helper/date.js";
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = 'stalkch'

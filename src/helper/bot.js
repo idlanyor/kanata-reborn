@@ -6,7 +6,7 @@ import {
     useMultiFileAuthState,
     DisconnectReason,
     Browsers
-} from '@seaavey/baileys';
+} from '@fizzxydev/baileys-pro';
 import pino from "pino";
 import NodeCache from "node-cache";
 import fs from 'fs-extra';
@@ -102,7 +102,7 @@ class Kanata {
                         retryCount++;
                         if (retryCount >= maxRetries) {
                             logger.error("Failed to get pairing code, removing session and restarting...");
-                            // await fs.remove(`./${this.sessionId}`);
+                            await fs.remove(`./${this.sessionId}`);
                             await startBot();
                         }
                     }
@@ -135,8 +135,16 @@ class Kanata {
                             await fs.remove(`./${this.sessionId}`);
                             logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
-                        } else {
+                        } else if(reason === DisconnectReason.badSession){
+                            logger.system("Bad session, removing session and restarting...");
+                            this.io?.emit("broadcastMessage", "Bad session, removing session and restarting...");
+                            await fs.remove(`./${this.sessionId}`);
+                            logger.info(`Session ${this.sessionId} removed!`);
+                            await startBot();
+                        } else{
                             logger.system("Restarting connection...");
+                            // await fs.remove(`./${this.sessionId}`);
+                            logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
                         }
                         break;

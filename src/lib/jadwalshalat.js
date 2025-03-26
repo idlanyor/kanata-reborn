@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import cron from 'node-cron';
 import { setTimeout } from 'timers';
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const URL = 'https://fastrestapis.fasturl.cloud/religious/prayerschedule?city=Purbalingga';

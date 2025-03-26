@@ -1,4 +1,4 @@
-import pkg, { prepareWAMessageMedia } from '@seaavey/baileys';
+import pkg, { prepareWAMessageMedia } from '@fizzxydev/baileys-pro';
 const { generateWAMessageFromContent, proto } = pkg;
 export const sendIAMessage = async (jid, btns = [], quoted, opts = {}, sock) => {
     let messageContent = {

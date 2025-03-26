@@ -1,5 +1,5 @@
 // import { helpMessage } from '../../helper/help.js'
-// import pkg from '@seaavey/baileys';
+// import pkg from '@fizzxydev/baileys-pro';
 // const { proto, generateWAMessageFromContent } = pkg;
 // import loadAssets from '../../helper/loadAssets.js';
 

@@ -1,4 +1,4 @@
-import pkg from '@seaavey/baileys';
+import pkg from '@fizzxydev/baileys-pro';
 import { tiktokDl } from "../../lib/scraper/tiktok.js";
 const { proto, generateWAMessageFromContent } = pkg;
 
