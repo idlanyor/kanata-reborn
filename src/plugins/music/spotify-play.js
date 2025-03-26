@@ -4,6 +4,7 @@ import moment from 'moment';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import svg2img from 'svg2img'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,86 +17,79 @@ registerFont(join(__dirname, '../../assets/fonts/Poppins-Regular.ttf'), { family
 export const handler = 'play'
 export const description = 'Search Spotify Song/Artist'
 
-async function createSpotifyCard(title, author, thumbnail, duration) {
+export async function createSpotifyCard(title, author, thumbnail, duration) {
     const canvas = createCanvas(800, 500);
     const ctx = canvas.getContext('2d');
 
-    // Background gradient dengan efek blur
-    // const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    // gradient.addColorStop(0, '#121212');
-    // gradient.addColorStop(1, '#000000');
-    // ctx.fillStyle = gradient;
-    // ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#191414'); // Hitam
+    gradient.addColorStop(1, '#1DB954'); // Hijau Spotify
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-    gradient.addColorStop(0, 'rgba(29,185,84,0.05)');
-    gradient.addColorStop(1, 'rgba(25,20,20,0.9)')
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    ctx.fillStyle = 'rgba(29, 185, 84, 0.8)';
-    ctx.font = 'bold 28px Poppins'
-    ctx.textAlign = 'center'
-    ctx.fillText('Kanata Spotify Player', 400, 50)
+    ctx.fillStyle = '#1DB954';
+    ctx.font = 'bold 28px Poppins';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kanata Spotify Player', 400, 50);
 
     try {
-        // Load dan gambar thumbnail
+        // Load and draw thumbnail
         const image = await loadImage(thumbnail);
-        const imageSize = 250;
-        const imageX = 30;
-        const imageY = 80;
+        ctx.drawImage(image, 30, 80, 250, 250);
 
-        // ctx.fillStyle('#333333')
-        // ctx.fillRect(30, 80, imageSize, imageSize)
-
-        // Gambar thumbnail
-        ctx.drawImage(image, imageX, imageY, imageSize, imageSize);
-
-
-
-        // Judul lagu dengan Poppins Bold
+        // Song title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '28px Poppins Bold';
-        ctx.fillText(title.length > 25 ? title.substring(0, 25) + '...' : title, 320, 120);
+        ctx.textAlign = 'left';
+        ctx.fillText(title.length > 25 ? title.substring(0, 25) + '...' : title, 320, 200);
 
-        // Nama artis dengan Poppins Medium
+        // Artist name
         ctx.fillStyle = '#B3B3B3';
         ctx.font = '20px Poppins Medium';
-        ctx.fillText(author, 320, 120);
+        ctx.fillText(author, 320, 250);
 
-        // Progress bar background
+        // Progress bar
         ctx.fillStyle = '#404040';
         ctx.fillRect(30, 360, canvas.width - 60, 10);
-
-        // Progress bar (random position)
         ctx.fillStyle = '#1DB954';
         ctx.fillRect(30, 360, (canvas.width - 60) * 0.4, 10);
 
-        // Timestamps dengan Poppins Regular
+        // Timestamps
         ctx.fillStyle = '#B3B3B3';
         ctx.font = '14px Poppins';
-        ctx.textAlign = 'left'
-        ctx.fillText('00:00', 260, 190);
+        ctx.fillText('00:00', 30, 390);
+        ctx.textAlign = 'right';
+        ctx.fillText(moment.utc(duration).format('mm:ss'), canvas.width - 30, 390);
 
-        // Duration
-        const durationText = moment.utc(duration).format('mm:ss');
-        const durationWidth = ctx.measureText(durationText).width;
-        ctx.fillText(durationText, 760 - durationWidth, 190);
+        // SVG Buttons
+        const buttons = {
+            previous: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18V6l-6 6 6 6zM9 6H7v12h2V6z" fill="#000"/></svg>',
+            play: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7L8 5z" fill="#000"/></svg>',
+            next: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V6l6 6-6 6zM15 6h2v12h-2V6z" fill="#000"/></svg>',
+        };
 
-        // Spotify logo
-        ctx.fillStyle = '#1DB954';
-        ctx.beginPath();
-        ctx.arc(750, 40, 15, 0, Math.PI * 2);
-        ctx.fill();
+        const buttonPositions = [
+            { svg: buttons.previous, x: 300 },
+            { svg: buttons.play, x: 380 },
+            { svg: buttons.next, x: 460 },
+        ];
 
-        // Tambah icon play di logo
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.moveTo(745, 35);
-        ctx.lineTo(745, 45);
-        ctx.lineTo(755, 40);
-        ctx.closePath();
-        ctx.fill();
+        for (const btn of buttonPositions) {
+            await new Promise((resolve) => {
+                svg2img(btn.svg, (error, buffer) => {
+                    if (!error) {
+                        loadImage(buffer).then(image => {
+                            ctx.drawImage(image, btn.x, 420, 40, 40);
+                            resolve();
+                        });
+                    } else {
+                        console.error('Error generating SVG button:', error);
+                        resolve();
+                    }
+                });
+            });
+        }
 
         return canvas.toBuffer();
     } catch (error) {
@@ -103,6 +97,8 @@ async function createSpotifyCard(title, author, thumbnail, duration) {
         throw error;
     }
 }
+
+
 
 export default async ({ sock, m, id, psn }) => {
     try {
@@ -153,9 +149,4 @@ export default async ({ sock, m, id, psn }) => {
     }
 };
 
-export const help = {
-    name: "play",
-    description: "Play music from Spotify",
-    usage: ".play <song title>",
-    example: ".play Bla Bla Bla Bla"
-};
+

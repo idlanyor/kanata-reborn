@@ -55,6 +55,7 @@
     "remove.bg": "latest",
     "socket.io": "latest",
     "sqlite3": "latest",
+    "svg2img": "^1.0.0-beta.2",
     "systeminformation": "latest",
     "wa-sticker-formatter": "latest",
     "yt-search": "latest",
