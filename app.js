@@ -315,7 +315,7 @@ export async function startBot() {
             try {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
-                console.log(await sock.groupMetadata('120363347021473313@g.us'))
+                // console.log(await sock.groupMetadata('120363347021473313@g.us'))
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
                 // if (m.isGroup) return
