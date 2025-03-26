@@ -10,6 +10,8 @@
     # pkgs.apt
     # pkgs.python311
     # pkgs.python311Packages.pip
+    pkgs.yt-dlp
+    pkgs.ffmpeg
     pkgs.nodejs_20
     pkgs.nodePackages.nodemon
 

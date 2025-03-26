@@ -318,7 +318,7 @@ export async function startBot() {
                 // console.log()
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
-                if (m.isGroup) return
+                // if (m.isGroup) return
                 // if (m.isGroup && !m.isOwner()) return
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
