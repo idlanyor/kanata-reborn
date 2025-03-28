@@ -1,5 +1,3 @@
-import puppeteer from 'puppeteer';
-
 export const description = "🖼️ *Web Screenshot*";
 export const handler = "ssweb";
 
@@ -24,44 +22,37 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         await sock.sendMessage(id, { text: '📸 Capturing screenshot, please wait... ⏳' });
 
-        // Launch Puppeteer
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--disable-gpu'
-            ]
-        });
-        const page = await browser.newPage();
+        const apiUrl = `https://fastrestapis.fasturl.cloud/tool/screenshot?url=${encodeURIComponent(url)}&width=1280&height=800&delay=0&fullPage=false&darkMode=false&type=png`;
 
-        // Set user agent untuk menghindari deteksi bot
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-
-        // Tambahkan timeout untuk menghindari hanging
-        await page.goto(url, { 
-            waitUntil: 'networkidle2',
-            timeout: 30000 
+        const response = await fetch(apiUrl, {
+            headers: {
+                'accept': 'image/png'
+            }
         });
 
+        if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
+        }
 
-        // Capture screenshot dengan opsi yang lebih lengkap
-        const screenshotBuffer = await page.screenshot({ 
-            fullPage: true,
-            type: 'jpeg',
-            quality: 80,
-            encoding: 'binary'
-        });
-
-        // Close browser
-        await browser.close();
+        const imageBuffer = await response.arrayBuffer();
 
         // Send screenshot
-        await sock.sendMessage(id, { image: screenshotBuffer, caption: `🖼️ Screenshot of: ${url}` });
+        await sock.sendMessage(id, { 
+            image: Buffer.from(imageBuffer), 
+            caption: `🖼️ Screenshot of: ${url}` 
+        });
+
     } catch (error) {
-        await sock.sendMessage(id, { text: `⚠️ An error occurred while capturing the screenshot:\n\n${error.message}` });
+        let errorMessage = '⚠️ Terjadi kesalahan saat mengambil screenshot:\n\n';
+        
+        if (error.name === 'TimeoutError') {
+            errorMessage += 'Waktu loading halaman terlalu lama';
+        } else if (error.message.includes('net::')) {
+            errorMessage += 'Tidak dapat mengakses website tersebut';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        await sock.sendMessage(id, { text: errorMessage });
     }
 };
