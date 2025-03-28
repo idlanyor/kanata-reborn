@@ -25,17 +25,38 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.sendMessage(id, { text: '📸 Capturing screenshot, please wait... ⏳' });
 
         // Launch Puppeteer
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--disable-gpu'
+            ]
+        });
         const page = await browser.newPage();
 
-        // Set viewport size
-        await page.setViewport({ width: 1280, height: 800 });
+        // Set user agent untuk menghindari deteksi bot
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        // Tambahkan timeout untuk menghindari hanging
+        await page.goto(url, { 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+        });
 
-        // Capture screenshot
-        const screenshotBuffer = await page.screenshot({ fullPage: true });
+        // Tunggu sebentar untuk memastikan konten dimuat
+        await page.waitForTimeout(2000);
+
+        // Capture screenshot dengan opsi yang lebih lengkap
+        const screenshotBuffer = await page.screenshot({ 
+            fullPage: true,
+            type: 'jpeg',
+            quality: 80,
+            encoding: 'binary'
+        });
 
         // Close browser
         await browser.close();
