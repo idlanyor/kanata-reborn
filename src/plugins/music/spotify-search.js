@@ -1,7 +1,7 @@
 import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 const { proto, prepareWAMessageMedia } = pkg
 import { spotifySearch } from '../../lib/neoxr/spotify.js';
-import { createCanvas } from 'canvas';
+import { createCanvas,registerFont } from 'canvas';
 import fs from 'fs';
 import path from 'path';
 import { join } from 'path';
