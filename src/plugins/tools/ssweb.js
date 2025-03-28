@@ -47,8 +47,6 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             timeout: 30000 
         });
 
-        // Tunggu sebentar untuk memastikan konten dimuat
-        await page.waitForTimeout(2000);
 
         // Capture screenshot dengan opsi yang lebih lengkap
         const screenshotBuffer = await page.screenshot({ 
