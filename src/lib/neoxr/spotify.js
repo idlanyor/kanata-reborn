@@ -1,5 +1,4 @@
 import axios from "axios";
-import { spotifyDownload } from "../scraper/spotify.js";
 
 export const spotifySearch = async (name) => {
     try {
@@ -19,35 +18,36 @@ export const spotifySearch = async (name) => {
 
 export const spotifySong = async (q) => {
     try {
-        // https://api.siputzx.my.id/api/s/spotify?query=serana
         const result = await spotifySearch(q)
-        // return
-        const { data } = await spotifyDownload(result[0].url)
-        console.log(data)
-        // console.log(data);
+        const { data } = await axios.get('https://fastrestapis.fasturl.cloud/downup/spotifydown', {
+            params: {
+                url: result[0].url
+            }
+        })
         return {
-            thumbnail: data?.coverImage || 'https://files.catbox.moe/2wynab.jpg',
-            title: data?.title || 'GTW Judulnya',
-            author: data?.artist || 'YNTKTS',
-            audio: data?.downloadUrl
+            thumbnail: data.result.metadata.cover || 'https://files.catbox.moe/2wynab.jpg',
+            title: data.result.metadata.title || 'GTW Judulnya',
+            author: data.result.metadata.artists || 'YNTKTS', 
+            audio: data.result.link
         }
-
     } catch (error) {
         throw error
     }
 }
+
 export const spotifyUrl = async (url) => {
     try {
-
-        const { data } = await spotifyDownload(url)
-        // console.log(data);
+        const { data } = await axios.get('https://fastrestapis.fasturl.cloud/downup/spotifydown', {
+            params: {
+                url: url
+            }
+        })
         return {
-            thumbnail: data?.coverImage || 'https://files.catbox.moe/2wynab.jpg',
-            title: data?.title || 'GTW Judulnya',
-            author: data?.artist || 'YNTKTS',
-            audio: data?.downloadUrl
+            thumbnail: data.result.metadata.cover || 'https://files.catbox.moe/2wynab.jpg',
+            title: data.result.metadata.title || 'GTW Judulnya',
+            author: data.result.metadata.artists || 'YNTKTS',
+            audio: data.result.link
         }
-
     } catch (error) {
         throw error
     }
