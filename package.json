@@ -18,6 +18,7 @@
   "dependencies": {
     "@fizzxydev/baileys-pro": "^8.6.11",
     "@google/generative-ai": "latest",
+    "speedtest-net": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
     "@seaavey/baileys": "^6.6.5",
