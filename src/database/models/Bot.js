@@ -1,98 +1,118 @@
-import db from '../config.js';
+import { Low } from 'lowdb'
+import { JSONFile } from 'lowdb/node'
 import moment from 'moment';
+import path from 'path';
+import fs from 'fs';
+
+// Inisialisasi struktur database
+const defaultData = {
+    jadibot_sessions: [],
+    rental_plans: [
+        { id: 1, name: 'Basic', duration_days: 30, price: 100000 },
+        { id: 2, name: 'Premium', duration_days: 30, price: 200000 },
+        { id: 3, name: 'VIP', duration_days: 30, price: 300000 }
+    ],
+    bot_rentals: []
+};
+
+// Buat direktori database jika belum ada
+const dbDir = path.join(process.cwd(), 'database');
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Inisialisasi lowdb
+const adapter = new JSONFile(path.join(dbDir, 'db.json'));
+const db = new Low(adapter, defaultData);
 
 class Bot {
     static async createJadiBot(userId, sessionId, duration = 1) {
-        return new Promise((resolve, reject) => {
-            const expiresAt = moment().add(duration, 'days').format('YYYY-MM-DD HH:mm:ss');
-            
-            db.run(`INSERT INTO jadibot_sessions 
-                (user_id, session_id, expires_at) 
-                VALUES (?, ?, ?)`,
-            [userId, sessionId, expiresAt],
-            function(err) {
-                if (err) reject(err);
-                resolve(this.lastID);
-            });
-        });
+        await db.read();
+        const expiresAt = moment().add(duration, 'days').format('YYYY-MM-DD HH:mm:ss');
+
+        const newSession = {
+            id: Date.now(),
+            user_id: userId,
+            session_id: sessionId,
+            expires_at: expiresAt,
+            is_active: true
+        };
+
+        db.data.jadibot_sessions.push(newSession);
+        await db.write();
+        return newSession.id;
     }
 
     static async checkJadiBotSession(sessionId) {
-        return new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM jadibot_sessions 
-                WHERE session_id = ? AND is_active = 1 
-                AND expires_at > datetime('now')`,
-            [sessionId],
-            (err, row) => {
-                if (err) reject(err);
-                resolve(row);
-            });
-        });
+        await db.read();
+        const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+        return db.data.jadibot_sessions.find(session =>
+            session.session_id === sessionId &&
+            session.is_active &&
+            moment(session.expires_at).isAfter(now)
+        );
     }
 
     static async getRentalPlans() {
-        return new Promise((resolve, reject) => {
-            db.all('SELECT * FROM rental_plans', [], (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
-            });
-        });
+        await db.read();
+        return db.data.rental_plans;
+    }
+
+    static async getRentalPlan(planType) {
+        await db.read();
+        return db.data.rental_plans.find(plan => plan.id === planType);
     }
 
     static async createRental(groupId, renterId, planType) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const plan = await this.getRentalPlan(planType);
-                if (!plan) {
-                    reject(new Error('Plan tidak valid'));
-                    return;
-                }
+        await db.read();
+        const plan = await this.getRentalPlan(planType);
 
-                const endDate = moment().add(plan.duration_days, 'days').format('YYYY-MM-DD HH:mm:ss');
-                
-                db.run(`INSERT INTO bot_rentals 
-                    (group_id, renter_id, plan_type, end_date) 
-                    VALUES (?, ?, ?, ?)`,
-                [groupId, renterId, planType, endDate],
-                function(err) {
-                    if (err) reject(err);
-                    resolve({
-                        rentalId: this.lastID,
-                        plan,
-                        endDate
-                    });
-                });
-            } catch (error) {
-                reject(error);
-            }
-        });
+        if (!plan) {
+            throw new Error('Plan tidak valid');
+        }
+
+        const endDate = moment().add(plan.duration_days, 'days').format('YYYY-MM-DD HH:mm:ss');
+        const newRental = {
+            id: Date.now(),
+            group_id: groupId,
+            renter_id: renterId,
+            plan_type: planType,
+            end_date: endDate,
+            is_active: true,
+            payment_status: 'pending'
+        };
+
+        db.data.bot_rentals.push(newRental);
+        await db.write();
+
+        return {
+            rentalId: newRental.id,
+            plan,
+            endDate
+        };
     }
 
     static async checkRental(groupId) {
-        return new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM bot_rentals 
-                WHERE group_id = ? AND is_active = 1 
-                AND end_date > datetime('now')`,
-            [groupId],
-            (err, row) => {
-                if (err) reject(err);
-                resolve(row);
-            });
-        });
+        await db.read();
+        const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+        return db.data.bot_rentals.find(rental =>
+            rental.group_id === groupId &&
+            rental.is_active &&
+            moment(rental.end_date).isAfter(now)
+        );
     }
 
     static async updatePaymentStatus(rentalId, status) {
-        return new Promise((resolve, reject) => {
-            db.run(`UPDATE bot_rentals 
-                SET payment_status = ? 
-                WHERE id = ?`,
-            [status, rentalId],
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            });
-        });
+        await db.read();
+        const rental = db.data.bot_rentals.find(r => r.id === rentalId);
+
+        if (rental) {
+            rental.payment_status = status;
+            await db.write();
+        }
     }
 }
 
-export default Bot; 
+export default Bot;

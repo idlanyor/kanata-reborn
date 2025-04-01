@@ -136,10 +136,8 @@ class Kanata {
                             logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
                         } else if(reason === DisconnectReason.badSession){
-                            logger.system("Bad session, removing session and restarting...");
-                            this.io?.emit("broadcastMessage", "Bad session, removing session and restarting...");
-                            await fs.remove(`./${this.sessionId}`);
-                            logger.info(`Session ${this.sessionId} removed!`);
+                            logger.system("Bad session, restarting...");
+                            this.io?.emit("broadcastMessage", "Bad session, restarting...");
                             await startBot();
                         } else{
                             logger.system("Restarting connection...");

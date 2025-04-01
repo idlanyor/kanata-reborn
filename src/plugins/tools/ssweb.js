@@ -10,7 +10,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     }
 
     const url = psn.trim();
-
+kahsuyeghskas
     // Validate URL
     try {
         new URL(url);
