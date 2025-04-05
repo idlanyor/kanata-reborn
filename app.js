@@ -313,7 +313,6 @@ export async function startBot() {
             try {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
-                // console.log(await sock.groupMetadata('120363347021473313@g.us'))
                 if (m.chat.endsWith('@newsletter')) return;
                 if (m.key.fromMe) return
                 // if (m.isGroup) return
@@ -321,6 +320,7 @@ export async function startBot() {
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
                 const id = m.chat;
+                console.log(id)
                 // if(id.endsWith('@g.us')) return
                 const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
                 const botId = sock.user.id.replace(/:\d+/, '');

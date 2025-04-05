@@ -96,22 +96,8 @@ export async function groupParticipants(ev, sock) {
                 if (settings.welcome) {
                     const welcomeMsg = {
                         text: `╭─────────────────╮
-│    *WELCOME TO ${groupName}*
+│    *WELCOME MEMBER*
 ╰─────────────────╯
-
-🎉 Halo @${userId}! 
-Selamat datang di grup kami!
-
-📜 *Deskripsi Grup:*
-${groupMetadata.desc || 'Tidak ada deskripsi'}
-
-👥 *Total Anggota:* ${groupMetadata.participants.length}
-
-🔰 *Rules Grup:*
-• Patuhi peraturan grup
-• Hormati sesama anggota
-• Jaga kesopanan dalam chat
-• No spam/konten 18+
 
 ${settings.welcome_message.replace('@user', `@${userId}`).replace('@group', groupName)}
 

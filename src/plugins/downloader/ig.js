@@ -1,4 +1,4 @@
-import { igDl } from "../../lib/scraper/igdl.js";
+import axios from "axios";
 
 export const description = "✨ Downloader Instagram Video & Image provided by *Roy*";
 export const handler = "ig";
@@ -13,47 +13,37 @@ export default async ({ sock, m, id, psn }) => {
 
     try {
         await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
-        const result = await igDl(psn);
 
-        if (!result?.status) {
+        const res = await axios.get(`https://fastrestapis.fasturl.cloud/downup/igdown?url=${encodeURIComponent(psn)}`, {
+            headers: { accept: 'application/json' }
+        });
+
+        const result = res.data?.result;
+
+        if (!result?.status || !result?.data?.length) {
             await sock.sendMessage(id, {
-                text: `❌ *Gagal:* ${result?.message}`
+                text: `❌ *Gagal:* Tidak ada data ditemukan atau URL tidak valid.`
             });
             return;
         }
 
-        if (Array.isArray(result?.data)) {
-            for (const item of result?.data) {
-                if (item?.thumbnail) {
-                    await sock.sendMessage(id, {
-                        image: { url: item?.thumbnail },
-                        caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-                    });
-                }
-                if (item?.videoUrl) {
-                    await sock.sendMessage(id, {
-                        video: { url: item?.videoUrl },
-                        caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-                    });
-                }
+        for (const item of result.data) {
+            if (item.thumbnail) {
+                await sock.sendMessage(id, {
+                    image: { url: item.thumbnail },
+                    caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
+                });
             }
-            return;
-        }
-
-        if (result?.data?.thumbnail) {
-            await sock.sendMessage(id, {
-                image: { url: result?.data?.thumbnail },
-                caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-            });
-        }
-        if (result?.data?.videoUrl) {
-            await sock.sendMessage(id, {
-                video: { url: result?.data?.videoUrl },
-                caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-            });
+            if (item.url) {
+                await sock.sendMessage(id, {
+                    video: { url: item.url },
+                    caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
+                });
+            }
         }
 
     } catch (error) {
+        console.error('❌ Error:', error);
         await sock.sendMessage(id, {
             text: '❌ *Terjadi kesalahan:* \n' + error.message
         });

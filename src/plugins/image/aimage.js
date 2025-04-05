@@ -18,7 +18,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash-exp-image-generation",
             generationConfig: {
-                responseModalities: ['Text', 'Image']
+                responseModalities: ['Text', 'Image'],
             },
         });
 

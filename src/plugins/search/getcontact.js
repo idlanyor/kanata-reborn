@@ -3,7 +3,7 @@ import axios from "axios";
 export const handler = 'getcontact'
 export const description = 'Retrieve Tags & User Information From Getcontact'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
-    if (!psn) return await sock.sendMessage(id, { text: 'Silahkan Masukkan nomor telepon' })
+    if (!psn) return await sock.sendMessage(id, { text: 'Silahkan Masukkan nomor telepon dengan format `.getcontact 62xxxx`' })
     const base = `https://fastrestapis.fasturl.cloud/tool/getcontact?number=${psn}`
 
     const { data } = await axios.get(base)
