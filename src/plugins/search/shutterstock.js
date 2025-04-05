@@ -22,8 +22,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
 
     try {
-        const results = await shutterstockSearch(psn);
-
+        const results = (await shutterstockSearch(psn)).data.results;
+        // console.log(results)
         if (!results.length) {
             await sock.sendMessage(id, {
                 text: '❌ Tidak ditemukan hasil untuk pencarian tersebut.'
@@ -46,8 +46,12 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.fromObject({
                 buttons: [
                     {
-                        name: "quick_reply",
-                        buttonParamsJson: `{"display_text":"🔍 View Original","id":"ssview ${result.link}"}`
+                        name: "cta_url",
+                        buttonParamsJson: JSON.stringify({
+                            display_text: 'View Source',
+                            url: result.link,
+                            merchant_url: result.link,
+                        }),
                     }
                 ]
             })
@@ -92,7 +96,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                     })
                 }
             }
-        }, { id: m.chat, quoted:m });
+        }, { id: m.chat, quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
         await sock.sendMessage(id, { react: { text: '✅', key: m.key } });

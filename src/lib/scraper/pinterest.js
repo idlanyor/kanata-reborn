@@ -22,7 +22,7 @@ export const pinSearch = async (q) => {
         const scrollTimes = 5;
         for (let i = 0; i < scrollTimes; i++) {
             await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-            await page.waitForTimeout(1000); // Add small delay for content to load
+            // await new Promise(resolve => setTimeout(resolve, 500)); // Add small delay for content to load
         }
 
         const pins = await page.evaluate(() => {
@@ -71,4 +71,4 @@ export const pinSearch = async (q) => {
     }
 };
 
-// (async () => { console.log(await pinSearch('anime ghibli')) })()
+// (async () => { console.log((await pinSearch('anime ghibli')).data.results) })()

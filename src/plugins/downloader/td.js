@@ -61,7 +61,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
 
         await sock.sendMessage(id, {
-            video: { url: data.video[0].url },
+            video: { url: data.video[1].url },
             caption: `📹 *Video TikTok berhasil diunduh!*\n\n📄 *Title:* ${data.caption}`,
             contextInfo: {
                 isForwarded: true,

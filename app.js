@@ -109,7 +109,6 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             cmd = command.split(' ')[0].replace('!', '').replace('.', '');
             args = command.split(' ').slice(1);
         }
-        console.log(cmd, args)
 
         // logger.info(`Pesan baru diterima dari ${m.pushName}`);
         // logger.message.in(command);
@@ -246,7 +245,6 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 return [handler, plugin];
             }))
         );
-        console.log(plugins[cmd])
         if (plugins[cmd]) {
             logger.info(`Executing command: ${cmd}`);
             await plugins[cmd]({ sock, m, id, psn: args.join(' '), sender, noTel, attf, cmd });
@@ -473,7 +471,8 @@ export async function startBot() {
 
                             // Untuk grup chat
                             const settings = await Group.getSettings(id);
-                            if (settings.autoai === 1) {
+                            console.log('hallo', settings)
+                            if (settings.autoai) {
                                 logger.info(`AutoAI diaktifkan di grup ${id}`);
                                 const groupId = `group_${id}`;
                                 const quotedText = m.quoted?.text || "";

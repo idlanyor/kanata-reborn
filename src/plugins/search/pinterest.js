@@ -22,7 +22,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
 
     try {
-        const results = await pinSearch(psn);
+        const results = (await pinSearch(psn)).data.results;
 
         if (!results.length) {
             await sock.sendMessage(id, {

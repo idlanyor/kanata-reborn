@@ -904,7 +904,7 @@ PENTING:
             );
 
             // Dapatkan daftar plugin dengan error handling
-            let pluginsData = "{}";
+            let pluginsData = {};
             try {
                 const plugins = await helpMessage();
                 if (plugins) {

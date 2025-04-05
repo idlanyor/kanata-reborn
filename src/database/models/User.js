@@ -1,147 +1,107 @@
-import db from '../config.js';
+import db from '../config.js'
 
 class User {
     static async create(phone, name) {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO users (
-                phone, 
-                name, 
-                exp,
-                level,
-                last_daily,
-                total_messages,
-                total_commands,
-                join_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [phone, name, 0, 1, null, 0, 0, new Date().toISOString()],
-            function(err) {
-                if (err) reject(err);
-                resolve(this.lastID);
-            });
-        });
+        await db.read()
+        const existing = db.data.users.find(u => u.phone === phone)
+        if (existing) throw new Error('User sudah ada 🐒')
+
+        const user = {
+            phone,
+            name,
+            exp: 0,
+            level: 1,
+            last_daily: null,
+            total_messages: 0,
+            total_commands: 0,
+            join_date: new Date().toISOString()
+        }
+
+        db.data.users.push(user)
+        await db.write()
+        return user
     }
 
     static async getUser(phone) {
-        return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM users WHERE phone = ?', [phone], (err, row) => {
-                if (err) reject(err);
-                resolve(row);
-            });
-        });
+        await db.read()
+        return db.data.users.find(u => u.phone === phone) || null
     }
 
     static async addExp(phone, expAmount) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const user = await this.getUser(phone);
-                if (!user) {
-                    reject(new Error('User tidak ditemukan'));
-                    return;
-                }
+        await db.read()
+        const user = db.data.users.find(u => u.phone === phone)
+        if (!user) throw new Error('User gak ketemu njir 😤')
 
-                // Hitung level baru
-                const currentExp = user.exp + expAmount;
-                const currentLevel = user.level;
-                const expNeeded = currentLevel * 1000; // Setiap level butuh exp lebih banyak
+        user.exp += expAmount
+        user.total_messages += 1
 
-                let newLevel = currentLevel;
-                let levelUp = false;
+        const expNeeded = user.level * 1000
+        let levelUp = false
 
-                // Cek apakah naik level
-                if (currentExp >= expNeeded) {
-                    newLevel = currentLevel + 1;
-                    levelUp = true;
-                }
+        if (user.exp >= expNeeded) {
+            user.level += 1
+            levelUp = true
+        }
 
-                // Update database
-                db.run(`UPDATE users SET 
-                    exp = ?,
-                    level = ?,
-                    total_messages = total_messages + 1
-                    WHERE phone = ?`,
-                [currentExp, newLevel, phone],
-                (err) => {
-                    if (err) reject(err);
-                    resolve({
-                        levelUp,
-                        newLevel,
-                        currentExp,
-                        expNeeded
-                    });
-                });
-            } catch (error) {
-                reject(error);
-            }
-        });
+        await db.write()
+
+        return {
+            levelUp,
+            newLevel: user.level,
+            currentExp: user.exp,
+            expNeeded
+        }
     }
 
     static async claimDaily(phone) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const user = await this.getUser(phone);
-                if (!user) {
-                    reject(new Error('User tidak ditemukan'));
-                    return;
-                }
+        await db.read()
+        const user = db.data.users.find(u => u.phone === phone)
+        if (!user) throw new Error('User ilang kaya mantan 😭')
 
-                const lastDaily = user.last_daily ? new Date(user.last_daily) : null;
-                const now = new Date();
+        const now = new Date()
+        const lastDaily = user.last_daily ? new Date(user.last_daily) : null
 
-                // Cek apakah sudah 24 jam sejak klaim terakhir
-                if (lastDaily && (now - lastDaily) < 86400000) { // 24 jam dalam milidetik
-                    reject(new Error('Daily reward sudah diambil hari ini'));
-                    return;
-                }
+        if (lastDaily && (now - lastDaily) < 86400000) {
+            throw new Error('Udah ngambil daily cok, sabar 24 jam 😡')
+        }
 
-                const dailyExp = 1000; // Exp yang didapat dari daily
-                const dailyResult = await this.addExp(phone, dailyExp);
+        const dailyExp = 1000
+        const result = await this.addExp(phone, dailyExp)
 
-                // Update waktu klaim daily
-                db.run('UPDATE users SET last_daily = ? WHERE phone = ?',
-                [now.toISOString(), phone],
-                (err) => {
-                    if (err) reject(err);
-                    resolve({
-                        ...dailyResult,
-                        dailyExp
-                    });
-                });
-            } catch (error) {
-                reject(error);
-            }
-        });
+        user.last_daily = now.toISOString()
+        await db.write()
+
+        return {
+            ...result,
+            dailyExp
+        }
     }
 
     static async getLeaderboard(limit = 10) {
-        return new Promise((resolve, reject) => {
-            db.all(`SELECT 
-                name, 
-                phone, 
-                level, 
-                exp,
-                total_messages,
-                total_commands 
-                FROM users 
-                ORDER BY level DESC, exp DESC 
-                LIMIT ?`,
-            [limit],
-            (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
-            });
-        });
+        await db.read()
+        return db.data.users
+            .sort((a, b) => b.level !== a.level
+                ? b.level - a.level
+                : b.exp - a.exp)
+            .slice(0, limit)
+            .map(u => ({
+                name: u.name,
+                phone: u.phone,
+                level: u.level,
+                exp: u.exp,
+                total_messages: u.total_messages,
+                total_commands: u.total_commands
+            }))
     }
 
     static async incrementCommand(phone) {
-        return new Promise((resolve, reject) => {
-            db.run('UPDATE users SET total_commands = total_commands + 1 WHERE phone = ?',
-            [phone],
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            });
-        });
+        await db.read()
+        const user = db.data.users.find(u => u.phone === phone)
+        if (!user) throw new Error('Gak nemu user waktu nambah command 😩')
+
+        user.total_commands += 1
+        await db.write()
     }
 }
 
-export default User; 
+export default User

@@ -6,9 +6,9 @@ export const description = "Download Murrotal Al-Quran MP3";
 export default async ({ sock, m, id, psn }) => {
     try {
         await m.react('⏳');
-        
+
         const result = await getMp3Murotal();
-        
+
         if (!result.status) {
             await m.reply('❌ Gagal mengambil data murrotal: ' + result.message);
             return;
@@ -27,10 +27,10 @@ export default async ({ sock, m, id, psn }) => {
 
             await sock.sendMessage(id, {
                 text: `*MURROTAL AL-QURAN*\n\n` +
-                      `📖 Surah: ${surah.name}\n` +
-                      `🎙️ Qori: ${result.data.reciter}\n` +
-                      `📊 Ukuran: ${surah.size}\n\n` +
-                      `Sedang mengirim audio...`,
+                    `📖 Surah: ${surah.name}\n` +
+                    `🎙️ Qori: ${result.data.reciter}\n` +
+                    `📊 Ukuran: ${surah.size}\n\n` +
+                    `Sedang mengirim audio...`,
                 contextInfo: {
                     externalAdReply: {
                         title: surah.name,
@@ -45,11 +45,11 @@ export default async ({ sock, m, id, psn }) => {
 
             // Kirim audio
             await sock.sendMessage(id, {
-                audio: { url: surah.url },
+                audio: await fetch(surah.url),
                 mimetype: 'audio/mpeg',
                 ptt: false
             });
-            
+
             await m.react('✨');
             return;
         }
@@ -94,9 +94,9 @@ export default async ({ sock, m, id, psn }) => {
 
         await sock.sendMessage(id, {
             text: "*MURROTAL AL-QURAN*\n\n" +
-                  "🎙️ Qori: Misyari Rasyid Al-Afasy\n" +
-                  "📚 Total Surah: " + result.data.total + "\n\n" +
-                  "Silahkan pilih surah yang ingin didengarkan:",
+                "🎙️ Qori: Misyari Rasyid Al-Afasy\n" +
+                "📚 Total Surah: " + result.data.total + "\n\n" +
+                "Silahkan pilih surah yang ingin didengarkan:",
             footer: '© 2024 Kanata Bot',
             buttons: [
                 {
@@ -126,8 +126,8 @@ export default async ({ sock, m, id, psn }) => {
                     renderLargerThumbnail: true
                 }
             }
-        }, { quoted:m });
-        
+        }, { quoted: m });
+
         await m.react('📖');
 
     } catch (error) {

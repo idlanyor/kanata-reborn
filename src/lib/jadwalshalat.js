@@ -52,13 +52,13 @@ export const schedulePrayerReminders = async (sock, chatId) => {
     const now = new Date();
 
     const prayerTimes = [
-        { name: 'Ramadhan', time: "00:00" },
-        { name: 'Sahur', time: "02:30" },
-        { name: 'Imsyak', time: jadwalToday.imsyak },
+        // { name: 'Ramadhan', time: "00:00" },
+        // { name: 'Sahur', time: "02:30" },
+        // { name: 'Imsyak', time: jadwalToday.imsyak },
         { name: 'Shubuh', time: jadwalToday.shubuh },
         { name: 'Dzuhur', time: jadwalToday.dzuhur },
         { name: 'Ashar', time: jadwalToday.ashr },
-        { name: 'Buka', time: jadwalToday.maghrib },
+        // { name: 'Buka', time: jadwalToday.maghrib },
         { name: 'Maghrib', time: jadwalToday.maghrib },
         { name: 'Isya', time: jadwalToday.isya }
     ];
@@ -98,29 +98,29 @@ export const schedulePrayerReminders = async (sock, chatId) => {
 };
 
 function generatePrayerMessage(name, time) {
-    let text = `╭─「 *RAMADHAN MUBARAK* 」\n`;
+    let text = `╭─「 *SHALAT NOTIFICATION* 」\n`;
     text += `├ 🕌 *${name}*\n`;
     text += `├ 🕐 *${time} WIB*\n`;
     text += `├ 📍 *Purbalingga dan sekitarnya*\n│\n`;
 
     switch (name) {
-        case 'Sahur':
-            text += `├ Waktunya *${name}*, mari bergegas\n`;
-            text += `├ menyiapkan santapan sahur 📿🤲🏻\n`;
-            text += `├ _Selamat menjalankan ibadah Sahur_\n`;
-            break;
-        case 'Ramadhan':
-            text += `├ 🌙 Diawali dengan Bismillah, menyambut bulan penuh barokah 🌙\n`;
-            text += `├ 📿 Mari tingkatkan keimanan dan takwa 📿\n`;
-            text += `├ 🤲 Semoga diampunkan segala dosa 🤲\n`;
-            text += `├ 🌟 Marhaban ya Ramadhan 1446 H/2025 M 🌟\n`;
-            text += `├ 🕌 Selamat menunaikan ibadah puasa 🕌\n`;
-            break;
-        case 'Imsyak':
-            text += `├ Waktu *${name}* telah tiba\n`;
-            text += `├ Selamat menjalankan ibadah puasa\n`;
-            text += `├ Semoga puasa kita diterima Allah SWT 🤲🏻\n`;
-            break;
+        // case 'Sahur':
+        //     text += `├ Waktunya *${name}*, mari bergegas\n`;
+        //     text += `├ menyiapkan santapan sahur 📿🤲🏻\n`;
+        //     text += `├ _Selamat menjalankan ibadah Sahur_\n`;
+        //     break;
+        // case 'Ramadhan':
+        //     text += `├ 🌙 Diawali dengan Bismillah, menyambut bulan penuh barokah 🌙\n`;
+        //     text += `├ 📿 Mari tingkatkan keimanan dan takwa 📿\n`;
+        //     text += `├ 🤲 Semoga diampunkan segala dosa 🤲\n`;
+        //     text += `├ 🌟 Marhaban ya Ramadhan 1446 H/2025 M 🌟\n`;
+        //     text += `├ 🕌 Selamat menunaikan ibadah puasa 🕌\n`;
+        //     break;
+        // case 'Imsyak':
+        //     text += `├ Waktu *${name}* telah tiba\n`;
+        //     text += `├ Selamat menjalankan ibadah puasa\n`;
+        //     text += `├ Semoga puasa kita diterima Allah SWT 🤲🏻\n`;
+        //     break;
         case 'Terbit':
             text += `├ *Semangat Pagi*\n`;
             text += `├ Waktu *${name}* telah tiba\n`;
@@ -128,16 +128,18 @@ function generatePrayerMessage(name, time) {
             text += `├ senantiasa dilindungi Allah SWT 🤲🏻\n`;
             break;
         case 'Maghrib':
-            text += `├ 🌙 *Selamat Berbuka Puasa!* 🌙\n`;
+            // text += `├ 🌙 *Selamat Berbuka Puasa!* 🌙\n`;
             text += `├ Waktu *${name}* telah tiba\n`;
-            text += `├ Silakan berbuka puasa dengan yang manis\n`;
-            text += `├ dan jangan lupa shalat Maghrib 🤲🏻\n`;
-            break;
-        case 'Isya':
-            text += `├ Waktu Isya & Tarawih telah tiba\n`;
+            // text += `├ Silakan berbuka puasa dengan yang manis\n`;
             text += `├ Silakan persiapkan diri untuk shalat Berjamaah di masjid / mushola terdekat\n`;
-            text += `├ sesungguhnya pahala shalat berjamaah adalah 27x lipat lebih banyak dibanding shalat sendirian 🤲🏻\n`;
+            text += `├ sesungguhnya pahala shalat berjamaah adalah 27x lipat lebih banyak dibanding shalat sendirian 🤲🏻\n 🤲🏻\n`;
+            // text += `├ dan jangan lupa shalat Maghrib 🤲🏻\n`;
             break;
+        // case 'Isya':
+        //     text += `├ Waktu Isya & Tarawih telah tiba\n`;
+        //     text += `├ Silakan persiapkan diri untuk shalat Berjamaah di masjid / mushola terdekat\n`;
+        //     text += `├ sesungguhnya pahala shalat berjamaah adalah 27x lipat lebih banyak dibanding shalat sendirian 🤲🏻\n`;
+        //     break;
         case 'Shubuh':
             text += `├ 🌙 Waktu *${name}* telah tiba 🌙\n`;
             text += `├ Ayo shalat berjamaah!\n`;
@@ -145,7 +147,7 @@ function generatePrayerMessage(name, time) {
             text += `├ _Mereka yang memperoleh pahala paling besar karena mengerjakan sholat adalah mereka yang (tempat tinggalnya) paling jauh (dari masjid), kemudian mereka yang lebih jauh dari itu, dan seterusnya. Demikian pula orang yang menunggu mengerjakan sholat bersama imam memperoleh pahala yang lebih besar daripada orang yang mengerjakan sholat lalu pergi tidur_ 🤲🏻\n`;
             break;
         default:
-            if (['Dzuhur', 'Ashar'].includes(name)) {
+            if (['Dzuhur', 'Ashar', 'Isya'].includes(name)) {
                 text += `├ Waktu Shalat *${name}* telah tiba\n`;
                 text += `├ Mari tinggalkan aktivitas sejenak\n`;
                 text += `├ Ambil wudhu dan laksanakan kewajiban 📿🤲🏻\n`;
@@ -159,15 +161,15 @@ function generatePrayerMessage(name, time) {
 
 async function getPrayerImage(name) {
     const images = {
-        'Sahur': 'https://fastrestapis.fasturl.cloud/file/v2/FieAa6x.jpg',
-        'Imsyak': 'https://fastrestapis.fasturl.cloud/file/v2/wdGBB0L.jpg',
+        // 'Sahur': 'https://fastrestapis.fasturl.cloud/file/v2/FieAa6x.jpg',
+        // 'Imsyak': 'https://fastrestapis.fasturl.cloud/file/v2/wdGBB0L.jpg',
         'Shubuh': 'https://fastrestapis.fasturl.cloud/file/v2/J7r7Kzj.jpg',
         'Dzuhur': 'https://fastrestapis.fasturl.cloud/file/v2/Nm7xLET.jpg',
         'Ashar': 'https://fastrestapis.fasturl.cloud/file/v2/vl5k4iD.jpg',
         'Maghrib': 'https://fastrestapis.fasturl.cloud/file/v2/dATGtcL.jpg',
-        'Buka': 'https://fastrestapis.fasturl.cloud/file/v2/NaP2lnd.jpg',
+        // 'Buka': 'https://fastrestapis.fasturl.cloud/file/v2/NaP2lnd.jpg',
         'Isya': 'https://fastrestapis.fasturl.cloud/file/v2/pLwruV9.jpg',
-        'Ramadhan': 'https://fastrestapis.fasturl.cloud/file/v2/sdb0OYA.jpg',
+        // 'Ramadhan': 'https://fastrestapis.fasturl.cloud/file/v2/sdb0OYA.jpg',
     };
     console.log(images[name]);
     return images[name] || 'https://fastrestapis.fasturl.cloud/file/v2/sdb0OYA.jpg';
