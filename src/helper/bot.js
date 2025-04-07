@@ -60,11 +60,20 @@ class Kanata {
                 markOnlineOnConnect: true,
                 logger: P,
                 printQRInTerminal: false,
-                browser: Browsers.macOS("Safari"),
+                // browser: Browsers.macOS("Safari"),
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, P),
                 },
+                connectTimeoutMs: 60000,
+                defaultQueryTimeoutMs: 0,
+                keepAliveIntervalMs: 10000,
+                emitOwnEvents: true,
+                fireInitQueries: true,
+                generateHighQualityLinkPreview: true,
+                syncFullHistory: true,
+                markOnlineOnConnect: true,
+                browser: ["Ubuntu", "Chrome", "20.0.04"],
                 msgRetryCounterCache,
                 connectOptions: {
                     maxRetries: 5,
@@ -94,7 +103,7 @@ class Kanata {
                 while (retryCount < maxRetries) {
                     try {
                         await delay(6000);
-                        const code = await sock.requestPairingCode(this.phoneNumber,"KANATAV3");
+                        const code = await sock.requestPairingCode(this.phoneNumber, "KANATAV3");
                         logger.connection.pairing(code);
                         this.io?.emit("pairCode", `${code}`);
                         break;
@@ -135,11 +144,11 @@ class Kanata {
                             await fs.remove(`./${this.sessionId}`);
                             logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
-                        } else if(reason === DisconnectReason.badSession){
+                        } else if (reason === DisconnectReason.badSession) {
                             logger.system("Bad session, restarting...");
                             this.io?.emit("broadcastMessage", "Bad session, restarting...");
                             await startBot();
-                        } else{
+                        } else {
                             logger.system("Restarting connection...");
                             // await fs.remove(`./${this.sessionId}`);
                             logger.info(`Session ${this.sessionId} removed!`);
@@ -196,7 +205,7 @@ const sanitizeBotId = botId => botId.split(":")[0] + "@s.whatsapp.net";
 
 const getPpUrl = async (sock, noTel) => {
     try {
-        return await sock.profilePictureUrl(noTel+"@s.whatsapp.net", "image");
+        return await sock.profilePictureUrl(noTel + "@s.whatsapp.net", "image");
     } catch {
         return globalThis.defaultProfilePic
     }

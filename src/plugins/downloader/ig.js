@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const description = "✨ Downloader Instagram Video & Image provided by *Roy*";
+export const description = "✨ Downloader Instagram Video & Image provided by *FastURL*";
 export const handler = "ig";
 
 export default async ({ sock, m, id, psn }) => {

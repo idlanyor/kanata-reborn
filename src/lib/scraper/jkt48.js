@@ -136,3 +136,4 @@ export const detailMember = async (memberId) => {
 }
 
 // (async () => { console.log(await detailMember(252)) })()
+

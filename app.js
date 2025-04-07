@@ -365,7 +365,10 @@ export async function startBot() {
                             if (Buffer.isBuffer(mediaBuffer)) {
                                 // Handle media dengan command
                                 if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
-                                    const command = caption.startsWith('!') || caption.startsWith('.') ? caption : m.body;
+                                    // const command = m.quoted?.text || caption.startsWith('!') || caption.startsWith('.') ? caption : m.quoted?.text;
+                                    console.log(m.quoted?.text)
+                                    const command = m.quoted?.text || caption
+                                    
                                     await prosesPerintah({
                                         command,
                                         sock, m, id,
@@ -389,7 +392,7 @@ export async function startBot() {
 
                                     const imageResponse = await geminiHandler.analyzeImage(
                                         mediaBuffer,
-                                        caption || m.body || '',
+                                        m.quoted?.text || caption || m.body,
                                         { id, m }
                                     );
                                     await sock.sendMessage(id, {
@@ -430,7 +433,8 @@ export async function startBot() {
                 if (!isMediaProcessed && m.type === 'text') {
                     // Handle pesan dengan prefix . atau !
                     if (m.body && (m.body.startsWith('!') || m.body.startsWith('.'))) {
-                        await prosesPerintah({ command: m.body, sock, m, id, sender, noTel, attf: null, mime: null });
+                        const command = m.quoted?.text || m.body
+                        await prosesPerintah({ command, sock, m, id, sender, noTel, attf: null, mime: null });
                         return;
                     }
 

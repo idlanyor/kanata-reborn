@@ -11,8 +11,6 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         type: StickerTypes.FULL,
         quality: 100,
     }
-    // console.log(data)
-    // return
     try {
         const generateSticker = await createSticker(url, stickerOption);
         await sock.sendMessage(id, { sticker: generateSticker })
