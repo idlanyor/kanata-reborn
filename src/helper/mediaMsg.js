@@ -15,10 +15,12 @@ export async function streamToBuffer(readableStream) {
 
 export const getMedia = async (msg) => {
     try {
-        // Deteksi tipe media dari pesan
         let mediaType, messageType
 
-        if (msg.message?.videoMessage) {
+        if (msg.message?.documentMessage) {
+            messageType = 'documentMessage'
+            mediaType = 'document'
+        } else if (msg.message?.videoMessage) {
             messageType = 'videoMessage'
             mediaType = 'video'
         } else if (msg.message?.audioMessage) {
@@ -27,23 +29,31 @@ export const getMedia = async (msg) => {
         } else if (msg.message?.imageMessage) {
             messageType = 'imageMessage'
             mediaType = 'image'
+        } else if (msg.message?.stickerMessage) {
+            messageType = 'stickerMessage'
+            mediaType = 'sticker'
         } else {
-            throw new Error('Tipe media tidak didukung')
+            throw new Error('Unsupported media type')
         }
 
-        // Download konten media
         const stream = await downloadContentFromMessage(msg.message[messageType], mediaType)
         let buffer = Buffer.from([])
 
-        // Gabungkan chunk data menjadi buffer
         for await (const chunk of stream) {
             buffer = Buffer.concat([buffer, chunk])
         }
 
-        return buffer
+        const result = {
+            buffer,
+            mimetype: msg.message[messageType]?.mimetype,
+            fileName: msg.message[messageType]?.fileName
+        }
+
+        return result
+
     } catch (error) {
-        console.error('Error saat mengunduh media:', error)
-        throw new Error('Gagal mengunduh media: ' + error.message)
+        console.error('Error downloading media:', error)
+        throw new Error('Failed to download media: ' + error.message)
     }
 }
 

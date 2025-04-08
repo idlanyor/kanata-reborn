@@ -60,7 +60,7 @@ class Kanata {
                 markOnlineOnConnect: true,
                 logger: P,
                 printQRInTerminal: false,
-                // browser: Browsers.macOS("Safari"),
+                browser: Browsers.macOS("Safari"),
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, P),
@@ -73,7 +73,6 @@ class Kanata {
                 generateHighQualityLinkPreview: true,
                 syncFullHistory: true,
                 markOnlineOnConnect: true,
-                browser: ["Ubuntu", "Chrome", "20.0.04"],
                 msgRetryCounterCache,
                 connectOptions: {
                     maxRetries: 5,

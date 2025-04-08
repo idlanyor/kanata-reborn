@@ -346,7 +346,7 @@ export async function startBot() {
                 }
 
                 // Handle media messages first (image, video, audio)
-                const mediaTypes = ['image', 'video', 'audio'];
+                const mediaTypes = ['image', 'video', 'audio','document'];
                 let isMediaProcessed = false;
 
                 for (const type of mediaTypes) {
@@ -362,19 +362,20 @@ export async function startBot() {
                             const caption = mediaMessage.caption || m.message?.extendedTextMessage?.text || '';
                             const mime = mediaMessage.mimetype;
 
-                            if (Buffer.isBuffer(mediaBuffer)) {
+                            if (Buffer.isBuffer(mediaBuffer.buffer)) {
                                 // Handle media dengan command
                                 if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
                                     // const command = m.quoted?.text || caption.startsWith('!') || caption.startsWith('.') ? caption : m.quoted?.text;
                                     console.log(m.quoted?.text)
                                     const command = m.quoted?.text || caption
-                                    
+
                                     await prosesPerintah({
                                         command,
                                         sock, m, id,
                                         sender, noTel,
-                                        attf: mediaBuffer,
-                                        mime
+                                        attf: mediaBuffer.buffer,
+                                        mime :mediaBuffer.mimetype,
+                                        filename: mediaBuffer.fileName,
                                     });
                                     return;
                                 }
@@ -391,7 +392,7 @@ export async function startBot() {
                                     }
 
                                     const imageResponse = await geminiHandler.analyzeImage(
-                                        mediaBuffer,
+                                        mediaBuffer.buffer,
                                         m.quoted?.text || caption || m.body,
                                         { id, m }
                                     );
@@ -411,7 +412,7 @@ export async function startBot() {
                                     }
 
                                     const audioResponse = await geminiHandler.analyzeAudio(
-                                        mediaBuffer,
+                                        mediaBuffer.buffer,
                                         caption || m.body || '',
                                         { id, m }
                                     );
@@ -616,14 +617,37 @@ export async function startBot() {
                         }
                     }
                 }
+                // const groups = await sock.groupFetchAllParticipating();
+                // const groupJids = Object.keys(groups);
+                // console.log(groupJids)
 
             } catch (error) {
                 logger.error('Error handling message:', error);
             }
         });
+
         // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
         // schedulePrayerReminders(sock, globalThis.newsLetterJid);
-        schedulePrayerReminders(sock, globalThis.groupJid);
+        const jids = [
+            '120363322355235306@g.us',
+            '120363168824825004@g.us',
+            '120363331973486203@g.us',
+            '120363313225939444@g.us',
+            '120363025048735374@g.us',
+            '120363170175024834@g.us',
+            '120363333206963062@g.us',
+            '120363420976976851@g.us',
+            '120363378930842508@g.us',
+            '120363393072539921@g.us',
+            '120363320183359410@g.us',
+            '120363349495948665@g.us',
+            '120363176955019646@g.us',
+            '120363152273645676@g.us',
+            '120363299623971703@g.us'
+        ]
+        for (const jid of jids) {
+            schedulePrayerReminders(sock, jid); 
+        }
 
         sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
         sock.ev.on('groups.update', ev => groupUpdate(ev, sock));

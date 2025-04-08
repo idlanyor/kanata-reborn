@@ -1,156 +1,177 @@
-import Bot from '../../database/models/Bot.js';
-import { Browsers, makeWASocket, useMultiFileAuthState } from '@fizzxydev/baileys-pro';
-import { checkOwner } from '../../helper/permission.js';
+import { makeWASocket, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, makeInMemoryStore, useMultiFileAuthState, DisconnectReason } from '@fizzxydev/baileys-pro';
+import { logger } from '../../helper/logger.js';
+import NodeCache from "node-cache";
+import pino from "pino";
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 
 const sessions = new Map();
+const SESSION_FOLDER = 'jadibots';
 
 export default async ({ sock, m, id, noTel, psn }) => {
     try {
-        // Cek apakah user adalah owner
-        if (!await checkOwner(sock, id, noTel)) return;
+        if (!m.isOwner) {
+            await m.reply('🔒 Fitur ini khusus owner bot!');
+            return;
+        }
 
         if (!psn) {
-            await sock.sendMessage(id, {
-                text: '❌ Format salah!\nContoh: !jadibot 628123456789'
-            });
+            await m.reply(`📱 *JADIBOT SYSTEM*\n\n*Format:* .jadibot nomor\n*Contoh:* .jadibot 628123456789\n\n*Note:*\n- Nomor harus aktif di WhatsApp\n- Session berlaku 24 jam\n- Restart otomatis jika terputus`);
             return;
         }
 
-        // Format nomor telepon
         let targetNumber = psn.replace(/[^0-9]/g, '');
-        if (!targetNumber.startsWith('62')) {
-            targetNumber = '62' + targetNumber;
-        }
+        if (!targetNumber.startsWith('62')) targetNumber = '62' + targetNumber;
         targetNumber = targetNumber + '@s.whatsapp.net';
 
-        // Cek apakah nomor yang dituju adalah owner
-        if (targetNumber === noTel) {
-            await sock.sendMessage(id, {
-                text: '❌ Tidak bisa jadikan nomor owner sebagai bot!'
-            });
+        const [result] = await sock.onWhatsApp(targetNumber);
+        if (!result?.exists) {
+            await m.reply('❌ Nomor tidak terdaftar di WhatsApp!');
             return;
         }
 
-        // Cek apakah nomor valid
-        try {
-            const [result] = await sock.onWhatsApp(targetNumber);
-            if (!result?.exists) {
-                await sock.sendMessage(id, {
-                    text: '❌ Nomor tidak terdaftar di WhatsApp!'
-                });
-                return;
-            }
-        } catch (error) {
-            await sock.sendMessage(id, {
-                text: '❌ Nomor tidak valid!'
-            });
+        if (sessions.has(targetNumber)) {
+            await m.reply('⚠️ Nomor ini sudah menjadi bot!');
             return;
         }
 
-        // Generate unique session ID
         const sessionId = crypto.randomBytes(16).toString('hex');
-        const sessionDir = path.join(process.cwd(), 'jadibots', targetNumber.split('@')[0]);
+        const sessionDir = path.join(process.cwd(), SESSION_FOLDER, targetNumber.split('@')[0]);
 
-        // Create session directory
         if (!fs.existsSync(sessionDir)) {
             fs.mkdirSync(sessionDir, { recursive: true });
         }
 
-        await sock.sendMessage(id, {
-            text: `⏳ Memulai session jadibot untuk nomor ${targetNumber.split('@')[0]}...`
-        });
+        await m.react('⏳');
 
-        // Initialize session
+        const msgRetryCounterCache = new NodeCache();
+        const MAIN_LOGGER = pino({ timestamp: () => `,"time":"${new Date().toJSON()}"` });
+        const logger = MAIN_LOGGER.child({});
+        logger.level = "silent";
+
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+        const { version, isLatest } = await fetchLatestBaileysVersion();
+
+        const store = makeInMemoryStore({ logger });
+        store.readFromFile(`${sessionDir}/store.json`);
+        setInterval(() => {
+            store.writeToFile(`${sessionDir}/store.json`);
+        }, 10000 * 6);
 
         const jadibotSock = makeWASocket({
-            auth: state,
+            version,
+            logger: pino({ level: "silent" }),
             printQRInTerminal: false,
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, logger),
+            },
+            msgRetryCounterCache,
             generateHighQualityLinkPreview: true,
-            browser: Browsers.macOS('safari')
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 0,
+            keepAliveIntervalMs: 10000,
+            emitOwnEvents: true,
+            fireInitQueries: true,
+            syncFullHistory: true,
+            markOnlineOnConnect: true
         });
 
-        // Handle connection update
+        store?.bind(jadibotSock.ev);
+        jadibotSock.ev.on('creds.update', saveCreds);
+
         jadibotSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
 
-            if (connection === 'close') {
-                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
-                if (shouldReconnect) {
-                    await sock.sendMessage(id, {
-                        text: `⚠️ Koneksi terputus untuk nomor ${targetNumber.split('@')[0]}, mencoba menghubungkan kembali...`
-                    });
-                } else {
-                    sessions.delete(sessionId);
-                    fs.rmSync(sessionDir, { recursive: true, force: true });
-                    await sock.sendMessage(id, {
-                        text: `❌ Session berakhir untuk nomor ${targetNumber.split('@')[0]}`
-                    });
-                }
+            if (connection === 'open') {
+                sessions.set(targetNumber, {
+                    socket: jadibotSock,
+                    sessionId,
+                    startTime: Date.now(),
+                    store
+                });
+
+                await m.reply(`✅ *Berhasil terhubung!*\n\n*Device:*\n${JSON.stringify(jadibotSock.user, null, 2)}\n\n*Session akan berakhir dalam 24 jam*`);
+                await sock.sendMessage(targetNumber, {
+                    text: `🤖 *JADIBOT AKTIF*\n\n- Ketik .menu untuk melihat fitur\n- Session berlaku 24 jam\n- Restart otomatis jika terputus\n\n_Powered by Kanata Bot_`
+                });
             }
 
-            if (connection === 'open') {
-                await Bot.createJadiBot(targetNumber, sessionId);
-                sessions.set(sessionId, jadibotSock);
+            if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-                // Notifikasi ke user yang request
-                await sock.sendMessage(id, {
-                    text: `✅ Berhasil terhubung ke nomor ${targetNumber.split('@')[0]}!\n\nInfo Device:\n${JSON.stringify(jadibotSock.user, null, 2)}`
-                });
-
-                // Notifikasi ke user yang jadi bot
-                await sock.sendMessage(targetNumber, {
-                    text: '🤖 Nomor kamu sekarang sudah menjadi bot!\nKetik !menu untuk melihat daftar perintah'
-                });
+                if (shouldReconnect) {
+                    await m.reply('🔄 Koneksi terputus, mencoba menghubungkan kembali...');
+                    startJadibot(targetNumber, sessionDir, sock, m);
+                } else {
+                    cleanupSession(targetNumber, sessionDir);
+                    await m.reply('❌ Session invalid, silahkan buat ulang!');
+                }
             }
         });
 
-        // Request pairing code
         if (!jadibotSock.authState.creds.registered) {
             const code = await jadibotSock.requestPairingCode(targetNumber.split('@')[0]);
-
-            // Kirim kode ke user yang mau jadi bot
             await sock.sendMessage(targetNumber, {
-                text: `🔑 Kode pairing kamu adalah: ${code}\n\nMasukkan kode ini di WhatsApp kamu:\n1. Buka WhatsApp\n2. Klik Perangkat Tertaut\n3. Klik Tautkan Perangkat\n4. Masukkan kode di atas`
+                text: `🔑 *KODE PAIRING KAMU*\n\n${code}\n\n*Cara Pairing:*\n1. Buka WhatsApp\n2. Klik Perangkat Tertaut\n3. Klik Tautkan Perangkat\n4. Masukkan kode di atas`
             });
-
-            // Kirim notifikasi ke user yang request
-            await sock.sendMessage(id, {
-                text: `✅ Kode pairing telah dikirim ke nomor ${targetNumber.split('@')[0]}\nSilakan cek chat pribadi bot!`
-            });
+            await m.reply(`✅ Kode pairing telah dikirim ke wa.me/${targetNumber.split('@')[0]}`);
         }
 
-        // Save credentials on update
-        jadibotSock.ev.on('creds.update', saveCreds);
-
-        // Auto delete session after 24 hours
-        setTimeout(async () => {
-            if (sessions.has(sessionId)) {
-                jadibotSock.logout();
-                sessions.delete(sessionId);
-                fs.rmSync(sessionDir, { recursive: true, force: true });
-
-                // Notifikasi ke kedua user
-                await sock.sendMessage(id, {
-                    text: `⏰ Session jadibot untuk nomor ${targetNumber.split('@')[0]} telah berakhir (24 jam)`
-                });
-                await sock.sendMessage(targetNumber, {
-                    text: '⏰ Session jadibot kamu telah berakhir (24 jam)'
-                });
-            }
+        setTimeout(() => {
+            cleanupSession(targetNumber, sessionDir);
         }, 24 * 60 * 60 * 1000);
 
     } catch (error) {
-        await sock.sendMessage(id, {
-            text: `❌ Error: ${error.message}`
-        });
+        logger.error('Jadibot Error:', error);
+        await m.reply(`❌ Error: ${error.message}`);
+        await m.react('❌');
     }
 };
+
+async function startJadibot(number, dir, sock, m) {
+    try {
+        const { state } = await useMultiFileAuthState(dir);
+        const newSock = makeWASocket({
+            auth: state,
+            printQRInTerminal: false,
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 0,
+            keepAliveIntervalMs: 10000
+        });
+
+        if (!sessions.has(number)) {
+            sessions.set(number, {});
+        }
+
+        const session = sessions.get(number);
+        session.socket = newSock;
+
+        // Bind event handlers
+        newSock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect } = update;
+            if (connection === 'open') {
+                await m.reply('✅ Berhasil terhubung kembali!');
+            }
+        });
+
+    } catch (error) {
+        logger.error('Reconnect Error:', error);
+        await m.reply('❌ Gagal menghubungkan kembali!');
+    }
+}
+
+
+function cleanupSession(number, dir) {
+    sessions.delete(number);
+    fs.rmSync(dir, { recursive: true, force: true });
+}
 
 export const handler = 'jadibot';
 export const tags = ['owner'];
 export const command = ['jadibot'];
-export const help = 'Jadikan nomor lain sebagai bot (Owner Only)\nContoh: !jadibot 628123456789'; 
+export const help = 'Jadikan nomor lain sebagai bot (Owner Only)';

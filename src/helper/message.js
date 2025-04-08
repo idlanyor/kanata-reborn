@@ -64,10 +64,10 @@ export function addMessageHandler(m, sock) {
         return globalThis.ownerNumber.includes(number)
     }
     m.download = (m.type === 'image' || m.type === 'video' || m.type === 'audio' || m.type === 'document' || m.type === 'sticker') ? async () => {
-        return await getMedia({
+        return (await getMedia({
             message: m.message,
             key: m.key
-        });
+        })).buffer;
     } : null;
 
     m.isBotAdmin = m.isGroup ? (
@@ -106,19 +106,19 @@ export function addMessageHandler(m, sock) {
             caption: getQuotedText(actualMsg),
             text: m.message?.extendedTextMessage?.text,
             download: async () => {
-                return await getMedia({
+                return (await getMedia({
                     message: quotedMsg,
                     key: m.quoted.key
-                });
+                })).buffer;
             }
         };
     }
 
     m.download = async () => {
-        return await getMedia({
+        return (await getMedia({
             message: m.message,
             key: m.key
-        });
+        })).buffer;
     };
 
     m.reply = async (text, quoted = true, useContext = true, newsletterName = `${globalThis.botName}`) => {

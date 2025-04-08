@@ -67,7 +67,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
                 isForwarded: true,
                 forwardingScore: 9999999,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363305152329358@newsletter',
+                    newsletterJid: '@newsletter',
                     newsletterName: data.author || 'Tiktok Downloader',
                     serverMessageId: -1
                 }

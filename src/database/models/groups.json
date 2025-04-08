@@ -26,8 +26,8 @@
     },
     {
       "group_id": "120363320183359410@g.us",
-      "welcome_message": "Hai @user silahkan diisi ya \n 📝📌 *KARTU INTRO*\n\n📍Nama: \n📍Umur: \n📍Kelas: \n📍Askot: \n📍Agama: \n\n👨‍💻 @group",
-      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "welcome_message": "Hai tod",
+      "goodbye_message": "bye tod",
       "autoai": false,
       "antilink": false,
       "welcome": true,
@@ -48,6 +48,30 @@
       "antipromosi": true,
       "only_admin": false,
       "antispam": true
+    },
+    {
+      "group_id": "120363393072539921@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363322355235306@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
     }
   ],
   "spam_detection": [

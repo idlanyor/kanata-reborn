@@ -1,12 +1,32 @@
 import axios from 'axios'
 import FormData from 'form-data'
 import fs from 'fs'
+import path from 'path'
 const bufferToReadStream = (buffer, path) => {
     // Simpan buffer iki dadi file sementara nganggo path
     fs.writeFileSync(path, buffer);
 
     // Convert buffer dadi ReadStream nganggo path
     return fs.createReadStream(path);
+};
+export const uploadFile = async (buffer, filename) => {
+    try {
+        const form = new FormData();
+        form.append('reqtype', 'fileupload');
+        form.append('fileToUpload', buffer, {
+            filename: filename || 'file' + path.extname(filename || '.bin')
+        });
+
+        const response = await axios.post('https://catbox.moe/user/api.php', form, {
+            headers: {
+                ...form.getHeaders()
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 };
 /**
  * Fungsi buat upload gambar ke catbox.moe
