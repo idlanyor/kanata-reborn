@@ -1,4 +1,4 @@
-import { caklontong } from "../../lib/tebak/index.js";
+import { caklontong } from "../../src/lib/tebak/index.js";
 export const handler = "lontong"
 export const description = "Teka Teki Sulit Cak Lontong";
 

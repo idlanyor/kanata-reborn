@@ -26,7 +26,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
             params: {
                 url: psn,
                 quality: quality,
-                server: 'auto'
+                server: 'server2'
             },
             headers: {
                 'accept': 'application/json'

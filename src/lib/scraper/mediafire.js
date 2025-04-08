@@ -68,12 +68,17 @@ export const mediafire = async (url) => {
 
         // Dapatkan informasi file
         const result = await page.evaluate(() => {
-            const filename = document.querySelector('.dl-btn-label')?.textContent?.trim() || '';
+            const filename = document.querySelector('.filename')?.textContent?.trim() || '';
             const filesize = document.querySelector('.details li:first-child span')?.textContent?.trim() || '';
             const downloadUrl = document.querySelector('.download_link .input')?.getAttribute('href') || '';
-
+            
+            // Get file extension from the download URL
+            const extension = downloadUrl.split('.').pop() || '';
+            // Combine filename with extension
+            const filenameWithExt = filename + (extension ? '.' + extension : '');
+        
             return {
-                filename,
+                filename: filename,
                 filesize,
                 downloadUrl
             };

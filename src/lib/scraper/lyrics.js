@@ -58,6 +58,6 @@ export async function googleLyrics(judulLagu) {
     }
 }
 
-// (async () => {
-//     console.log(await googleLyrics('langit biru cinta searah'))
-// })()
+(async () => {
+    console.log(await googleLyrics('langit biru cinta searah'))
+})()

@@ -8,6 +8,7 @@ import { groupParticipants, groupUpdate } from './src/lib/group.js';
 import { getMedia } from './src/helper/mediaMsg.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
+import { exec } from 'child_process'
 import path from 'path';
 import chalk from 'chalk';
 import readline from 'readline';
@@ -54,6 +55,81 @@ function findJsFiles(dir) {
         }
     });
     return results;
+}
+
+function watchCodeChanges() {
+    const pluginsDir = path.join(__dirname, 'src/plugins');
+    const libDir = path.join(__dirname, 'src/lib');
+    const helperDir = path.join(__dirname, 'src/helper');
+
+    logger.info('Watching for code changes...');
+    const watchDirectory = (dir) => {
+        const files = findJsFiles(dir);
+
+        files.forEach(file => {
+            fs.watchFile(file, { interval: 1000 }, async (curr, prev) => {
+                if (curr.mtime !== prev.mtime) {
+                    const relativePath = path.relative(__dirname, file);
+                    logger.info(`File changed: ${relativePath}`);
+                    try {
+                        // Clear cache untuk file yang berubah
+                        const fileURL = pathToFileURL(file).href;
+                        // delete require.cache[fileURL];
+                        const modulePath = `${fileURL}?update=${Date.now()}`;
+                        await import(modulePath);
+
+                        // Jika file adalah plugin, reload plugin
+                        if (file.includes('/plugins/')) {
+                            try {
+                                // Hapus dari cache dan import ulang
+                                await import(`${fileURL}?update=${Date.now()}`);
+                                logger.success(`Plugin reloaded: ${relativePath}`);
+                            } catch (error) {
+                                logger.error(`Failed to reload plugin ${relativePath}:`, error);
+                            }
+                        } else {
+                            logger.info(`Module updated: ${relativePath}`);
+                        }
+                    } catch (error) {
+                        logger.error(`Error watching file ${relativePath}:`, error);
+                    }
+                }
+            });
+        });
+    };
+
+    // Pantau direktori utama
+    watchDirectory(pluginsDir);
+    watchDirectory(libDir);
+    watchDirectory(helperDir);
+
+    // Pantau file app.js dan global.js
+    const appFile = path.join(__dirname, 'app.js');
+    const globalFile = path.join(__dirname, 'src/global.js');
+
+    fs.watchFile(appFile, { interval: 1000 }, (curr, prev) => {
+        if (curr.mtime !== prev.mtime) {
+            logger.warning('app.js changed - changes require restart to take effect');
+        }
+    });
+
+    fs.watchFile(globalFile, { interval: 1000 }, (curr, prev) => {
+        if (curr.mtime !== prev.mtime) {
+            logger.warning('global.js changed - reloading global configuration');
+            try {
+                // Reload global configuration
+                exec('node -e "import(\'./src/global.js?update=' + Date.now() + '\')"', (error, stdout, stderr) => {
+                    if (error) {
+                        logger.error('Failed to reload global configuration:', error);
+                        return;
+                    }
+                    logger.success('Global configuration reloaded');
+                });
+            } catch (error) {
+                logger.error('Error reloading global configuration:', error);
+            }
+        }
+    });
 }
 
 app.get('/', (req, res) => {
@@ -346,7 +422,7 @@ export async function startBot() {
                 }
 
                 // Handle media messages first (image, video, audio)
-                const mediaTypes = ['image', 'video', 'audio','document'];
+                const mediaTypes = ['image', 'video', 'audio', 'document'];
                 let isMediaProcessed = false;
 
                 for (const type of mediaTypes) {
@@ -374,7 +450,7 @@ export async function startBot() {
                                         sock, m, id,
                                         sender, noTel,
                                         attf: mediaBuffer.buffer,
-                                        mime :mediaBuffer.mimetype,
+                                        mime: mediaBuffer.mimetype,
                                         filename: mediaBuffer.fileName,
                                     });
                                     return;
@@ -646,7 +722,7 @@ export async function startBot() {
             '120363299623971703@g.us'
         ]
         for (const jid of jids) {
-            schedulePrayerReminders(sock, jid); 
+            schedulePrayerReminders(sock, jid);
         }
 
         sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
@@ -661,4 +737,5 @@ export async function startBot() {
 server.listen(3000, '0.0.0.0', () => {
     console.log('server running at http://0.0.0.0:3000');
 });
+watchCodeChanges();
 startBot()

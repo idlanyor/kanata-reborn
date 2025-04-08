@@ -57,7 +57,7 @@ export default async ({ sock, m, id, psn, sender }) => {
             params: {
                 url: videoUrl,
                 quality: quality,
-                server: 'auto'
+                server: 'server2'
             },
             headers: {
                 'accept': 'application/json'

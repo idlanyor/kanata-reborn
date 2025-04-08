@@ -1,5 +1,5 @@
-import { tebak } from "../../helper/skizotech.js";
-import { tebakSession } from "../../lib/tebak/index.js";
+import { tebak } from "../../src/helper/skizotech.js";
+import { tebakSession } from "../../src/lib/tebak/index.js";
 export const handler = "tebakgambar"
 export const description = "Tebak Gambar";
 

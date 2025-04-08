@@ -88,18 +88,17 @@ export async function capcut(url) {
 // console.log(await ig('https://www.instagram.com/reel/DDCJKb8vXcc/?igsh=MXNzeGlpZGF3NXNrZw=='))
 // console.log(await fb('https://www.facebook.com/share/r/14bjUseLMP/'))
 
-function getYouTubeId(url) {
-    // Regex kanggo njupuk ID YouTube
-    const match = url.match(/(?:v=|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+// function getYouTubeId(url) {
+//     // Regex kanggo njupuk ID YouTube
+//     const match = url.match(/(?:v=|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
 
-    // Yen match ketemu, njupuk ID YouTube-nya
-    return match ? match[1] : null;
-}
+//     // Yen match ketemu, njupuk ID YouTube-nya
+//     return match ? match[1] : null;
+// }
 
 // Fungsi helper untuk menjalankan yt-dlp
 async function runYtDlp(url, options) {
     try {
-        // Tambahkan opsi --no-check-certificates dan --force-ipv4 untuk menghindari masalah koneksi
         const command = `yt-dlp --no-check-certificates --force-ipv4 ${options} "${url}"`;
         console.log('Menjalankan perintah:', command);
 
@@ -177,17 +176,14 @@ async function ytsearch(query) {
 
 export async function yutubAudio(query) {
     try {
-        // Cek apakah input adalah URL atau query pencarian
         const isUrl = query.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
         let videoUrl = query;
 
         if (!isUrl) {
-            // Jika bukan URL, lakukan pencarian terlebih dahulu
             const searchResult = await ytsearch(query);
             videoUrl = searchResult.url;
         }
 
-        // Dapatkan info video
         const info = await runYtDlp(videoUrl, '--dump-json');
         const videoInfo = JSON.parse(info);
 
@@ -196,7 +192,6 @@ export async function yutubAudio(query) {
 
         const outputPath = path.join(tempDir, `${videoInfo.id}.mp3`);
 
-        // Download dan convert ke MP3
         await runYtDlp(videoUrl, `-x --audio-format mp3 --audio-quality 128K -o "${outputPath}"`);
 
         return {

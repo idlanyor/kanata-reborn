@@ -21,7 +21,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
     try {
         // Inisialisasi Gemini dengan API key
-        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini);
+        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini2);
         
         // Setup model dengan konfigurasi khusus untuk editing
         const model = genAI.getGenerativeModel({
@@ -38,19 +38,38 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         const base64Image = attf.toString('base64');
 
         // Buat prompt yang lebih terstruktur
-        const basePrompt = `Kamu adalah editor gambar profesional. Tolong edit gambar ini sesuai permintaan:
+//         const basePrompt = `Kamu adalah editor gambar profesional. Tolong edit gambar ini sesuai permintaan:
+
+// "${psn}"
+
+// Panduan editing:
+// - Pertahankan subjek utama dan ekspresinya
+// - Sesuaikan dengan style yang diminta
+// - Pastikan hasil tetap natural dan berkualitas tinggi
+// - Jangan tambahkan watermark atau teks
+// - Fokus pada detail dan keseimbangan warna 
+
+// Mohon edit gambar sesuai permintaan tersebut dengan mempertahankan kualitas tinggi.`;
+const basePrompt = `
+🎨 Kamu adalah AI editor visual canggih dengan gaya yang selevel dengan MidJourney dan Stable Diffusion.
+
+📸 Deskripsi tugasmu:
+Edit gambar yang aku lampirkan agar sesuai dengan instruksi berikut:
 
 "${psn}"
 
-Panduan editing:
-- Pertahankan subjek utama dan ekspresinya
-- Sesuaikan dengan style yang diminta
-- Pastikan hasil tetap natural dan berkualitas tinggi
-- Jangan tambahkan watermark atau teks
-- Fokus pada detail dan keseimbangan warna
+🧠 Prinsip Editing:
+- Gaya visual cinematic, realistis, atau stylized tergantung konteks prompt
+- Warna seimbang, kontras kuat tapi tetap natural
+- Tambahkan efek estetika (jika diminta) seperti lighting, tone, ambient atmosphere
+- Jangan mengubah bentuk wajah atau subjek utama kecuali diminta
+- Gunakan komposisi visual yang menarik dan dramatis
+- Hindari filter norak, watermark, atau teks yang gak diminta
+- Hasil harus terlihat seperti hasil karya seni tingkat tinggi
 
-Mohon edit gambar sesuai permintaan tersebut dengan mempertahankan kualitas tinggi.`;
-
+🖌️ Tujuan akhir:
+Gambar harus terlihat seperti hasil render dari AI visual high-end, cocok untuk pameran seni digital atau cover majalah elite.
+`;
         // Siapkan konten untuk Gemini
         const contents = [
             { text: basePrompt },
