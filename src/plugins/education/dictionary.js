@@ -39,7 +39,7 @@ export default async ({ sock, m, id, psn, sender }) => {
         const word = psn.toLowerCase().trim();
         
         // Inisialisasi Gemini AI
-        const genAI = new GoogleGenerativeAI(globalThis.apikey.gemini);
+        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini2);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
         // Buat prompt untuk Gemini

@@ -1,4 +1,4 @@
-import HijriDate from 'hijri-date/lib/safe';
+import HijriDate from 'hijri-date';
 
 export const handler = 'hijri'
 export const description = 'Menampilkan kalender Hijriyah dan info ibadah'

@@ -144,7 +144,7 @@ Please provide:
 1. Original text
 2. Translation
 3. Pronunciation (if applicable)`;
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini2);
         const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash-lite"
         });
