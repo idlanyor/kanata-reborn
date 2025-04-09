@@ -1,68 +1,82 @@
 import pkg from '@fizzxydev/baileys-pro';
 import { getBuffer } from '../../helper/mediaMsg.js';
-const { proto, generateWAMessageFromContent } = pkg
+const { proto, generateWAMessageFromContent } = pkg;
 import os from 'os';
-import si from 'systeminformation'; // Tambahkan library systeminformation
+import si from 'systeminformation';
 
-export const handler = "stats"
-export const description = "📊 Informasi sistem";
+export const handler = "stats";
+export const description = "📊 Informasi Sistem Server";
+
 export async function systemSpec() {
+    // Dapatkan informasi sistem dasar
     const platform = os.platform();
     const release = os.release();
     const osType = os.type();
-    let OS = `🌐「 *Server System Information* 」* 🌐\n\n`;
+    
+    // Format pesan utama
+    let OS = `╭─❒ 「 *INFORMASI SISTEM SERVER* 」 ❒\n`;
+    OS += `│\n`;
 
     // Informasi OS
-    OS += `💻 *OS*: ${osType} (${platform} ${release})\n`;
+    OS += `├─💻 *Sistem Operasi*\n`;
+    OS += `│  └─ ${osType} (${platform} ${release})\n\n`;
 
     // Informasi RAM
-    const totalMem = os.totalmem() / (1024 ** 3); // Dalam GB
-    const freeMem = os.freemem() / (1024 ** 3); // Dalam GB
+    const totalMem = os.totalmem() / (1024 ** 3);
+    const freeMem = os.freemem() / (1024 ** 3);
     const usedMem = totalMem - freeMem;
-    const ramUsagePercent = (usedMem / totalMem) * 100; // Persentase RAM terpakai
-    const ramFreePercent = (freeMem / totalMem) * 100; // Persentase RAM tersedia
-    const uptime = os.uptime() / 3600; // Dalam jam
+    const ramUsagePercent = (usedMem / totalMem) * 100;
+    const ramFreePercent = (freeMem / totalMem) * 100;
 
+    OS += `├─🧠 *Informasi RAM*\n`;
+    OS += `│  ├─ Total: ${totalMem.toFixed(2)} GB\n`;
+    OS += `│  ├─ Terpakai: ${usedMem.toFixed(2)} GB (${ramUsagePercent.toFixed(2)}%)\n`;
+    OS += `│  └─ Tersedia: ${freeMem.toFixed(2)} GB (${ramFreePercent.toFixed(2)}%)\n\n`;
+
+    // Informasi Uptime
+    const uptime = os.uptime() / 3600;
     const hours = Math.floor(uptime);
     const minutes = Math.floor((uptime - hours) * 60);
     const seconds = Math.floor(((uptime - hours) * 60 - minutes) * 60);
 
-    OS += `🧠 *Total RAM*: ${totalMem.toFixed(2)} GB\n`;
-    OS += `📊 *RAM Terpakai*: ${usedMem.toFixed(2)} GB (${ramUsagePercent.toFixed(2)}%)\n`;
-    OS += `💾 *RAM Tersedia*: ${freeMem.toFixed(2)} GB (${ramFreePercent.toFixed(2)}%)\n\n`;
-
-    // Informasi Waktu Aktif (Uptime)
-    OS += `⏱️ *Uptime*: ${hours} jam ${minutes} menit ${seconds} detik\n\n`;
+    OS += `├─⏱️ *Waktu Aktif*\n`;
+    OS += `│  └─ ${hours} jam ${minutes} menit ${seconds} detik\n\n`;
 
     // Informasi CPU
-    OS += `🖥️ *CPU Info*:\n`;
     const cpus = os.cpus();
     const cpuLoad = calculateCpuLoad();
+
+    OS += `├─🖥️ *Informasi CPU*\n`;
     cpus.forEach((cpu, index) => {
-        OS += `   🔹 *CPU ${index + 1}*: ${cpu.model}\n`;
+        OS += `│  ├─ Core ${index + 1}: ${cpu.model}\n`;
     });
-    OS += `📉 *CPU Usage*: ${cpuLoad.toFixed(2)}%\n\n`;
+    OS += `│  └─ Penggunaan: ${cpuLoad.toFixed(2)}%\n\n`;
 
     // Informasi Jaringan
     const networkStats = await si.networkStats();
     const networkInterfaces = os.networkInterfaces();
-    OS += `🌐 *Network Interfaces*:\n`;
+
+    OS += `├─🌐 *Interfaces Jaringan*\n`;
     for (const [name, interfaces] of Object.entries(networkInterfaces)) {
         interfaces.forEach((iface) => {
-            OS += `   🔹 *${name}* (${iface.family})\n`;
-            OS += `      ▪️ IP Address: ${iface.address}\n`;
-            OS += `      ▪️ Netmask: ${iface.netmask}\n`;
-            OS += `      ▪️ MAC Address: ${iface.mac}\n`;
+            OS += `│  ├─ ${name} (${iface.family})\n`;
+            OS += `│  │  ├─ IP: ${iface.address}\n`;
+            OS += `│  │  ├─ Netmask: ${iface.netmask}\n`;
+            OS += `│  │  └─ MAC: ${iface.mac}\n`;
         });
     }
 
-    OS += `📊 *Network Traffic*:\n`;
+    OS += `│\n`;
+    OS += `├─📊 *Traffic Jaringan*\n`;
     networkStats.forEach((net, index) => {
-        OS += `   🔹 *Interface ${index + 1}*:\n`;
-        OS += `      ▪️ Received: ${(net.rx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
-        OS += `      ▪️ Transmitted: ${(net.tx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
-        OS += `      ▪️ Speed: ${net.ms} ms\n`;
+        OS += `│  ├─ Interface ${index + 1}\n`;
+        OS += `│  │  ├─ Terima: ${(net.rx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
+        OS += `│  │  ├─ Kirim: ${(net.tx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
+        OS += `│  │  └─ Kecepatan: ${net.ms} ms\n`;
     });
+
+    OS += `│\n`;
+    OS += `╰──────────────────`;
 
     return OS;
 }
@@ -79,27 +93,33 @@ function calculateCpuLoad() {
         idle += core.times.idle;
     });
 
-    const usage = 100 - (idle / total) * 100;
-    return usage;
+    return 100 - (idle / total) * 100;
 }
 
-
-export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
-    let msg = generateWAMessageFromContent(
-        id,
-        {
-            orderMessage: {
-                productId: "8569472943180260",
-                title: "Kanata Bot",
-                description: "now",
-                currencyCode: "IDR",
-                message: await systemSpec(),
-                priceAmount1000: "91000",
-                thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
-                surface: "Kanata Bot",
-                contextInfo: { mentionedJid: [id] },
+export default async ({ sock, m, id }) => {
+    try {
+        const msg = generateWAMessageFromContent(
+            id,
+            {
+                orderMessage: {
+                    productId: "8569472943180260",
+                    title: "Kanata Bot",
+                    description: "Informasi Sistem",
+                    currencyCode: "IDR",
+                    message: await systemSpec(),
+                    priceAmount1000: "91000",
+                    thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
+                    surface: "Kanata Bot",
+                    contextInfo: { mentionedJid: [id] },
+                },
             },
-        }, {});
-    await sock.relayMessage(id, msg.message, {});
-    // await sock.sendMessage(id, { text: await systemSpec() });
+            {}
+        );
+        
+        await sock.relayMessage(id, msg.message, {});
+    } catch (error) {
+        await sock.sendMessage(id, { 
+            text: `❌ Terjadi kesalahan: ${error.message}`
+        });
+    }
 };
