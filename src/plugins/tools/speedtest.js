@@ -11,18 +11,20 @@ export async function runSpeedTest() {
         let result = `🌐 *Speed Test Sedang Berjalan*\n\n`;
         result += `⏳ Mohon tunggu sekitar 30 detik...\n`;
         
-        const { stdout } = await execAsync('speedtest-cli --json');
+        const { stdout } = await execAsync('speedtest -f json');
         const test = JSON.parse(stdout);
         
         result = `🚀 *Hasil Speed Test*\n\n`;
-        result += `📥 *Download*: ${(test.download / 1000000).toFixed(2)} Mbps\n`;
-        result += `📤 *Upload*: ${(test.upload / 1000000).toFixed(2)} Mbps\n`;
-        result += `📶 *Ping*: ${test.ping} ms\n\n`;
+        result += `📥 *Download*: ${(test.download.bandwidth / 1000000).toFixed(2)} Mbps\n`;
+        result += `📤 *Upload*: ${(test.upload.bandwidth / 1000000).toFixed(2)} Mbps\n`;
+        result += `📶 *Ping*: ${test.ping.latency.toFixed(2)} ms\n`;
+        result += `📊 *Jitter*: ${test.ping.jitter.toFixed(2)} ms\n\n`;
         result += `🌍 *ISP*: ${test.isp}\n`;
         result += `📍 *Server*:\n`;
         result += `   • Nama: ${test.server.name}\n`;
         result += `   • Lokasi: ${test.server.location} (${test.server.country})\n`;
-        result += `\n🔗 *Preview Link*: ${test.result.url}`;
+        result += `   • IP: ${test.server.ip}\n\n`;
+        result += `🔗 *Preview Link*: ${test.result.url}`;
         
         return result;
     } catch (error) {

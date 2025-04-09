@@ -2,7 +2,7 @@ import Bot from '../../database/models/Bot.js';
 
 export default async ({ sock, m, id, noTel, psn }) => {
     try {
-        if (!psn) {
+        if (!psn) { 
             // Tampilkan daftar harga
             const plans = await Bot.getRentalPlans();
             let text = '*💰 SEWA BOT*\n\n';
