@@ -1,6 +1,8 @@
-import speedTest from 'speedtest-net';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
+const execAsync = promisify(exec);
 
 export const handler = "speedtest";
 
@@ -9,19 +11,18 @@ export async function runSpeedTest() {
         let result = `🌐 *Speed Test Sedang Berjalan*\n\n`;
         result += `⏳ Mohon tunggu sekitar 30 detik...\n`;
         
-        const test = await speedTest({
-            acceptLicense: true,
-            acceptGdpr: true
-        });
+        const { stdout } = await execAsync('speedtest-cli --json');
+        const test = JSON.parse(stdout);
         
         result = `🚀 *Hasil Speed Test*\n\n`;
-        result += `📥 *Download*: ${(test.download.bandwidth / 125000)} Mbps\n`;
-        result += `📤 *Upload*: ${(test.upload.bandwidth / 125000)} Mbps\n`;
-        result += `📶 *Ping*: ${test.ping.latency} ms\n\n`;
+        result += `📥 *Download*: ${(test.download / 1000000).toFixed(2)} Mbps\n`;
+        result += `📤 *Upload*: ${(test.upload / 1000000).toFixed(2)} Mbps\n`;
+        result += `📶 *Ping*: ${test.ping} ms\n\n`;
         result += `🌍 *ISP*: ${test.isp}\n`;
         result += `📍 *Server*:\n`;
         result += `   • Nama: ${test.server.name}\n`;
         result += `   • Lokasi: ${test.server.location} (${test.server.country})\n`;
+        result += `\n🔗 *Preview Link*: ${test.result.url}`;
         
         return result;
     } catch (error) {
@@ -59,4 +60,4 @@ export default async ({ sock, m, id }) => {
             text: `❌ Terjadi kesalahan: ${error.message}`
         });
     }
-}; 
+};

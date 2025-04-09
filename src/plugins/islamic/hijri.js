@@ -1,0 +1,148 @@
+import HijriDate from 'hijri-date/lib/safe';
+
+export const handler = 'hijri'
+export const description = 'Menampilkan kalender Hijriyah dan info ibadah'
+
+const bulanHijri = {
+    1: 'Muharram',
+    2: 'Safar',
+    3: 'Rabiul Awal',
+    4: 'Rabiul Akhir',
+    5: 'Jumadil Awal',
+    6: 'Jumadil Akhir',
+    7: 'Rajab',
+    8: "Sya'ban",
+    9: 'Ramadhan',
+    10: 'Syawal',
+    11: 'Dzulqaidah',
+    12: 'Dzulhijjah'
+};
+
+const hariPuasaSunnah = {
+    // Format: bulan: [tanggal]
+    1: [9, 10], // Tasu'a dan 'Asyura
+    7: [27], // Isra' Mi'raj
+    8: [13, 14, 15], // Ayyamul Bidh
+    9: Array.from({length: 30}, (_, i) => i + 1), // Ramadhan
+    12: [9], // Arafah
+};
+
+function cekPuasaSunnah(date) {
+    const bulan = date.getMonth();
+    const tanggal = date.getDate();
+    
+    if (hariPuasaSunnah[bulan]?.includes(tanggal)) {
+        switch(bulan) {
+            case 1:
+                return tanggal === 9 ? "Puasa Tasu'a" : "Puasa 'Asyura";
+            case 7:
+                return "Puasa Isra' Mi'raj";
+            case 8:
+                return "Puasa Ayyamul Bidh";
+            case 9:
+                return "Puasa Ramadhan";
+            case 12:
+                return "Puasa Arafah";
+            default:
+                return null;
+        }
+    }
+    
+    // Cek Senin-Kamis
+    const hariMasehi = new Date().getDay();
+    if (hariMasehi === 1) return "Puasa Sunnah Senin";
+    if (hariMasehi === 4) return "Puasa Sunnah Kamis";
+    
+    return null;
+}
+
+function cekHariSpesial(date) {
+    const bulan = date.getMonth();
+    const tanggal = date.getDate();
+    
+    if (bulan === 1 && tanggal === 10) return "Hari 'Asyura";
+    if (bulan === 3 && tanggal === 12) return "Maulid Nabi Muhammad ﷺ";
+    if (bulan === 7 && tanggal === 27) return "Isra' Mi'raj";
+    if (bulan === 9 && tanggal === 1) return "Awal Ramadhan";
+    if (bulan === 9 && tanggal === 17) return "Nuzulul Qur'an";
+    if (bulan === 10 && tanggal === 1) return "Hari Raya Idul Fitri";
+    if (bulan === 12 && tanggal === 10) return "Hari Raya Idul Adha";
+    
+    return null;
+}
+
+export default async ({ sock, m, id, psn, sender }) => {
+    try {
+        const today = new Date();
+        const hijri = new HijriDate();
+        
+        const puasaHariIni = cekPuasaSunnah(hijri);
+        const hariSpesial = cekHariSpesial(hijri);
+        
+        const message = `╭─「 *KALENDER HIJRIYAH* 」
+├ *Tanggal:* ${hijri.getDate()} ${bulanHijri[hijri.getMonth()]} ${hijri.getFullYear()} H
+├ *Masehi:* ${today.toLocaleDateString('id-ID', { 
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+})}
+│
+${hariSpesial ? `├ *Event:* ${hariSpesial}
+│` : ''}
+${puasaHariIni ? `├ *Puasa:* ${puasaHariIni}
+│` : ''}
+├ *Catatan:*
+├ • Senin & Kamis: Puasa Sunnah
+├ • Tanggal 13-15: Puasa Ayyamul Bidh
+├ • 'Asyura: 10 Muharram
+├ • Arafah: 9 Dzulhijjah
+╰──────────────────
+
+_Powered by Kanata-V3_`;
+
+        await sock.sendMessage(id, {
+            text: message,
+            contextInfo: {
+                externalAdReply: {
+                    title: '乂 Kalender Hijriyah 乂',
+                    body: `${hijri.getDate()} ${bulanHijri[hijri.getMonth()]} ${hijri.getFullYear()} H`,
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        });
+
+        // Kirim reaksi sukses
+        await sock.sendMessage(id, {
+            react: {
+                text: '📅',
+                key: m.key
+            }
+        });
+
+    } catch (error) {
+        await sock.sendMessage(id, {
+            text: '❌ Error: ' + error.message,
+            contextInfo: {
+                externalAdReply: {
+                    title: '❌ Hijri Calendar Error',
+                    body: 'An error occurred while getting Hijri date',
+                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                    mediaType: 1,
+                }
+            }
+        });
+
+        // Kirim reaksi error
+        await sock.sendMessage(id, {
+            react: {
+                text: '❌',
+                key: m.key
+            }
+        });
+    }
+}; 
