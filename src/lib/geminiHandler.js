@@ -330,7 +330,7 @@ Ada yang bisa gw bantu hari ini? Tinggal bilang aja ya!`;
                 const imagePart = this.bufferToGenerativePart(imageBuffer);
 
 
-                let prompt = `Sebagai Kanata, analisis gambar ini. ${userName} bertanya: "${safeMessage}"`;
+                let prompt = `analisis gambar ini. ${userName} bertanya: "${safeMessage}"`;
 
                 if (isOwner && this.ownerInfo) {
                     prompt += ` User adalah ${this.ownerInfo.name}, pemilikmu. Dia bertanya ${safeMessage}.`;

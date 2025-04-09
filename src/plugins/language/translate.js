@@ -134,7 +134,7 @@ ${Object.entries(languageCodes).map(([code, lang]) => `${code} = ${lang}`).join(
         const text = textParts.join(' ');
 
         if (!text || !languageCodes[targetLang]) {
-            throw new Error('Invalid format or language code');
+            throw new Error('Invalid format or language code ');
         }
 
         const prompt = `Translate this text to ${languageCodes[targetLang]}:
@@ -144,8 +144,8 @@ Please provide:
 1. Original text
 2. Translation
 3. Pronunciation (if applicable)`;
-
-        const model = globalThis.genAI.getGenerativeModel({
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash-lite"
         });
 

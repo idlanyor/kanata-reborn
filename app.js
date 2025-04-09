@@ -6,6 +6,7 @@ import { Kanata } from './src/helper/bot.js';
 import { groupParticipants, groupUpdate } from './src/lib/group.js';
 // import { checkAnswer, tebakSession } from './src/lib/tebak/index.js';
 import { getMedia } from './src/helper/mediaMsg.js';
+import chokidar from 'chokidar';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs';
 import { exec } from 'child_process'
@@ -58,76 +59,42 @@ function findJsFiles(dir) {
 }
 
 function watchCodeChanges() {
-    const pluginsDir = path.join(__dirname, 'src/plugins');
-    const libDir = path.join(__dirname, 'src/lib');
-    const helperDir = path.join(__dirname, 'src/helper');
+    const directories = [
+        path.join(__dirname, 'src/plugins'),
+        path.join(__dirname, 'src/lib'),
+        path.join(__dirname, 'src/helper'),
+        // path.join(__dirname, 'app.js'),
+        path.join(__dirname, 'src/global.js'),
+    ];
 
-    logger.info('Watching for code changes...');
-    const watchDirectory = (dir) => {
-        const files = findJsFiles(dir);
+    logger.info('🔥 Ngejagain file kek bodyguard, siap mantau perubahan...');
 
-        files.forEach(file => {
-            fs.watchFile(file, { interval: 1000 }, async (curr, prev) => {
-                if (curr.mtime !== prev.mtime) {
-                    const relativePath = path.relative(__dirname, file);
-                    logger.info(`File changed: ${relativePath}`);
-                    try {
-                        // Clear cache untuk file yang berubah
-                        const fileURL = pathToFileURL(file).href;
-                        // delete require.cache[fileURL];
-                        const modulePath = `${fileURL}?update=${Date.now()}`;
-                        await import(modulePath);
-
-                        // Jika file adalah plugin, reload plugin
-                        if (file.includes('/plugins/')) {
-                            try {
-                                // Hapus dari cache dan import ulang
-                                await import(`${fileURL}?update=${Date.now()}`);
-                                logger.success(`Plugin reloaded: ${relativePath}`);
-                            } catch (error) {
-                                logger.error(`Failed to reload plugin ${relativePath}:`, error);
-                            }
-                        } else {
-                            logger.info(`Module updated: ${relativePath}`);
-                        }
-                    } catch (error) {
-                        logger.error(`Error watching file ${relativePath}:`, error);
-                    }
-                }
-            });
-        });
-    };
-
-    // Pantau direktori utama
-    watchDirectory(pluginsDir);
-    watchDirectory(libDir);
-    watchDirectory(helperDir);
-
-    // Pantau file app.js dan global.js
-    const appFile = path.join(__dirname, 'app.js');
-    const globalFile = path.join(__dirname, 'src/global.js');
-
-    fs.watchFile(appFile, { interval: 1000 }, (curr, prev) => {
-        if (curr.mtime !== prev.mtime) {
-            logger.warning('app.js changed - changes require restart to take effect');
-        }
+    const watcher = chokidar.watch(directories, {
+        ignored: /node_modules/,
+        persistent: true,
+        ignoreInitial: false,
+        usePolling: true, // biar konsisten di semua platform
+        interval: 1000, // mirip kayak yang di fs.watchFile
     });
 
-    fs.watchFile(globalFile, { interval: 1000 }, (curr, prev) => {
-        if (curr.mtime !== prev.mtime) {
-            logger.warning('global.js changed - reloading global configuration');
-            try {
-                // Reload global configuration
-                exec('node -e "import(\'./src/global.js?update=' + Date.now() + '\')"', (error, stdout, stderr) => {
-                    if (error) {
-                        logger.error('Failed to reload global configuration:', error);
-                        return;
-                    }
-                    logger.success('Global configuration reloaded');
-                });
-            } catch (error) {
-                logger.error('Error reloading global configuration:', error);
+    watcher.on('change', async (filePath) => {
+        const relativePath = path.relative(__dirname, filePath);
+        logger.info(`📢 File berubah: ${relativePath}`);
+
+        try {
+            const fileURL = pathToFileURL(filePath).href;
+            const modulePath = `${fileURL}?update=${Date.now()}`;
+            await import(modulePath);
+
+            if (filePath.includes('/plugins/')) {
+                logger.success(` Plugin di-reload: ${relativePath}`);
+            } else if (filePath.endsWith('global.js')) {
+                logger.success(`Global config di-reload: ${relativePath}`);
+            } else {
+                logger.info(`✅ Module updated: ${relativePath}`);
             }
+        } catch (err) {
+            logger.error(`💥 Error waktu reload ${relativePath}:`, err);
         }
     });
 }
@@ -390,6 +357,7 @@ export async function startBot() {
                 let m = chatUpdate.messages[0];
                 m = addMessageHandler(m, sock);
                 if (m.chat.endsWith('@newsletter')) return;
+                if (m.chat.endsWith('@broadcast')) return;
                 if (m.key.fromMe) return
                 // if (m.isGroup) return
                 // if (m.isGroup && !m.isOwner()) return
@@ -704,26 +672,26 @@ export async function startBot() {
 
         // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
         // schedulePrayerReminders(sock, globalThis.newsLetterJid);
-        const jids = [
-            '120363322355235306@g.us',
-            '120363168824825004@g.us',
-            '120363331973486203@g.us',
-            '120363313225939444@g.us',
-            '120363025048735374@g.us',
-            '120363170175024834@g.us',
-            '120363333206963062@g.us',
-            '120363420976976851@g.us',
-            '120363378930842508@g.us',
-            '120363393072539921@g.us',
-            '120363320183359410@g.us',
-            '120363349495948665@g.us',
-            '120363176955019646@g.us',
-            '120363152273645676@g.us',
-            '120363299623971703@g.us'
-        ]
-        for (const jid of jids) {
-            schedulePrayerReminders(sock, jid);
-        }
+        // const jids = [
+        //     '120363322355235306@g.us',
+        //     '120363168824825004@g.us',
+        //     '120363331973486203@g.us',
+        //     '120363313225939444@g.us',
+        //     '120363025048735374@g.us',
+        //     '120363170175024834@g.us',
+        //     '120363333206963062@g.us',
+        //     '120363420976976851@g.us',
+        //     '120363378930842508@g.us',
+        //     '120363393072539921@g.us',
+        //     '120363320183359410@g.us',
+        //     '120363349495948665@g.us',
+        //     '120363176955019646@g.us',
+        //     '120363152273645676@g.us',
+        //     '120363299623971703@g.us'
+        // ]
+        // for (const jid of jids) {
+        //     schedulePrayerReminders(sock, jid);
+        // }
 
         sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
         sock.ev.on('groups.update', ev => groupUpdate(ev, sock));
@@ -731,11 +699,10 @@ export async function startBot() {
             call(callEv, sock)
         })
     }).catch(error => logger.error('Fatal error starting bot:', error));
-
 }
 
-server.listen(3000, '0.0.0.0', () => {
-    console.log('server running at http://0.0.0.0:3000');
+server.listen(3035, '0.0.0.0', () => {
+    console.log('server running at http://0.0.0.0:3035');
 });
 watchCodeChanges();
 startBot()

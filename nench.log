@@ -1,0 +1,102 @@
+-------------------------------------------------
+ nench.sh v2019.07.20 -- https://git.io/nench.sh
+ benchmark timestamp:    2025-04-09 08:42:42 UTC
+-------------------------------------------------
+
+Processor:    Intel Xeon E3-12xx v2 (Ivy Bridge)
+CPU cores:    2
+Frequency:    2793.268 MHz
+RAM:          7.8Gi
+Swap:         -
+Kernel:       Linux 5.15.0-136-generic x86_64
+
+Disks:
+sda     50G  SSD
+
+CPU: SHA256-hashing 500 MB
+    4.812 seconds
+CPU: bzip2-compressing 500 MB
+    9.337 seconds
+CPU: AES-encrypting 500 MB
+    3.470 seconds
+
+ioping: seek rate
+    min/avg/max/mdev = 47.3 us / 123.6 us / 23.1 ms / 366.8 us
+ioping: sequential read speed
+    generated 20.3 k requests in 5.00 s, 4.95 GiB, 4.05 k iops, 1013.7 MiB/s
+
+dd: sequential write speed
+    1st run:    104.90 MiB/s
+    2nd run:    137.33 MiB/s
+    3rd run:    119.21 MiB/s
+    average:    120.48 MiB/s
+
+IPv4 speedtests
+    your IPv4:    45.134.39.xxxx
+
+    Cachefly CDN:         49.44 MiB/s
+    Leaseweb (NL):        0.01 MiB/s
+    Softlayer DAL (US):   0.00 MiB/s
+    Online.net (FR):      43.16 MiB/s
+    OVH BHS (CA):         9.76 MiB/s
+
+IPv6 speedtests
+    your IPv6:    2a0e:97c0:3ea:xxxx
+
+    Leaseweb (NL):        0.58 MiB/s
+    Softlayer DAL (US):   0.00 MiB/s
+    Online.net (FR):      82.78 MiB/s
+    OVH BHS (CA):         6.89 MiB/s
+-------------------------------------------------
+
+-------------------------------------------------
+ nench.sh v2019.07.20 -- https://git.io/nench.sh
+ benchmark timestamp:    2025-04-09 08:44:10 UTC
+-------------------------------------------------
+
+Processor:    Intel Xeon E3-12xx v2 (Ivy Bridge)
+CPU cores:    2
+Frequency:    2793.268 MHz
+RAM:          7.8Gi
+Swap:         -
+Kernel:       Linux 5.15.0-136-generic x86_64
+
+Disks:
+sda     50G  SSD
+
+CPU: SHA256-hashing 500 MB
+    5.036 seconds
+CPU: bzip2-compressing 500 MB
+    9.571 seconds
+CPU: AES-encrypting 500 MB
+    3.683 seconds
+
+ioping: seek rate
+    min/avg/max/mdev = 47.2 us / 117.5 us / 15.6 ms / 321.9 us
+ioping: sequential read speed
+    generated 21.6 k requests in 5.00 s, 5.26 GiB, 4.31 k iops, 1.05 GiB/s
+
+dd: sequential write speed
+    1st run:    113.49 MiB/s
+    2nd run:    124.93 MiB/s
+    3rd run:    144.96 MiB/s
+    average:    127.79 MiB/s
+
+IPv4 speedtests
+    your IPv4:    45.134.39.xxxx
+
+    Cachefly CDN:         103.41 MiB/s
+    Leaseweb (NL):        0.01 MiB/s
+    Softlayer DAL (US):   0.00 MiB/s
+    Online.net (FR):      80.00 MiB/s
+    OVH BHS (CA):         9.39 MiB/s
+
+IPv6 speedtests
+    your IPv6:    2a0e:97c0:3ea:xxxx
+
+    Leaseweb (NL):        0.62 MiB/s
+    Softlayer DAL (US):   0.00 MiB/s
+    Online.net (FR):      86.27 MiB/s
+    OVH BHS (CA):         10.58 MiB/s
+-------------------------------------------------
+
