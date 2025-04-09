@@ -12,7 +12,7 @@ export async function systemSpec() {
     const platform = os.platform();
     const release = os.release();
     const osType = os.type();
-    
+
     // Format pesan utama
     let OS = `╭─❒ 「 *INFORMASI SISTEM SERVER* 」 ❒\n`;
     OS += `│\n`;
@@ -102,23 +102,31 @@ export default async ({ sock, m, id }) => {
             id,
             {
                 orderMessage: {
+                    orderId: "8569472943180260",
+                    thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
+                    itemCount: 1,
+                    status: 1,
+                    surface: "Kanata Bot",
+                    message: await systemSpec(),
+                    orderTitle: "Speed Test",
+                    sellerJid: '0@s.whatsapp.net',
+                    token: '1',
+                    totalAmount1000: 100000,
+                    totalCurrencyCode: "IDR",
                     productId: "8569472943180260",
                     title: "Kanata Bot",
                     description: "Informasi Sistem",
                     currencyCode: "IDR",
-                    message: await systemSpec(),
                     priceAmount1000: "91000",
-                    thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
-                    surface: "Kanata Bot",
                     contextInfo: { mentionedJid: [id] },
                 },
             },
             {}
         );
-        
+
         await sock.relayMessage(id, msg.message, {});
     } catch (error) {
-        await sock.sendMessage(id, { 
+        await sock.sendMessage(id, {
             text: `❌ Terjadi kesalahan: ${error.message}`
         });
     }
