@@ -1,10 +1,21 @@
 import { updatePoints } from '../../helper/database.js';
-import { tebak } from '../../helper/skizotech.js';
+import { game } from '../../helper/hikaru.js';
 import moment from 'moment';
 import { maskSentence } from '../../helper/word.js';
 import User from '../../database/models/User.js';
 
-export let tebakSession = new Map();
+// Tambahkan ini di bagian atas file
+global.tebakGame = {};
+console.log("Initializing tebakGame:", global.tebakGame);
+
+// Tambahkan fungsi helper untuk debug
+export const debugGameSession = (id) => {
+    console.log('Current Game Session:', {
+        id,
+        session: global.tebakGame[id],
+        allSessions: global.tebakGame
+    });
+};
 
 // Helper function untuk menghitung exp berdasarkan waktu
 const calculateExp = (timeElapsed) => {
@@ -21,7 +32,7 @@ const calculateExp = (timeElapsed) => {
 };
 
 // Fungsi untuk mengirim pesan level up
-const sendLevelUpMessage = async (sock, id, newLevel) => {
+export const sendLevelUpMessage = async (sock, id, newLevel) => {
     await sock.sendMessage(id, {
         text: `🎉 Selamat! Level kamu naik ke level ${newLevel}!`
     });
@@ -29,45 +40,59 @@ const sendLevelUpMessage = async (sock, id, newLevel) => {
 
 export const asahotak = async (id, sock) => {
     try {
-        const response = await tebak('asahotak');
-        const question = response.data.soal;
-        const answer = response.data.jawaban;
+        const response = await game('asahotak');
+        const question = response.question;
+        const answer = response.answer;
 
         await sock.sendMessage(id, { text: question });
 
-        tebakSession.set(id, {
+        // Simpan ke global state
+        global.tebakGame[id] = {
+            session: true,
             answer: answer,
-            timestamp: moment(), // Tambahkan timestamp
+            timestamp: moment(),
             timeout: setTimeout(async () => {
-                await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-                tebakSession.delete(id);
+                await sock.sendMessage(id, {
+                    text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+                });
+                delete global.tebakGame[id];
             }, 60000)
-        });
+        };
+
     } catch (error) {
         console.log(error)
         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
     }
 };
+
 export const caklontong = async (id, sock) => {
     try {
         const response = await tebak('caklontong');
         const question = `Soal : ${response.data.soal} \n Clue : ${response.data.deskripsi}`;
         const answer = response.data.jawaban;
 
-        await sock.sendMessage(id, { text: question + ` ${maskSentence(answer)} (${answer.length}) kata` });
-
-        tebakSession.set(id, {
-            answer: answer,
-            timeout: setTimeout(async () => {
-                await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-                tebakSession.delete(id);
-            }, 60000) // 60 detik
+        await sock.sendMessage(id, {
+            text: question + ` ${maskSentence(answer)} (${answer.length} kata)`
         });
+
+        global.tebakGame[id] = {
+            session: true,
+            answer: answer,
+            timestamp: moment(),
+            timeout: setTimeout(async () => {
+                await sock.sendMessage(id, {
+                    text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+                });
+                delete global.tebakGame[id];
+            }, 60000)
+        };
+
     } catch (error) {
         console.log(error)
         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
     }
 };
+
 export const susun = async (id, sock) => {
     try {
         const response = await tebak('susunkata');
@@ -76,13 +101,17 @@ export const susun = async (id, sock) => {
 
         await sock.sendMessage(id, { text: question });
 
-        tebakSession.set(id, {
+        global.tebakGame[id] = {
+            session: true,
             answer: answer,
+            timestamp: moment(),
             timeout: setTimeout(async () => {
-                await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-                tebakSession.delete(id);
-            }, 60000) // 60 detik
-        });
+                await sock.sendMessage(id, {
+                    text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+                });
+                delete global.tebakGame[id];
+            }, 60000)
+        };
     } catch (error) {
         console.log(error)
         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
@@ -97,32 +126,41 @@ export const bendera = async (id, sock) => {
 
         await sock.sendMessage(id, { text: question });
 
-        tebakSession.set(id, {
+        global.tebakGame[id] = {
+            session: true,
             answer: answer,
+            timestamp: moment(),
             timeout: setTimeout(async () => {
-                await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-                tebakSession.delete(id);
-            }, 60000) // 60 detik
-        });
+                await sock.sendMessage(id, {
+                    text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+                });
+                delete global.tebakGame[id];
+            }, 60000)
+        };
     } catch (error) {
         console.log(error)
         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
     }
 };
+
 export const gambar = async (id, sock) => {
     try {
-        const response = await tebak('gambar');
-        const img = response.data.result.image;
-        const answer = response.data.result.answer;
-        await sock.sendMessage(id, { image: { url: img.replace(/\.png$/, '.jpg') } })
+        const response = await game('tebakgambar');
+        const img = response.image;
+        const answer = response.answer;
+        await sock.sendMessage(id, { image: { url: img } })
 
-        tebakSession.set(id, {
+        global.tebakGame[id] = {
+            session: true,
             answer: answer,
+            timestamp: moment(),
             timeout: setTimeout(async () => {
-                await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-                tebakSession.delete(id);
-            }, 60000) // 60 detik
-        });
+                await sock.sendMessage(id, {
+                    text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+                });
+                delete global.tebakGame[id];
+            }, 60000)
+        };
     } catch (error) {
         console.log(error)
         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
@@ -130,63 +168,66 @@ export const gambar = async (id, sock) => {
 };
 
 export const checkAnswer = async (id, userAnswer, sock, quotedMessageId, noTel) => {
-    const session = tebakSession.get(id);
-    const correctAnswer = session.answer.toLowerCase();
-    const questionTime = session.timestamp;
-    const currentTime = moment();
+    const session = global.tebakGame[id];
+    if (!session) {
+        console.log('No active session found for:', id);
+        return false;
+    }
 
-    const timeElapsed = currentTime.diff(questionTime, 'seconds');
+    console.log('Checking answer:', {
+        userAnswer,
+        correctAnswer: session.answer,
+        session: session
+    });
 
-    // Hitung poin dan exp
-    const { min: minPoin, max: maxPoin } = calculateExp(timeElapsed);
-    const kalkulasiPoin = Math.floor(Math.random() * (maxPoin - minPoin + 1)) + minPoin;
-    
-    // Exp akan sebanding dengan poin yang didapat (10x lipat)
-    const expGained = kalkulasiPoin * 10;
+    const answer = session.answer.toLowerCase().trim();
+    userAnswer = userAnswer.toLowerCase().trim();
 
-    if (userAnswer.toLowerCase() === correctAnswer) {
+    if (userAnswer === answer) {
         clearTimeout(session.timeout);
         
         try {
-            // Update poin
-            await updatePoints({ id: noTel, points: kalkulasiPoin });
+            // Hitung waktu yang dibutuhkan untuk menjawab dalam detik
+            const timeElapsed = moment().diff(session.timestamp, 'seconds');
+            const expRange = calculateExp(timeElapsed);
+            const pointsEarned = Math.floor(Math.random() * (expRange.max - expRange.min + 1)) + expRange.min;
             
-            // Update exp dan cek level up
-            const expResult = await User.addExp(noTel, expGained);
+            await updatePoints({ id: noTel, points: pointsEarned });
             
-            let rewardMessage = `🎯 Jawaban kamu benar: ${correctAnswer}\n`;
-            rewardMessage += `💰 Poin +${kalkulasiPoin}\n`;
-            rewardMessage += `✨ EXP +${expGained}\n`;
-            
-            // Jika naik level, tambahkan pesan selamat
-            if (expResult.levelUp) {
-                rewardMessage += `\n🎉 Level Up! Sekarang kamu level ${expResult.newLevel}!\n`;
-                rewardMessage += `📊 Progress: ${expResult.currentExp}/${expResult.expNeeded} EXP`;
-            }
+            await sock.sendMessage(id, { 
+                text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan ${pointsEarned} points!`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '🏆 Jawaban Benar',
+                        body: `+${pointsEarned} points`,
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                        sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                        mediaType: 1,
+                    }
+                }
+            });
 
-            await sock.sendMessage(id, {
-                text: rewardMessage
-            }, { quoted: quotedMessageId });
+            await sock.sendMessage(id, { 
+                react: { 
+                    text: '🎮', 
+                    key: quotedMessageId.key 
+                } 
+            });
 
+            delete global.tebakGame[id];
+            return true;
         } catch (error) {
-            console.error('Error updating rewards:', error);
+            console.error('Error giving reward:', error);
             await sock.sendMessage(id, {
-                text: 'Terjadi kesalahan saat memperbarui hadiah.'
-            }, { quoted: quotedMessageId });
+                text: 'Jawaban benar! Tapi ada error saat memberikan hadiah.'
+            });
+            return false;
         }
-
-        tebakSession.delete(id);
     } else {
-        // Opsional: Berikan sedikit exp untuk usaha menjawab
-        try {
-            await User.addExp(noTel, 5); // 5 exp untuk setiap jawaban salah
-            await sock.sendMessage(id, {
-                text: 'Jawaban salah, tapi kamu dapat 5 EXP untuk usahamu! Coba lagi!',
-            }, { quoted: quotedMessageId });
-        } catch (error) {
-            console.error('Error updating exp for wrong answer:', error);
-        }
+        await sock.sendMessage(id, {
+            text: '❌ Jawaban salah, coba lagi!'
+        });
+        return false;
     }
 };
-
 

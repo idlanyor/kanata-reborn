@@ -56,7 +56,7 @@ class User {
     static async claimDaily(phone) {
         await db.read()
         const user = db.data.users.find(u => u.phone === phone)
-        if (!user) throw new Error('User ilang kaya mantan 😭')
+        if (!user) throw new Error('User ilang 😭')
 
         const now = new Date()
         const lastDaily = user.last_daily ? new Date(user.last_daily) : null

@@ -13,5 +13,16 @@ export const hikaru = async (url, config) => {
         throw error;
     }
 }
+export const game = async (q, config) => {
+    try {
+        return (await axiosInstance.get('/game/' + q, config)).data.result;
+    } catch (error) {
+        console.error('Error in game request:', error);
+        throw error;
+    }
+}
 
-
+// (async () => {
+//     const result = await game('tebakgambar');
+//     console.log(result);
+// })();

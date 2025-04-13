@@ -4,7 +4,7 @@ import express from 'express'
 import { Server } from 'socket.io'
 import { Kanata } from './src/helper/bot.js';
 import { groupParticipants, groupUpdate } from './src/lib/group.js';
-// import { checkAnswer, tebakSession } from './src/lib/tebak/index.js';
+import { checkAnswer } from './src/lib/tebak/index.js';
 import { getMedia } from './src/helper/mediaMsg.js';
 import chokidar from 'chokidar';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -136,6 +136,26 @@ async function getPhoneNumber() {
         });
     }
 }
+
+// Tambahkan fungsi helper untuk mengecek sesi game
+const isGameSession = (id) => {
+    return global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session;
+};
+
+// Tambahkan fungsi untuk handle AI response
+const handleAIResponse = async (sock, m, id, noTel, isGroupChat, settings) => {
+    // Cek sesi game terlebih dahulu
+    if (isGameSession(id)) {
+        // Jika ada sesi game dan user mention bot, beri peringatan
+        if (m.body.includes('@' + sock.user.id.split(':')[0])) {
+            await sock.sendMessage(id, { 
+                text: "🎮 Sedang ada sesi game berlangsung. Selesaikan dulu gamenya ya!" 
+            }, { quoted: m });
+        }
+        return true; // Return true untuk menandakan ada sesi game
+    }
+    return false; // Return false jika tidak ada sesi game
+};
 
 async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
     // if (!command && !attf) return;
@@ -292,47 +312,82 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             logger.info(`Executing command: ${cmd}`);
             await plugins[cmd]({ sock, m, id, psn: args.join(' '), sender, noTel, attf, cmd });
             logger.success(`Command ${cmd} executed successfully`);
+            return;
         }
 
         // Handler untuk cek jawaban game tebak
-        // if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
-        //     const answer = global.tebakGame[id].answer.toLowerCase();
-        //     const userAnswer = m.body.toLowerCase();
+        if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+            // Tambahkan debug log
+            console.log('Game Session Active:', {
+                id: id,
+                userInput: m.body,
+                gameAnswer: global.tebakGame[id].answer,
+                messageType: m.type,
+                fullMessage: m // log full message object untuk cek struktur
+            });
 
-        //     // Jika jawaban benar
-        //     if (userAnswer === answer) {
-        //         // Clear timeout
-        //         clearTimeout(global.tebakGame[id].timeout);
+            if (m.body.startsWith('!') || m.body.startsWith('.')) {
+                return;
+            }
 
-        //         // Tambah point ke user (jika ada sistem point)
-        //         await User.addPoints(noTel, 100);
+            const answer = global.tebakGame[id].answer.toLowerCase().trim(); // tambah trim()
+            const userAnswer = m.body.toLowerCase().trim(); // tambah trim()
 
-        //         // Hapus sesi game
-        //         delete global.tebakGame[id];
+            console.log('Comparing answers:', {
+                userAnswer: userAnswer,
+                correctAnswer: answer,
+                isEqual: userAnswer === answer
+            });
 
-        //         // Kirim pesan berhasil
-        //         await sock.sendMessage(id, { 
-        //             text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan 100 points!`,
-        //             contextInfo: {
-        //                 externalAdReply: {
-        //                     title: '🏆 Jawaban Benar',
-        //                     body: '+100 points',
-        //                     thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
-        //                     sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-        //                     mediaType: 1,
-        //                 }
-        //             }
-        //         });
+            // Jika jawaban benar
+            if (userAnswer === answer) {
+                console.log('Correct answer!');
+                // Clear timeout
+                clearTimeout(global.tebakGame[id].timeout);
 
-        //         // Kirim reaksi sukses
-        //         await sock.sendMessage(id, { 
-        //             react: { 
-        //                 text: '🎮', 
-        //                 key: m.key 
-        //             } 
-        //         });
-        //     }
-        // }
+                // Tambah point ke user (jika ada sistem point)
+                await User.addPoints(noTel, 100);
+
+                // Hapus sesi game
+                delete global.tebakGame[id];
+                console.log('Game session cleared after correct answer');
+
+                // Kirim pesan berhasil
+                await sock.sendMessage(id, { 
+                    text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan 100 points!`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: '🏆 Jawaban Benar',
+                            body: '+100 points',
+                            thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                            sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                            mediaType: 1,
+                        }
+                    }
+                });
+
+                // Kirim reaksi sukses
+                await sock.sendMessage(id, { 
+                    react: { 
+                        text: '🎮', 
+                        key: m.key 
+                    } 
+                });
+            } else {
+                // Tambah debug untuk jawaban salah
+                console.log('Wrong answer details:', {
+                    userAnswerLength: userAnswer.length,
+                    correctAnswerLength: answer.length,
+                    userAnswerChars: Array.from(userAnswer),
+                    correctAnswerChars: Array.from(answer)
+                });
+                
+                await sock.sendMessage(id, {
+                    text: '❌ Jawaban salah, coba lagi!'
+                });
+            }
+            return;
+        }
 
     } catch (error) {
         logger.error('Error in message processing:', error);
@@ -435,6 +490,11 @@ export async function startBot() {
                                         if (settings.autoai !== 1) continue;
                                     }
 
+                                    // Cek sesi game sebelum proses AI
+                                    if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
+                                        continue;
+                                    }
+
                                     const imageResponse = await geminiHandler.analyzeImage(
                                         mediaBuffer.buffer,
                                         m.quoted?.text || caption || m.body,
@@ -476,9 +536,18 @@ export async function startBot() {
 
                 // Jika bukan media message, proses text message
                 if (!isMediaProcessed && m.type === 'text') {
-                    // Handle pesan dengan prefix . atau !
+                    // Handle game answers first
+                    if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+                        if (!m.body.startsWith('!') && !m.body.startsWith('.')) {
+                            console.log('Processing game answer:', m.body);
+                            await checkAnswer(id, m.body, sock, m, noTel);
+                            return;
+                        }
+                    }
+
+                    // Then handle commands
                     if (m.body && (m.body.startsWith('!') || m.body.startsWith('.'))) {
-                        const command = m.quoted?.text || m.body
+                        const command = m.quoted?.text || m.body;
                         await prosesPerintah({ command, sock, m, id, sender, noTel, attf: null, mime: null });
                         return;
                     }
@@ -486,6 +555,11 @@ export async function startBot() {
                     // Auto AI untuk mention bot
                     if (botMentioned) {
                         if (m.key.fromMe) return;
+                        
+                        // Cek sesi game
+                        if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
+                            return;
+                        }
 
                         try {
                             // Cek apakah ini private chat atau grup
@@ -573,12 +647,22 @@ export async function startBot() {
                         return;
                     }
 
+                    // Tambahkan pengecekan sesi game
+                    if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+                        return; // Skip proses autoAI jika sedang ada sesi game
+                    }
+
                     // Handle pesan teks biasa (minimal 3 karakter)
                     if (m.body && m.body.length >= 3 && sender !== globalThis.botNumber) {
                         // Untuk grup chat, hanya proses jika autoai aktif dan bot di-mention/reply
                         if (isGroupChat) {
                             const settings = await Group.getSettings(id);
                             if (settings.autoai !== 1) return;
+
+                            // Cek sesi game
+                            if (await handleAIResponse(sock, m, id, noTel, isGroupChat, settings)) {
+                                return;
+                            }
 
                             // Di grup harus di-mention atau di-reply
                             if (!botMentioned && !m.quoted?.participant?.includes(botId)) return;

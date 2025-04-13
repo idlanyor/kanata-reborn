@@ -1,11 +1,12 @@
-import { asahotak } from "../../lib/tebak/index.js";
-export const handler = "asahotak"
-export const description = "Tebak tebakan Asah Otak";
-// const asahotak = async (id, sock) => {
+// import { neo } from "../../helper/neoxr.js";
+// import { tebakSession } from "../../lib/tebak/index.js";
+// export const description = "Mini Game Susun Kata";
+// export const handler = "susun"
+// const susun = async (id, sock) => {
 //     try {
-//         const response = await tebak('asahotak');
-//         const question = response.data.result.question;
-//         const answer = response.data.result.answer;
+//         const response = await neo('whatword');
+//         const question = `Tipe : ${response.data.data.tipe}\n Pertanyaan : ${response.data.data.pertanyaan}`;
+//         const answer = response.data.data.jawaban;
 
 //         await sock.sendMessage(id, { text: question });
 
@@ -21,7 +22,6 @@ export const description = "Tebak tebakan Asah Otak";
 //         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
 //     }
 // };
-export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
-    await asahotak(id, sock);
-
-};
+// export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
+//     await susun(id, sock);
+// };
