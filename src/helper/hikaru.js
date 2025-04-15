@@ -22,7 +22,7 @@ export const game = async (q, config) => {
     }
 }
 
-// (async () => {
-//     const result = await game('tebakgambar');
-//     console.log(result);
-// })();
+(async () => {
+    const result = await game('tebakgambar');
+    console.log(result);
+})();

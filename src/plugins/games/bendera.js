@@ -1,42 +1,42 @@
 // import { game } from "../../helper/hikaru.js"
-// import { tebakSession } from "../../lib/tebak/index.js"
-// export const handler = "bendera"
+// import moment from 'moment';
+// import { getRandomFlag } from "../../utils/flagData.js"
+
+// export const handler = "tebakbendera"
 // export const description = "Tebak Bendera";
-// function countryToFlagEmoji(countryCode) {
-//     let code = countryCode.toUpperCase();
 
-//     if (code.length !== 2) {
-//         throw new Error('Kode negara kudu 2 huruf!');
-//     }
-
-
-//     // Konversi masing-masing karakter kode negara dadi emoji bendera
-//     let flag = String.fromCodePoint(code.charCodeAt(0) + 127397) +
-//         String.fromCodePoint(code.charCodeAt(1) + 127397);
-
-//     return flag;
-// }
-
-// export const bendera = async (id, sock) => {
+// const bendera = async (id, sock) => {
 //     try {
-//         const response = await tebak('tebakbendera');
-//         const question = countryToFlagEmoji(response.data.flag);
-//         const answer = response.data.name;
+//         const response = getRandomFlag();
+//         const caption = response.description;
+//         const answer = response.answer.toLowerCase().trim();
 
-//         await sock.sendMessage(id, { text: question });
-
-//         tebakSession.set(id, {
-//             answer: answer,
-//             timeout: setTimeout(async () => {
-//                 await sock.sendMessage(id, { text: `Waktu habis! Jawaban yang benar adalah: ${tebakSession.get(id).answer}` });
-//                 tebakSession.delete(id);
-//             }, 60000) // 60 detik
+//         console.log('New Game Session:', {
+//             id: id,
+//             answer: answer
 //         });
+
+//         await sock.sendMessage(id, { text: caption });
+
+//         global.tebakGame[id] = {
+//             session: true,
+//             answer: answer,
+//             timestamp: moment(),
+//             timeout: setTimeout(async () => {
+//                 await sock.sendMessage(id, {
+//                     text: `⏰ Waktu habis!\n\n✨ Jawaban yang benar adalah: *${answer}*`
+//                 });
+//                 delete global.tebakGame[id];
+//             }, 60000)
+//         };
+
+//         console.log('Game state after creation:', global.tebakGame[id]);
 //     } catch (error) {
 //         console.log(error)
 //         await sock.sendMessage(id, { text: 'Terjadi kesalahan, silakan coba lagi.' });
 //     }
 // };
+
 // export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 //     await bendera(id, sock);
 // };

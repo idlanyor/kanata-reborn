@@ -1,5 +1,6 @@
 import User from '../../database/models/User.js';
 import pkg from '@fizzxydev/baileys-pro';
+import { getPpUrl } from "../../helper/bot.js";
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = ['profile', 'me'];
@@ -24,6 +25,9 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
             return;
         }
 
+        // Ambil PP URL pengguna
+        const ppUrl = await getPpUrl(sock, noTel);
+
         const expNeeded = user.level * 1000;
         const progress = (user.exp / expNeeded) * 100;
 
@@ -35,16 +39,31 @@ export default async ({ sock, m, id, psn, sender, noTel }) => {
         const message = generateWAMessageFromContent(id, proto.Message.fromObject({
             extendedTextMessage: {
                 text: `╭─「 *USER PROFILE* 」
-├ 👤 *Name:* ${user.name}
-├ 📱 *Number:* ${user.phone}
+├ 👤 *Nama:* ${user.name}
+├ 📱 *Nomor:* ${user.phone}
+├ 🎯 *Nama Panggilan:* ${user.nickname || '(belum diatur)'}
+├ 👥 *Jenis Kelamin:* ${user.gender || '(belum diatur)'}
+├ 🕌 *Agama:* ${user.religion || '(belum diatur)'}
+├ 🌆 *Kota:* ${user.city || '(belum diatur)'}
+├ 📅 *Tanggal Lahir:* ${user.birthdate || '(belum diatur)'}
+├ 🎨 *Hobi:* ${user.hobby || '(belum diatur)'}
+├ 💭 *Bio:* ${user.bio || '(belum diatur)'}
+│
+├─「 *STATISTIK* 」
 ├ 📈 *Level:* ${user.level}
 ├ ✨ *EXP:* ${progressBar} ${progress.toFixed(1)}%
 ├ 💫 *Progress:* ${user.exp}/${expNeeded}
-├ 💬 *Messages:* ${user.total_messages}
-├ ⌨️ *Commands:* ${user.total_commands}
-├ 📅 *Joined:* ${new Date(user.join_date).toLocaleDateString()}
+├ 💬 *Total Pesan:* ${user.total_messages}
+├ ⌨️ *Total Command:* ${user.total_commands}
+├ 📅 *Bergabung:* ${new Date(user.join_date).toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+})}
 ╰──────────────────
 
+💡 _Ketik .setbio untuk mengatur biodata_
 _Powered by Kanata-V3_`,
                 contextInfo: {
                     mentionedJid: [user.phone + "@s.whatsapp.net"],
@@ -56,7 +75,7 @@ _Powered by Kanata-V3_`,
                         mediaType: 1,
                         previewType: 0,
                         renderLargerThumbnail: true,
-                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                        thumbnailUrl: ppUrl,
                         sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m'
                     }
                 }

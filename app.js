@@ -252,14 +252,6 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                     logger.error('Error in antitoxic:', error);
                 }
             }
-
-            // Cek only admin
-            if (settings.only_admin) {
-                const groupAdmins = await getGroupAdmins({ sock, id });
-                if (!groupAdmins.includes(noTel)) {
-                    return;
-                }
-            }
         } else {
             // if (m.key.fromMe) return;
         }
@@ -272,26 +264,34 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
 
         // Tambah exp untuk setiap pesan (5-15 exp random)
         const expGained = Math.floor(Math.random() * 11) + 5;
-        // const expResult = await User.addExp(noTel, expGained);
+        const expResult = await User.addExp(noTel, expGained);
 
         // Jika naik level, kirim notifikasi
-        // if (expResult.levelUp) {
-        //     await sock.sendMessage(id, {
-        //         text: `🎉 Selamat! Level kamu naik ke level ${expResult.newLevel}!`
-        //     }, { quoted: {
-        //     key: {
-        //         remoteJid: 'status@broadcast',
-        //         participant: "13135550002@s.whatsapp.net",
-        //     },
-        //     message: {
-        //         newsletterAdminInviteMessage: {
-        //             newsletterJid: '120363293401077915@newsletter',
-        //             newsletterName: 'Roy',
-        //             caption: 'Kanata V3'
-        //         }
-        //     }
-        // } });
-        // }
+        if (expResult.levelUp) {
+            await sock.sendMessage(id, {
+                text: `🎉 *LEVEL UP!*\n\n` +
+                      `📊 Level kamu naik ke level ${expResult.newLevel}!\n` +
+                      `✨ EXP: ${expResult.currentExp}/${expResult.expNeeded}`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: '🎮 Level Up!',
+                        body: `${m.pushName} naik ke level ${expResult.newLevel}`,
+                        thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
+                        sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            });
+
+            // Tambah reaksi level up
+            await sock.sendMessage(id, {
+                react: {
+                    text: '⭐',
+                    key: m.key
+                }
+            });
+        }
 
         // Jika ada command, increment counter command
         if (m.body.startsWith('!') || m.body.startsWith('.')) {
@@ -318,13 +318,13 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         // Handler untuk cek jawaban game tebak
         if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
             // Tambahkan debug log
-            console.log('Game Session Active:', {
-                id: id,
-                userInput: m.body,
-                gameAnswer: global.tebakGame[id].answer,
-                messageType: m.type,
-                fullMessage: m // log full message object untuk cek struktur
-            });
+            // console.log('Game Session Active:', {
+            //     id: id,
+            //     userInput: m.body,
+            //     gameAnswer: global.tebakGame[id].answer,
+            //     messageType: m.type,
+            //     fullMessage: m // log full message object untuk cek struktur
+            // });
 
             if (m.body.startsWith('!') || m.body.startsWith('.')) {
                 return;
@@ -333,15 +333,15 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             const answer = global.tebakGame[id].answer.toLowerCase().trim(); // tambah trim()
             const userAnswer = m.body.toLowerCase().trim(); // tambah trim()
 
-            console.log('Comparing answers:', {
-                userAnswer: userAnswer,
-                correctAnswer: answer,
-                isEqual: userAnswer === answer
-            });
+            // console.log('Comparing answers:', {
+            //     userAnswer: userAnswer,
+            //     correctAnswer: answer,
+            //     isEqual: userAnswer === answer
+            // });
 
             // Jika jawaban benar
             if (userAnswer === answer) {
-                console.log('Correct answer!');
+                // console.log('Correct answer!');
                 // Clear timeout
                 clearTimeout(global.tebakGame[id].timeout);
 
@@ -350,7 +350,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
 
                 // Hapus sesi game
                 delete global.tebakGame[id];
-                console.log('Game session cleared after correct answer');
+                // console.log('Game session cleared after correct answer');
 
                 // Kirim pesan berhasil
                 await sock.sendMessage(id, { 
@@ -375,12 +375,12 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 });
             } else {
                 // Tambah debug untuk jawaban salah
-                console.log('Wrong answer details:', {
-                    userAnswerLength: userAnswer.length,
-                    correctAnswerLength: answer.length,
-                    userAnswerChars: Array.from(userAnswer),
-                    correctAnswerChars: Array.from(answer)
-                });
+                // console.log('Wrong answer details:', {
+                //     userAnswerLength: userAnswer.length,
+                //     correctAnswerLength: answer.length,
+                //     userAnswerChars: Array.from(userAnswer),
+                //     correctAnswerChars: Array.from(answer)
+                // });
                 
                 await sock.sendMessage(id, {
                     text: '❌ Jawaban salah, coba lagi!'
@@ -419,7 +419,6 @@ export async function startBot() {
                 // Deteksi media dengan fungsi yang sudah diperbaiki
                 const sender = m.pushName;
                 const id = m.chat;
-                console.log(id)
                 // if(id.endsWith('@g.us')) return
                 const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
                 const botId = sock.user.id.replace(/:\d+/, '');
@@ -465,7 +464,6 @@ export async function startBot() {
                                 // Handle media dengan command
                                 if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
                                     // const command = m.quoted?.text || caption.startsWith('!') || caption.startsWith('.') ? caption : m.quoted?.text;
-                                    console.log(m.quoted?.text)
                                     const command = m.quoted?.text || caption
 
                                     await prosesPerintah({

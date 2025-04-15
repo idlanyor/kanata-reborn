@@ -1,0 +1,55 @@
+{
+  "rpg_stats": [
+    {
+      "user_id": "62895395590009",
+      "level": 1,
+      "exp": 139,
+      "max_exp": 100,
+      "health": 100,
+      "max_health": 100,
+      "mana": 50,
+      "max_mana": 50,
+      "stamina": 100,
+      "max_stamina": 100,
+      "hunger": 100,
+      "thirst": 100,
+      "energy": 100,
+      "attack": 10,
+      "defense": 5,
+      "gold": 1000,
+      "last_hunt": null,
+      "last_heal": "2025-04-13T15:19:36.027Z"
+    }
+  ],
+  "inventory": [],
+  "items": [
+    {
+      "id": 1,
+      "name": "Wooden Sword",
+      "type": "weapon",
+      "rarity": "common",
+      "price": 500,
+      "effect": {
+        "attack": 5
+      },
+      "description": "Pedang kayu untuk pemula"
+    },
+    {
+      "id": 2,
+      "name": "Iron Sword",
+      "type": "weapon",
+      "rarity": "uncommon",
+      "price": 1500,
+      "effect": {
+        "attack": 15
+      },
+      "description": "Pedang besi standar"
+    }
+  ],
+  "dungeon_history": [],
+  "user_skills": [],
+  "user_quests": [],
+  "parties": [],
+  "party_members": [],
+  "user_pets": []
+}

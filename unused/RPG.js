@@ -1,20 +1,111 @@
-import db from '../config.js';
+import { Low } from 'lowdb'
+import { JSONFile } from 'lowdb/node'
 import moment from 'moment';
-import User from './User.js';
+import path from 'path';
+import fs from 'fs';
+import User from '../src/database/models/User.js';
+
+// Inisialisasi struktur database RPG
+const defaultData = {
+    rpg_stats: [
+        {
+            user_id: '',
+            level: 1,
+            exp: 0,
+            health: 100,
+            max_health: 100,
+            mana: 50,
+            max_mana: 50,
+            attack: 10,
+            defense: 5,
+            speed: 10,
+            gold: 0,
+            temp_defense: 0,
+            temp_defense_expires: null,
+            last_hunt: null,
+            last_heal: null,
+            last_dungeon: null
+        }
+    ],
+    inventory: [
+        {
+            user_id: '',
+            item_id: 0,
+            quantity: 0,
+            equipped: false
+        }
+    ],
+    items: [
+        // Senjata
+        {id: 1, name: 'Wooden Sword', type: 'weapon', rarity: 'common', price: 500, effect: {attack: 5}, description: 'Pedang kayu untuk pemula'},
+        {id: 2, name: 'Iron Sword', type: 'weapon', rarity: 'uncommon', price: 1500, effect: {attack: 15}, description: 'Pedang besi standar'},
+        {id: 3, name: 'Steel Sword', type: 'weapon', rarity: 'rare', price: 3000, effect: {attack: 25}, description: 'Pedang baja yang kuat'},
+        {id: 4, name: 'Mythril Sword', type: 'weapon', rarity: 'epic', price: 7500, effect: {attack: 40}, description: 'Pedang mythril yang langka'},
+        {id: 5, name: 'Dragon Slayer', type: 'weapon', rarity: 'legendary', price: 15000, effect: {attack: 60}, description: 'Pedang legendaris pembunuh naga'},
+
+        // Armor
+        {id: 6, name: 'Leather Armor', type: 'armor', rarity: 'common', price: 400, effect: {defense: 5}, description: 'Armor kulit untuk pemula'},
+        {id: 7, name: 'Iron Armor', type: 'armor', rarity: 'uncommon', price: 1200, effect: {defense: 15}, description: 'Armor besi standar'},
+        {id: 8, name: 'Steel Armor', type: 'armor', rarity: 'rare', price: 2500, effect: {defense: 25}, description: 'Armor baja yang kuat'},
+        {id: 9, name: 'Mythril Armor', type: 'armor', rarity: 'epic', price: 6000, effect: {defense: 40}, description: 'Armor mythril yang langka'},
+        {id: 10, name: 'Dragon Scale Armor', type: 'armor', rarity: 'legendary', price: 12000, effect: {defense: 60}, description: 'Armor dari sisik naga'},
+
+        // Potion
+        {id: 11, name: 'Health Potion', type: 'consumable', rarity: 'common', price: 100, effect: {heal: 30}, description: 'Memulihkan 30 HP'},
+        {id: 12, name: 'Greater Health Potion', type: 'consumable', rarity: 'uncommon', price: 250, effect: {heal: 70}, description: 'Memulihkan 70 HP'},
+        {id: 13, name: 'Mana Potion', type: 'consumable', rarity: 'common', price: 120, effect: {mana: 20}, description: 'Memulihkan 20 MP'},
+        {id: 14, name: 'Greater Mana Potion', type: 'consumable', rarity: 'uncommon', price: 300, effect: {mana: 50}, description: 'Memulihkan 50 MP'},
+        {id: 15, name: 'Stamina Potion', type: 'consumable', rarity: 'common', price: 150, effect: {stamina: 40}, description: 'Memulihkan 40 Stamina'},
+
+        // Aksesori
+        {id: 16, name: 'Ring of Strength', type: 'accessory', rarity: 'rare', price: 2000, effect: {attack: 10}, description: 'Cincin yang meningkatkan kekuatan'},
+        {id: 17, name: 'Amulet of Protection', type: 'accessory', rarity: 'rare', price: 2000, effect: {defense: 10}, description: 'Amulet yang meningkatkan pertahanan'},
+        {id: 18, name: 'Speed Boots', type: 'accessory', rarity: 'rare', price: 2000, effect: {speed: 10}, description: 'Sepatu yang meningkatkan kecepatan'},
+        {id: 19, name: 'Mana Crystal', type: 'accessory', rarity: 'rare', price: 2000, effect: {max_mana: 20}, description: 'Kristal yang meningkatkan mana maksimal'},
+        {id: 20, name: 'Life Pendant', type: 'accessory', rarity: 'rare', price: 2000, effect: {max_health: 30}, description: 'Liontin yang meningkatkan HP maksimal'}
+    ],
+    dungeon_history: [],
+    user_skills: [
+        {id: 1, name: 'Slash', type: 'attack', mana_cost: 10, cooldown: 5, effect: {damage: 20}, description: 'Tebasan pedang dasar'},
+        {id: 2, name: 'Double Strike', type: 'attack', mana_cost: 15, cooldown: 8, effect: {damage: 30}, description: 'Dua serangan beruntun'},
+        {id: 3, name: 'Shield Wall', type: 'defense', mana_cost: 20, cooldown: 10, effect: {defense: 15}, description: 'Meningkatkan pertahanan sementara'},
+        {id: 4, name: 'Heal', type: 'support', mana_cost: 25, cooldown: 15, effect: {heal: 40}, description: 'Menyembuhkan HP'}
+    ],
+    user_quests: [
+        {id: 1, name: 'Pemburu Pemula', description: 'Berburu 5 kali', requirement: 5, rewards: '{"gold":500,"exp":200}', type: 'hunt'},
+        {id: 2, name: 'Kolektor Senjata', description: 'Kumpulkan 3 senjata berbeda', requirement: 3, rewards: '{"gold":1000,"exp":300}', type: 'collect'},
+        {id: 3, name: 'Penakluk Dungeon', description: 'Selesaikan 2 dungeon', requirement: 2, rewards: '{"gold":2000,"exp":500}', type: 'dungeon'}
+    ],
+    parties: [
+        {id: 1, name: 'Party Default', max_members: 4, level_required: 1}
+    ],
+    party_members: [],
+    user_pets: [
+        {id: 1, name: 'Wolf Pup', type: 'combat', effect: {attack: 5}, price: 1000},
+        {id: 2, name: 'Baby Dragon', type: 'combat', effect: {attack: 10, defense: 5}, price: 2500},
+        {id: 3, name: 'Healing Fairy', type: 'support', effect: {heal: 10}, price: 1500}
+    ]
+};
+
+// Buat direktori database jika belum ada
+const dbDir = path.join(process.cwd(), 'database');
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Inisialisasi lowdb
+const adapter = new JSONFile(path.join(dbDir, 'rpg.json'));
+const db = new Low(adapter, defaultData);
 
 class RPG {
     static async initPlayer(userId) {
-        return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM rpg_stats WHERE user_id = ?', [userId], (err, row) => {
-                if (err) {
-                    console.error('Error checking player:', err);
-                    reject(err);
-                    return;
-                }
-                
-                if (!row) {
+        await db.read();
+        
+        let player = db.data.rpg_stats.find(p => p.user_id === userId);
+        if (!player) {
                     // Inisialisasi player baru
                     const defaultStats = {
+                user_id: userId,
                         level: 1,
                         exp: 0,
                         max_exp: 100,
@@ -29,74 +120,35 @@ class RPG {
                         energy: 100,
                         attack: 10,
                         defense: 5,
-                        gold: 1000
-                    };
+                gold: 1000,
+                last_hunt: null,
+                last_heal: null
+            };
 
-                    db.run(`INSERT INTO rpg_stats (
-                        user_id, level, exp, max_exp, health, max_health,
-                        mana, max_mana, stamina, max_stamina, hunger, thirst,
-                        energy, attack, defense, gold
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [
-                        userId,
-                        defaultStats.level,
-                        defaultStats.exp,
-                        defaultStats.max_exp,
-                        defaultStats.health,
-                        defaultStats.max_health,
-                        defaultStats.mana,
-                        defaultStats.max_mana,
-                        defaultStats.stamina,
-                        defaultStats.max_stamina,
-                        defaultStats.hunger,
-                        defaultStats.thirst,
-                        defaultStats.energy,
-                        defaultStats.attack,
-                        defaultStats.defense,
-                        defaultStats.gold
-                    ], (err) => {
-                        if (err) {
-                            console.error('Error creating player:', err);
-                            reject(err);
-                            return;
-                        }
-                        resolve(defaultStats);
-                    });
-                } else {
-                    resolve(row);
-                }
-            });
-        });
+            db.data.rpg_stats.push(defaultStats);
+            await db.write();
+            return defaultStats;
+        }
+        return player;
     }
 
     static async getStats(userId) {
-        return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM rpg_stats WHERE user_id = ?', [userId], (err, row) => {
-                if (err) {
-                    console.error('Error getting stats:', err);
-                    reject(err);
-                    return;
-                }
-                if (!row) {
-                    reject(new Error('Player tidak ditemukan!'));
-                    return;
-                }
-                resolve(row);
-            });
-        });
+        await db.read();
+        const stats = db.data.rpg_stats.find(p => p.user_id === userId);
+        if (!stats) throw new Error('Player tidak ditemukan!');
+        return stats;
     }
 
     static async hunt(userId) {
-        return new Promise(async (resolve, reject) => {
             try {
+            await db.read();
                 const stats = await this.getStats(userId);
                 const now = new Date();
                 const lastHunt = stats.last_hunt ? new Date(stats.last_hunt) : new Date(0);
                 
                 // Cooldown 5 menit
                 if (now - lastHunt < 300000) {
-                    reject(new Error(`Tunggu ${Math.ceil((300000 - (now - lastHunt)) / 1000)} detik lagi`));
-                    return;
+                throw new Error(`Tunggu ${Math.ceil((300000 - (now - lastHunt)) / 1000)} detik lagi`);
                 }
 
                 // Generate random rewards
@@ -105,97 +157,81 @@ class RPG {
                 const healthLost = Math.floor(Math.random() * 20) + 5;
 
                 // Update stats
-                db.run(`UPDATE rpg_stats SET 
-                    gold = gold + ?,
-                    health = CASE 
-                        WHEN health - ? <= 0 THEN 1 
-                        ELSE health - ? 
-                    END,
-                    last_hunt = CURRENT_TIMESTAMP 
-                    WHERE user_id = ?`,
-                [goldEarned, healthLost, healthLost, userId],
-                async (err) => {
-                    if (err) reject(err);
+            const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+            if (playerIndex !== -1) {
+                db.data.rpg_stats[playerIndex].gold += goldEarned;
+                db.data.rpg_stats[playerIndex].health = Math.max(1, stats.health - healthLost);
+                db.data.rpg_stats[playerIndex].last_hunt = now.toISOString();
+            }
+
+            await db.write();
                     
                     // Add exp
                     const expResult = await User.addExp(userId, expEarned);
                     
-                    resolve({
+            return {
                         goldEarned,
                         expEarned,
                         healthLost,
                         levelUp: expResult.levelUp,
                         newLevel: expResult.newLevel
-                    });
-                });
+            };
             } catch (error) {
-                reject(error);
+            throw error;
             }
-        });
     }
 
     static async heal(userId) {
-        return new Promise(async (resolve, reject) => {
             try {
+            await db.read();
                 const stats = await this.getStats(userId);
                 const now = new Date();
                 const lastHeal = stats.last_heal ? new Date(stats.last_heal) : new Date(0);
                 
                 // Cooldown 3 menit
                 if (now - lastHeal < 180000) {
-                    reject(new Error(`Tunggu ${Math.ceil((180000 - (now - lastHeal)) / 1000)} detik lagi`));
-                    return;
+                throw new Error(`Tunggu ${Math.ceil((180000 - (now - lastHeal)) / 1000)} detik lagi`);
                 }
 
                 const healAmount = 30;
                 
-                db.run(`UPDATE rpg_stats SET 
-                    health = CASE 
-                        WHEN health + ? > max_health THEN max_health 
-                        ELSE health + ? 
-                    END,
-                    last_heal = CURRENT_TIMESTAMP 
-                    WHERE user_id = ?`,
-                [healAmount, healAmount, userId],
-                (err) => {
-                    if (err) reject(err);
-                    resolve(healAmount);
-                });
-            } catch (error) {
-                reject(error);
+            // Update stats
+            const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+            if (playerIndex !== -1) {
+                db.data.rpg_stats[playerIndex].health = Math.min(
+                    stats.max_health,
+                    stats.health + healAmount
+                );
+                db.data.rpg_stats[playerIndex].last_heal = now.toISOString();
             }
-        });
+
+            await db.write();
+            return healAmount;
+            } catch (error) {
+            throw error;
+            }
     }
 
     static async getInventory(userId) {
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    i.quantity as inv_quantity,
-                    i.item_id,
-                    items.* 
-                FROM inventory i 
-                JOIN items ON i.item_id = items.id 
-                WHERE i.user_id = ? AND i.quantity > 0
-                ORDER BY items.type, items.name
-            `;
-            
-            db.all(query, [userId], (err, rows) => {
-                if (err) {
-                    console.error('Error in getInventory:', err);
-                    reject(err);
-                    return;
-                }
-                
-                // Transform rows to match expected format
-                const inventory = rows.map(row => ({
-                    ...row,
-                    quantity: row.inv_quantity
-                }));
-                
-                resolve(inventory);
-            });
-        });
+        await db.read();
+        const inventory = [];
+        
+        // Ambil semua item di inventory user
+        const userItems = db.data.inventory.filter(i => i.user_id === userId);
+        
+        for (const userItem of userItems) {
+            // Ambil detail item dari database items
+            const itemDetails = db.data.items.find(item => item.id === userItem.item_id);
+            if (itemDetails && userItem.quantity > 0) {
+                inventory.push({
+                    ...itemDetails,
+                    quantity: userItem.quantity,
+                    equipped: userItem.equipped || false
+                });
+            }
+        }
+        
+        return inventory;
     }
 
     static async useItem(userId, itemName) {
@@ -224,10 +260,15 @@ class RPG {
                 updateQuery += ' WHERE user_id = ?';
                 updateValues.push(userId);
 
-                db.run(updateQuery, updateValues, (err) => {
-                    if (err) reject(err);
-                    resolve(effect);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId) {
+                        p.health = Math.min(p.max_health, p.health + (effect.health || 0));
+                        p.mana = Math.min(p.max_mana, p.mana + (effect.mana || 0));
+                    }
                 });
+
+                await db.write();
+                resolve(effect);
             } catch (error) {
                 reject(error);
             }
@@ -235,10 +276,8 @@ class RPG {
     }
 
     static async scavenge(userId) {
-        return new Promise(async (resolve, reject) => {
             try {
-                // Inisialisasi player jika belum ada
-                await this.initPlayer(userId);
+            await db.read();
 
                 // Cek stats player
                 const stats = await this.getStats(userId);
@@ -246,22 +285,29 @@ class RPG {
                     throw new Error('Energi tidak cukup! Minimal butuh 10 energi');
                 }
 
+            // Cek cooldown
+            const now = new Date();
+            const lastScavenge = stats.last_scavenge ? new Date(stats.last_scavenge) : new Date(0);
+            if (now - lastScavenge < 300000) { // 5 menit cooldown
+                const remaining = Math.ceil((300000 - (now - lastScavenge)) / 1000);
+                throw new Error(`Tunggu ${remaining} detik lagi`);
+                }
+
                 // Definisi item rongsokan yang bisa ditemukan
                 const scrapItems = [
-                    { name: 'Botol Plastik', value: 50, weight: 30 },
-                    { name: 'Kardus Bekas', value: 75, weight: 25 },
-                    { name: 'Kaleng Bekas', value: 100, weight: 20 },
-                    { name: 'Besi Berkarat', value: 150, weight: 15 },
-                    { name: 'Kabel Bekas', value: 200, weight: 10 },
-                    { name: 'Elektronik Rusak', value: 500, weight: 5 }
+                { id: 30, name: 'Botol Plastik', type: 'scrap', value: 50, weight: 30 },
+                { id: 31, name: 'Kardus Bekas', type: 'scrap', value: 75, weight: 25 },
+                { id: 32, name: 'Kaleng Bekas', type: 'scrap', value: 100, weight: 20 },
+                { id: 33, name: 'Besi Berkarat', type: 'scrap', value: 150, weight: 15 },
+                { id: 34, name: 'Kabel Bekas', type: 'scrap', value: 200, weight: 10 }
                 ];
 
-                // Tentukan berapa item yang ditemukan (1-4 item)
-                const itemCount = Math.floor(Math.random() * 4) + 1;
+            // Tentukan berapa item yang ditemukan (1-3 item)
+            const itemCount = Math.floor(Math.random() * 3) + 1;
                 let items = [];
                 let totalValue = 0;
 
-                // Pilih item berdasarkan weight
+            // Pilih item dan masukkan ke inventory
                 for (let i = 0; i < itemCount; i++) {
                     const roll = Math.random() * 100;
                     let cumWeight = 0;
@@ -271,50 +317,72 @@ class RPG {
                         if (roll <= cumWeight) {
                             const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 items
                             
-                            // Cek apakah item ada di database
-                            const dbItem = await this.getItemByName(item.name);
-                            if (dbItem) {
+                        // Tambahkan item ke inventory
+                        const existingItem = db.data.inventory.find(inv => 
+                            inv.user_id === userId && inv.item_id === item.id
+                        );
+
+                        if (existingItem) {
+                            existingItem.quantity += quantity;
+                        } else {
+                            db.data.inventory.push({
+                                user_id: userId,
+                                item_id: item.id,
+                                quantity: quantity
+                            });
+                        }
+
+                        // Pastikan item ada di database items
+                        if (!db.data.items.some(i => i.id === item.id)) {
+                            db.data.items.push({
+                                id: item.id,
+                                name: item.name,
+                                type: 'scrap',
+                                price: item.value,
+                                description: 'Barang bekas hasil mulung'
+                            });
+                        }
+
                                 items.push({
                                     name: item.name,
-                                    quantity: quantity
+                            quantity: quantity,
+                            value: item.value * quantity
                                 });
+                        
                                 totalValue += item.value * quantity;
-                            }
                             break;
                         }
                     }
                 }
 
-                // Kurangi energi
-                const energyLost = 10;
-                await db.run(`UPDATE rpg_stats SET 
-                    energy = CASE WHEN energy - ? < 0 THEN 0 ELSE energy - ? END,
-                    gold = gold + ?
-                    WHERE user_id = ?`,
-                [energyLost, energyLost, totalValue, userId]);
-
-                // Tambahkan items ke inventory
-                for (const item of items) {
-                    await this.addItem(userId, item.name, item.quantity);
+            // Update stats player
+            const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+            if (playerIndex !== -1) {
+                const player = db.data.rpg_stats[playerIndex];
+                player.energy = Math.max(0, player.energy - 10);
+                player.gold += totalValue;
+                player.last_scavenge = now.toISOString();
                 }
 
                 // Tambah exp (50-100 exp random)
                 const expGained = Math.floor(Math.random() * 51) + 50;
                 const expResult = await this.addExp(userId, expGained);
 
-                resolve({
+            await db.write();
+
+            return {
                     items,
                     totalValue,
-                    energyLost,
+                energyLost: 10,
+                expGained,
                     levelUp: expResult.levelUp,
                     newLevel: expResult.newLevel
-                });
+            };
 
             } catch (error) {
                 console.error('Error in scavenge:', error);
-                reject(error);
+            throw error;
             }
-        });
     }
 
     static async steal(userId, targetId) {
@@ -345,26 +413,28 @@ class RPG {
                 // 40% chance to fail and go to jail
                 if (Math.random() < 0.4) {
                     const jailTime = new Date(now.getTime() + 300000); // 5 menit di penjara
-                    db.run(`UPDATE rpg_stats SET 
-                        jail_time = ? 
-                        WHERE user_id = ?`,
-                    [jailTime.toISOString(), userId]);
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.jail_time = jailTime.toISOString();
+                        }
+                    });
                     reject(new Error('Kamu tertangkap dan dipenjara selama 5 menit!'));
                     return;
                 }
 
                 const stolenAmount = Math.floor(targetStats.gold * 0.1); // Steal 10% of target's gold
                 
-                db.run(`UPDATE rpg_stats SET 
-                    gold = gold + ?,
-                    last_steal = CURRENT_TIMESTAMP 
-                    WHERE user_id = ?`,
-                [stolenAmount, userId]);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId) {
+                        p.gold += stolenAmount;
+                    }
+                });
 
-                db.run(`UPDATE rpg_stats SET 
-                    gold = gold - ? 
-                    WHERE user_id = ?`,
-                [stolenAmount, targetId]);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === targetId) {
+                        p.gold -= stolenAmount;
+                    }
+                });
 
                 resolve(stolenAmount);
             } catch (error) {
@@ -400,44 +470,25 @@ class RPG {
 
                 // Mulai transaksi
                 await new Promise((resolve, reject) => {
-                    db.run('BEGIN TRANSACTION');
-
-                    // Update stats player
-                    db.run(`UPDATE rpg_stats SET 
-                        hunger = MIN(hunger + ?, 100),
-                        energy = MIN(energy + ?, 100),
-                        health = MIN(health + ?, max_health)
-                        WHERE user_id = ?`,
-                    [
-                        effect.hunger || 0,
-                        effect.energy || 0,
-                        effect.health || 0,
-                        userId
-                    ]);
-
-                    // Kurangi item dari inventory
-                    db.run(
-                        `UPDATE inventory SET quantity = quantity - 1 
-                        WHERE user_id = ? AND item_id = ?`,
-                        [userId, foodData.id]
-                    );
-
-                    // Hapus item jika quantity 0
-                    db.run(
-                        `DELETE FROM inventory 
-                        WHERE user_id = ? AND item_id = ? AND quantity <= 0`,
-                        [userId, foodData.id]
-                    );
-
-                    db.run('COMMIT', (err) => {
-                        if (err) {
-                            console.error('Transaction error:', err);
-                            db.run('ROLLBACK');
-                            reject(err);
-                        } else {
-                            resolve();
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.hunger = Math.min(100, p.hunger + (effect.hunger || 0));
+                            p.energy = Math.min(100, p.energy + (effect.energy || 0));
+                            p.health = Math.min(p.max_health, p.health + (effect.health || 0));
                         }
                     });
+
+                    // Kurangi item dari inventory
+                    db.data.inventory.forEach(i => {
+                        if (i.user_id === userId && i.item_id === foodData.id) {
+                            i.quantity -= 1;
+                        }
+                    });
+
+                    // Hapus item jika quantity 0
+                    db.data.inventory = db.data.inventory.filter(i => i.quantity > 0 || i.item_id !== foodData.id);
+
+                            resolve();
                 });
 
                 resolve(effect);
@@ -476,44 +527,25 @@ class RPG {
 
                 // Mulai transaksi
                 await new Promise((resolve, reject) => {
-                    db.run('BEGIN TRANSACTION');
-
-                    // Update stats player
-                    db.run(`UPDATE rpg_stats SET 
-                        thirst = MIN(thirst + ?, 100),
-                        energy = MIN(energy + ?, 100),
-                        mana = MIN(mana + ?, max_mana)
-                        WHERE user_id = ?`,
-                    [
-                        effect.thirst || 0,
-                        effect.energy || 0,
-                        effect.mana || 0,
-                        userId
-                    ]);
-
-                    // Kurangi item dari inventory
-                    db.run(
-                        `UPDATE inventory SET quantity = quantity - 1 
-                        WHERE user_id = ? AND item_id = ?`,
-                        [userId, hasDrink.item_id]
-                    );
-
-                    // Hapus item jika quantity 0
-                    db.run(
-                        `DELETE FROM inventory 
-                        WHERE user_id = ? AND item_id = ? AND quantity <= 0`,
-                        [userId, hasDrink.item_id]
-                    );
-
-                    db.run('COMMIT', (err) => {
-                        if (err) {
-                            console.error('Transaction error:', err);
-                            db.run('ROLLBACK');
-                            reject(err);
-                        } else {
-                            resolve();
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.thirst = Math.min(100, p.thirst + (effect.thirst || 0));
+                            p.energy = Math.min(100, p.energy + (effect.energy || 0));
+                            p.mana = Math.min(p.max_mana, p.mana + (effect.mana || 0));
                         }
                     });
+
+                    // Kurangi item dari inventory
+                    db.data.inventory.forEach(i => {
+                        if (i.user_id === userId && i.item_id === hasDrink.item_id) {
+                            i.quantity -= 1;
+                        }
+                    });
+
+                    // Hapus item jika quantity 0
+                    db.data.inventory = db.data.inventory.filter(i => i.quantity > 0 || i.item_id !== hasDrink.item_id);
+
+                            resolve();
                 });
 
                 resolve({
@@ -530,9 +562,10 @@ class RPG {
 
     static async shop() {
         return new Promise((resolve, reject) => {
-            db.all('SELECT * FROM items WHERE price > 0', [], (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
+            db.data.items.forEach(item => {
+                if (item.price > 0) {
+                    resolve(item);
+                }
             });
         });
     }
@@ -557,30 +590,19 @@ class RPG {
                 }
 
                 await new Promise((resolve, reject) => {
-                    db.run('BEGIN TRANSACTION');
-
-                    db.run(
-                        `UPDATE rpg_stats SET gold = gold - ? WHERE user_id = ?`,
-                        [totalCost, userId]
-                    );
-
-                    db.run(
-                        `INSERT INTO inventory (user_id, item_id, quantity) 
-                        VALUES (?, ?, ?)
-                        ON CONFLICT(user_id, item_id) DO UPDATE SET 
-                        quantity = quantity + ?`,
-                        [userId, item.id, quantity, quantity]
-                    );
-
-                    db.run('COMMIT', (err) => {
-                        if (err) {
-                            console.error('Transaction error:', err);
-                            db.run('ROLLBACK');
-                            reject(err);
-                        } else {
-                            resolve();
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.gold -= totalCost;
                         }
                     });
+
+                    db.data.inventory.push({
+                        user_id: userId,
+                        item_id: item.id,
+                        quantity: quantity
+                    });
+
+                            resolve();
                 });
 
                 resolve({
@@ -628,37 +650,16 @@ class RPG {
 
                 // Mulai transaksi
                 await new Promise((resolve, reject) => {
-                    db.run('BEGIN TRANSACTION');
-
-                    // Tambah gold
-                    db.run(
-                        `UPDATE rpg_stats SET gold = gold + ? WHERE user_id = ?`,
-                        [totalEarned, userId]
-                    );
-
-                    // Kurangi item dari inventory
-                    db.run(
-                        `UPDATE inventory SET quantity = quantity - ? 
-                        WHERE user_id = ? AND item_id = ?`,
-                        [quantity, userId, itemData.id]
-                    );
-
-                    // Hapus item jika quantity 0
-                    db.run(
-                        `DELETE FROM inventory 
-                        WHERE user_id = ? AND item_id = ? AND quantity <= 0`,
-                        [userId, itemData.id]
-                    );
-
-                    db.run('COMMIT', (err) => {
-                        if (err) {
-                            console.error('Transaction error:', err);
-                            db.run('ROLLBACK');
-                            reject(err);
-                        } else {
-                            resolve();
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.gold += totalEarned;
                         }
                     });
+
+                    // Kurangi item dari inventory
+                    db.data.inventory = db.data.inventory.filter(i => i.user_id === userId && i.item_id !== itemData.id);
+
+                            resolve();
                 });
 
                 resolve({
@@ -676,12 +677,10 @@ class RPG {
 
     static async getAllDungeons() {
         return new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM dungeons ORDER BY min_level ASC`, [], (err, rows) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.items.forEach(item => {
+                if (item.type === 'dungeon') {
+                    resolve(item);
                 }
-                resolve(rows);
             });
         });
     }
@@ -735,12 +734,18 @@ class RPG {
                 }
 
                 // Update last dungeon entry
-                await db.run(`INSERT OR REPLACE INTO dungeon_history (user_id, dungeon_id, last_enter) 
-                    VALUES (?, ?, datetime('now'))`, [userId, dungeon.id]);
+                await db.data.dungeon_history.push({
+                    user_id: userId,
+                    dungeon_id: dungeon.id,
+                    last_enter: new Date().toISOString()
+                });
 
                 // Update player HP
-                await db.run(`UPDATE rpg_stats SET health = ? WHERE user_id = ?`, 
-                    [Math.max(0, playerHP), userId]);
+                await db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId) {
+                        p.health = Math.max(0, playerHP);
+                    }
+                });
 
                 let rewards = {
                     exp: 0,
@@ -781,18 +786,20 @@ class RPG {
 
     static async getDungeonByName(dungeonName) {
         return new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM dungeons WHERE name = ? COLLATE NOCASE`, [dungeonName], (err, row) => {
-                if (err) reject(err);
-                resolve(row);
+            db.data.items.forEach(item => {
+                if (item.name === dungeonName && item.type === 'dungeon') {
+                    resolve(item);
+                }
             });
         });
     }
 
     static async getLastDungeon(userId) {
         return new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM dungeon_history WHERE user_id = ?`, [userId], (err, row) => {
-                if (err) reject(err);
-                resolve(row);
+            db.data.dungeon_history.forEach(entry => {
+                if (entry.user_id === userId) {
+                    resolve(entry);
+                }
             });
         });
     }
@@ -893,14 +900,10 @@ class RPG {
 
     static async getQuests(userId) {
         return new Promise((resolve, reject) => {
-            db.all(`SELECT q.*, uq.progress, uq.completed 
-                   FROM quests q 
-                   LEFT JOIN user_quests uq ON q.id = uq.quest_id AND uq.user_id = ?
-                   WHERE q.min_level <= (SELECT level FROM rpg_stats WHERE user_id = ?)`,
-            [userId, userId],
-            (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
+            db.data.user_quests.forEach(quest => {
+                if (quest.user_id === userId) {
+                    resolve(quest);
+                }
             });
         });
     }
@@ -932,130 +935,73 @@ class RPG {
 
     static async getAllSkills() {
         return new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM skills ORDER BY min_level ASC`, [], (err, rows) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.items.forEach(item => {
+                if (item.type === 'skill') {
+                    resolve(item);
                 }
-                resolve(rows.map(row => {
-                    try {
-                        row.effect = JSON.parse(row.effect);
-                    } catch (e) {
-                        console.error('Error parsing skill effect:', e);
-                        row.effect = {};
-                    }
-                    return row;
-                }));
             });
         });
     }
 
     static async getUserSkills(userId) {
         return new Promise((resolve, reject) => {
-            db.all(`
-                SELECT s.*, us.last_used 
-                FROM skills s 
-                JOIN user_skills us ON s.id = us.skill_id 
-                WHERE us.user_id = ?
-                ORDER BY s.min_level ASC
-            `, [userId], (err, rows) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.user_skills.forEach(skill => {
+                if (skill.user_id === userId) {
+                    resolve(skill);
                 }
-                resolve(rows.map(row => {
-                    try {
-                        row.effect = JSON.parse(row.effect);
-                    } catch (e) {
-                        console.error('Error parsing skill effect:', e);
-                        row.effect = {};
-                    }
-                    return row;
-                }));
             });
         });
     }
 
     static async getSkillByName(skillName) {
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT * FROM skills 
-                WHERE LOWER(name) = LOWER(?)
-                OR LOWER(name) LIKE LOWER(?)
-            `;
-            db.get(query, [skillName, `%${skillName}%`], (err, row) => {
-                if (err) {
-                    console.error('Error in getSkillByName:', err);
-                    console.error('Skill name:', skillName);
-                    reject(err);
-                    return;
+            db.data.items.forEach(item => {
+                if (item.name === skillName && item.type === 'skill') {
+                    resolve(item);
                 }
-                if (!row) {
-                    console.log('Skill not found:', skillName);
-                    console.log('Checking all skills in database...');
-                    db.all('SELECT name FROM skills', [], (err, rows) => {
-                        if (err) {
-                            console.error('Error checking skills:', err);
-                        } else {
-                            console.log('Available skills:', rows.map(r => r.name));
-                        }
-                    });
-                }
-                resolve(row);
             });
         });
     }
 
     static async hasSkill(userId, skillId) {
         return new Promise((resolve, reject) => {
-            db.get(`SELECT 1 FROM user_skills WHERE user_id = ? AND skill_id = ?`, 
-            [userId, skillId], (err, row) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.user_skills.forEach(skill => {
+                if (skill.user_id === userId && skill.skill_id === skillId) {
+                    resolve(true);
                 }
-                resolve(!!row);
             });
+            resolve(false);
         });
     }
 
     static async addUserSkill(userId, skillId) {
         return new Promise((resolve, reject) => {
-            db.run(`INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?, ?)`,
-            [userId, skillId], (err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve();
+            db.data.user_skills.push({
+                user_id: userId,
+                skill_id: skillId,
+                last_used: null
             });
+                resolve();
         });
     }
 
     static async updateSkillCooldown(userId, skillId) {
         return new Promise((resolve, reject) => {
-            db.run(`UPDATE user_skills SET last_used = CURRENT_TIMESTAMP 
-                WHERE user_id = ? AND skill_id = ?`,
-            [userId, skillId], (err) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.user_skills.forEach(skill => {
+                if (skill.user_id === userId && skill.skill_id === skillId) {
+                    skill.last_used = new Date().toISOString();
                 }
-                resolve();
             });
+                resolve();
         });
     }
 
     static async getSkillCooldown(userId, skillId) {
         return new Promise((resolve, reject) => {
-            db.get(`SELECT last_used FROM user_skills 
-                WHERE user_id = ? AND skill_id = ?`,
-            [userId, skillId], (err, row) => {
-                if (err) {
-                    reject(err);
-                    return;
+            db.data.user_skills.forEach(skill => {
+                if (skill.user_id === userId && skill.skill_id === skillId) {
+                    resolve(skill.last_used);
                 }
-                resolve(row?.last_used);
             });
         });
     }
@@ -1096,63 +1042,17 @@ class RPG {
 
                 // Mulai transaksi
                 await new Promise((resolve, reject) => {
-                    db.run('BEGIN TRANSACTION', (err) => {
-                        if (err) reject(err);
-                        resolve();
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.gold += totalPrice;
+                        }
                     });
+
+                    db.data.inventory = db.data.inventory.filter(i => i.user_id === userId && i.item_id !== item.id);
+
+                                resolve();
                 });
 
-                try {
-                    // Update inventory (kurangi item)
-                    await new Promise((resolve, reject) => {
-                        db.run(
-                            `UPDATE inventory 
-                            SET quantity = quantity - ? 
-                            WHERE user_id = ? AND item_name = ? COLLATE NOCASE`,
-                            [amount, userId, itemName],
-                            (err) => {
-                                if (err) reject(err);
-                                resolve();
-                            }
-                        );
-                    });
-
-                    // Hapus item dari inventory jika quantity = 0
-                    await new Promise((resolve, reject) => {
-                        db.run(
-                            `DELETE FROM inventory 
-                            WHERE user_id = ? AND item_name = ? AND quantity <= 0`,
-                            [userId, itemName],
-                            (err) => {
-                                if (err) reject(err);
-                                resolve();
-                            }
-                        );
-                    });
-
-                    // Update gold player
-                    await new Promise((resolve, reject) => {
-                        db.run(
-                            `UPDATE rpg_stats 
-                            SET gold = gold + ? 
-                            WHERE user_id = ?`,
-                            [totalPrice, userId],
-                            (err) => {
-                                if (err) reject(err);
-                                resolve();
-                            }
-                        );
-                    });
-
-                    // Commit transaksi
-                    await new Promise((resolve, reject) => {
-                        db.run('COMMIT', (err) => {
-                            if (err) reject(err);
-                            resolve();
-                        });
-                    });
-
-                    // Return hasil penjualan
                     resolve({
                         item: {
                             name: item.name,
@@ -1163,14 +1063,6 @@ class RPG {
                         remainingQuantity: userItem.quantity - amount
                     });
 
-                } catch (error) {
-                    // Rollback jika terjadi error
-                    await new Promise((resolve) => {
-                        db.run('ROLLBACK', () => resolve());
-                    });
-                    throw error;
-                }
-
             } catch (error) {
                 reject(error);
             }
@@ -1179,43 +1071,22 @@ class RPG {
 
     static async getShopItem(itemName) {
         return new Promise((resolve, reject) => {
-            db.get(
-                `SELECT * FROM shop_items WHERE name LIKE ? COLLATE NOCASE`,
-                [itemName],
-                (err, row) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    if (row) {
-                        try {
-                            row.effect = JSON.parse(row.effect);
-                        } catch (e) {
-                            console.error('Error parsing item effect:', e);
-                            row.effect = {};
-                        }
-                    }
-                    resolve(row);
+            db.data.items.forEach(item => {
+                if (item.name === itemName && item.type === 'shop') {
+                    resolve(item);
                 }
-            );
+            });
         });
     }
 
     static async updateGold(userId, amount) {
         return new Promise((resolve, reject) => {
-            db.run(
-                `UPDATE rpg_stats 
-                SET gold = gold + ? 
-                WHERE user_id = ?`,
-                [amount, userId],
-                (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
+            db.data.rpg_stats.forEach(p => {
+                if (p.user_id === userId) {
+                    p.gold += amount;
                 }
-            );
+            });
+                    resolve();
         });
     }
 
@@ -1234,16 +1105,18 @@ class RPG {
                 }
 
                 // Unequip item lama di slot yang sama
-                await db.run(`UPDATE equipment SET 
-                    is_equipped = 0 
-                    WHERE user_id = ? AND slot = ?`,
-                [userId, item.slot]);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId && p.slot === item.slot) {
+                        p.is_equipped = 0;
+                    }
+                });
 
                 // Equip item baru
-                await db.run(`UPDATE inventory SET 
-                    is_equipped = 1 
-                    WHERE user_id = ? AND item_name = ?`,
-                [userId, itemName]);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId && p.name === itemName) {
+                        p.is_equipped = 1;
+                    }
+                });
 
                 // Update stats
                 const effect = JSON.parse(item.effect);
@@ -1274,26 +1147,18 @@ class RPG {
                 };
 
                 // Update stats
-                const updateQuery = `UPDATE rpg_stats SET 
-                    max_health = max_health + ?,
-                    max_mana = max_mana + ?,
-                    strength = strength + ?,
-                    defense = defense + ?,
-                    agility = agility + ?,
-                    intelligence = intelligence + ?,
-                    health = max_health,
-                    mana = max_mana
-                    WHERE user_id = ?`;
-
-                await db.run(updateQuery, [
-                    bonusStats.max_health,
-                    bonusStats.max_mana,
-                    bonusStats.strength,
-                    bonusStats.defense,
-                    bonusStats.agility,
-                    bonusStats.intelligence,
-                    userId
-                ]);
+                db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId) {
+                        p.max_health += bonusStats.max_health;
+                        p.max_mana += bonusStats.max_mana;
+                        p.strength += bonusStats.strength;
+                        p.defense += bonusStats.defense;
+                        p.agility += bonusStats.agility;
+                        p.intelligence += bonusStats.intelligence;
+                        p.health = p.max_health;
+                        p.mana = p.max_mana;
+                    }
+                });
 
                 // Berikan reward item pada level tertentu
                 const levelRewards = {
@@ -1310,7 +1175,11 @@ class RPG {
                 // Update title/gelar
                 const newTitle = this.getTitleByLevel(newLevel);
                 if (newTitle) {
-                    await db.run(`UPDATE rpg_stats SET title = ? WHERE user_id = ?`, [newTitle, userId]);
+                    db.data.rpg_stats.forEach(p => {
+                        if (p.user_id === userId) {
+                            p.title = newTitle;
+                        }
+                    });
                 }
 
                 resolve({
@@ -1359,14 +1228,19 @@ class RPG {
                 }
 
                 // Buat party baru
-                await db.run(`INSERT INTO parties (name, leader_id) VALUES (?, ?)`,
-                [partyName, userId]);
+                await db.data.parties.push({
+                    name: partyName,
+                    leader_id: userId
+                });
 
-                const partyId = await this.getLastInsertId();
+                const partyId = db.data.parties.length;
 
                 // Tambahkan leader ke party
-                await db.run(`INSERT INTO party_members (party_id, user_id, role) VALUES (?, ?, 'leader')`,
-                [partyId, userId]);
+                await db.data.party_members.push({
+                    party_id: partyId,
+                    user_id: userId,
+                    role: 'leader'
+                });
 
                 resolve({
                     id: partyId,
@@ -1395,8 +1269,11 @@ class RPG {
                 }
 
                 // Tambahkan member baru
-                await db.run(`INSERT INTO party_members (party_id, user_id, role) VALUES (?, ?, 'member')`,
-                [partyId, userId]);
+                await db.data.party_members.push({
+                    party_id: partyId,
+                    user_id: userId,
+                    role: 'member'
+                });
 
                 resolve(party);
             } catch (error) {
@@ -1533,9 +1410,14 @@ class RPG {
                 }
 
                 // Tambah pet ke inventory
-                await db.run(`INSERT INTO user_pets (user_id, pet_id, level, exp, happiness) 
-                    VALUES (?, ?, 1, 0, 100)`,
-                [userId, pet.id]);
+                await db.data.user_pets.push({
+                    user_id: userId,
+                    pet_id: pet.id,
+                    level: 1,
+                    exp: 0,
+                    happiness: 100,
+                    is_active: 1
+                });
 
                 resolve(pet);
             } catch (error) {
@@ -1559,11 +1441,12 @@ class RPG {
 
                 // Update happiness dan exp pet
                 const effect = JSON.parse(food.effect);
-                await db.run(`UPDATE user_pets SET 
-                    happiness = MIN(happiness + ?, 100),
-                    exp = exp + ?
-                    WHERE user_id = ? AND is_active = 1`,
-                [effect.happiness, effect.exp, userId]);
+                await db.data.user_pets.forEach(p => {
+                    if (p.user_id === userId && p.is_active === 1) {
+                        p.happiness = Math.min(100, p.happiness + effect.happiness);
+                        p.exp += effect.exp;
+                    }
+                });
 
                 // Cek level up pet
                 await this.checkPetLevelUp(userId);
@@ -1577,9 +1460,10 @@ class RPG {
 
     static async getShopItems() {
         return new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM items WHERE type != 'scrap' ORDER BY type, price ASC`, [], (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
+            db.data.items.forEach(item => {
+                if (item.type !== 'scrap') {
+                    resolve(item);
+                }
             });
         });
     }
@@ -1598,15 +1482,18 @@ class RPG {
                 
                 if (existingItem) {
                     // Update quantity jika item sudah ada
-                    await db.run(`UPDATE inventory SET 
-                        quantity = quantity + ? 
-                        WHERE user_id = ? AND item_id = ?`,
-                    [quantity, userId, item.id]);
+                    await db.data.inventory.forEach(i => {
+                        if (i.user_id === userId && i.item_id === item.id) {
+                            i.quantity += quantity;
+                        }
+                    });
                 } else {
                     // Insert item baru jika belum ada
-                    await db.run(`INSERT INTO inventory (user_id, item_id, quantity) 
-                        VALUES (?, ?, ?)`,
-                    [userId, item.id, quantity]);
+                    await db.data.inventory.push({
+                        user_id: userId,
+                        item_id: item.id,
+                        quantity: quantity
+                    });
                 }
 
                 resolve({
@@ -1622,14 +1509,10 @@ class RPG {
 
     static async getInventoryItem(userId, itemName) {
         return new Promise((resolve, reject) => {
-            db.get(`
-                SELECT i.*, items.name, items.type, items.effect 
-                FROM inventory i 
-                JOIN items ON i.item_id = items.id 
-                WHERE i.user_id = ? AND items.name = ? COLLATE NOCASE
-            `, [userId, itemName], (err, row) => {
-                if (err) reject(err);
-                resolve(row);
+            db.data.inventory.forEach(i => {
+                if (i.user_id === userId && i.item_name === itemName) {
+                    resolve(i);
+                }
             });
         });
     }
@@ -1643,18 +1526,14 @@ class RPG {
                 }
 
                 // Update quantity
-                await db.run(`UPDATE inventory SET 
-                    quantity = CASE
-                        WHEN quantity - ? <= 0 THEN 0
-                        ELSE quantity - ?
-                    END
-                    WHERE user_id = ? AND item_id = ?`,
-                [quantity, quantity, userId, item.id]);
+                await db.data.inventory.forEach(i => {
+                    if (i.user_id === userId && i.item_id === item.id) {
+                        i.quantity -= quantity;
+                    }
+                });
 
                 // Hapus item dari inventory jika quantity 0
-                await db.run(`DELETE FROM inventory 
-                    WHERE user_id = ? AND item_id = ? AND quantity <= 0`,
-                [userId, item.id]);
+                db.data.inventory = db.data.inventory.filter(i => i.quantity > 0 || i.item_id !== item.id);
 
                 resolve({
                     name: itemName,
@@ -1669,30 +1548,10 @@ class RPG {
 
     static async getItemByName(itemName) {
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT * FROM items 
-                WHERE LOWER(name) = LOWER(?)
-                OR LOWER(name) LIKE LOWER(?)
-            `;
-            db.get(query, [itemName, `%${itemName}%`], (err, row) => {
-                if (err) {
-                    console.error('Error in getItemByName:', err);
-                    console.error('Item name:', itemName);
-                    reject(err);
-                    return;
+            db.data.items.forEach(item => {
+                if (item.name === itemName) {
+                    resolve(item);
                 }
-                if (!row) {
-                    console.log('Item not found:', itemName);
-                    console.log('Checking all items in database...');
-                    db.all('SELECT name FROM items', [], (err, rows) => {
-                        if (err) {
-                            console.error('Error checking items:', err);
-                        } else {
-                            console.log('Available items:', rows.map(r => r.name));
-                        }
-                    });
-                }
-                resolve(row);
             });
         });
     }
@@ -1724,11 +1583,12 @@ class RPG {
                 }
 
                 // Update exp dan level di database
-                await db.run(`UPDATE rpg_stats SET 
-                    exp = ?,
-                    level = ?
-                    WHERE user_id = ?`,
-                [currentExp, newLevel, userId]);
+                await db.data.rpg_stats.forEach(p => {
+                    if (p.user_id === userId) {
+                        p.exp = currentExp;
+                        p.level = newLevel;
+                    }
+                });
 
                 // Jika naik level, update stats
                 if (levelUp) {
@@ -1782,41 +1642,209 @@ class RPG {
             ];
 
             // Hapus semua item yang ada
-            db.run('DELETE FROM items', [], (err) => {
-                if (err) {
-                    console.error('Error clearing items:', err);
-                    reject(err);
-                    return;
-                }
-
-                // Reset auto increment
-                db.run('DELETE FROM sqlite_sequence WHERE name="items"', [], (err) => {
-                    if (err) {
-                        console.error('Error resetting sequence:', err);
-                    }
-                });
+            db.data.items = [];
 
                 // Insert item baru
-                const stmt = db.prepare('INSERT INTO items (name, type, rarity, price, effect, description) VALUES (?, ?, ?, ?, ?, ?)');
+            const stmt = db.data.items.push.bind(db.data.items);
                 defaultItems.forEach(item => {
-                    stmt.run(item, (err) => {
-                        if (err) {
-                            console.error('Error inserting item:', err);
-                            console.error('Item data:', item);
-                        }
-                    });
-                });
-                stmt.finalize((err) => {
-                    if (err) {
-                        console.error('Error finalizing statement:', err);
-                        reject(err);
-                    } else {
-                        // console.log('Default items initialized successfully');
-                        resolve();
-                    }
-                });
+                stmt(item);
             });
+
+                        resolve();
         });
+    }
+
+    static async getParty(partyId) {
+        await db.read();
+        return db.data.parties.find(p => p.id === partyId);
+    }
+
+    static async getUserParty(userId) {
+        await db.read();
+        const member = db.data.party_members.find(m => m.user_id === userId);
+        if (!member) return null;
+        return this.getParty(member.party_id);
+    }
+
+    static async getPartyMemberCount(partyId) {
+        await db.read();
+        return db.data.party_members.filter(m => m.party_id === partyId).length;
+    }
+
+    static async getRecipe(itemName) {
+        await db.read();
+        return db.data.items.find(i => 
+            i.name === itemName && 
+            i.type === 'recipe'
+        );
+    }
+
+    static async updatePvPStats(winnerId, loserId) {
+        await db.read();
+        
+        // Update winner stats
+        const winnerIndex = db.data.rpg_stats.findIndex(p => p.user_id === winnerId);
+        if (winnerIndex !== -1) {
+            db.data.rpg_stats[winnerIndex].pvp_wins = (db.data.rpg_stats[winnerIndex].pvp_wins || 0) + 1;
+            db.data.rpg_stats[winnerIndex].gold += 500; // Bonus gold untuk menang
+        }
+
+        // Update loser stats
+        const loserIndex = db.data.rpg_stats.findIndex(p => p.user_id === loserId);
+        if (loserIndex !== -1) {
+            db.data.rpg_stats[loserIndex].pvp_losses = (db.data.rpg_stats[loserIndex].pvp_losses || 0) + 1;
+        }
+
+        await db.write();
+    }
+
+    static async getPetByName(petName) {
+        await db.read();
+        return db.data.items.find(i => 
+            i.name === petName && 
+            i.type === 'pet'
+        );
+    }
+
+    static async getActivePet(userId) {
+        await db.read();
+        return db.data.user_pets.find(p => 
+            p.user_id === userId && 
+            p.is_active === 1
+        );
+    }
+
+    static async checkPetLevelUp(userId) {
+        await db.read();
+        const petIndex = db.data.user_pets.findIndex(p => 
+            p.user_id === userId && 
+            p.is_active === 1
+        );
+
+        if (petIndex === -1) return;
+
+        const pet = db.data.user_pets[petIndex];
+        const expNeeded = pet.level * 500;
+
+        if (pet.exp >= expNeeded) {
+            // Level up pet
+            db.data.user_pets[petIndex].level += 1;
+            db.data.user_pets[petIndex].exp -= expNeeded;
+
+            // Bonus stats untuk pet
+            const bonusStats = {
+                attack: 5,
+                defense: 3,
+                speed: 2
+            };
+
+            Object.entries(bonusStats).forEach(([stat, value]) => {
+                db.data.user_pets[petIndex][stat] = 
+                    (db.data.user_pets[petIndex][stat] || 0) + value;
+            });
+
+            await db.write();
+            return {
+                newLevel: pet.level + 1,
+                bonusStats
+            };
+        }
+
+        return null;
+    }
+
+    static async getActiveQuests(userId, questType) {
+        await db.read();
+        return db.data.user_quests.filter(q => 
+            q.user_id === userId && 
+            q.type === questType &&
+            !q.completed
+        );
+    }
+
+    static async completeQuest(userId, questId) {
+        await db.read();
+        const questIndex = db.data.user_quests.findIndex(q => 
+            q.user_id === userId && 
+            q.id === questId
+        );
+
+        if (questIndex !== -1) {
+            const quest = db.data.user_quests[questIndex];
+            db.data.user_quests[questIndex].completed = true;
+
+            // Berikan reward
+            const rewards = JSON.parse(quest.rewards);
+            if (rewards.gold) {
+                await this.updateGold(userId, rewards.gold);
+            }
+            if (rewards.exp) {
+                await this.addExp(userId, rewards.exp);
+            }
+            if (rewards.items) {
+                for (const [itemName, quantity] of Object.entries(rewards.items)) {
+                    await this.addItem(userId, itemName, quantity);
+                }
+            }
+
+            await db.write();
+            return rewards;
+        }
+
+        return null;
+    }
+
+    static async updateProgress(userId, questId, newProgress) {
+        await db.read();
+        const questIndex = db.data.user_quests.findIndex(q => 
+            q.user_id === userId && 
+            q.id === questId
+        );
+
+        if (questIndex !== -1) {
+            db.data.user_quests[questIndex].progress = newProgress;
+            await db.write();
+        }
+    }
+
+    static async updateStats(userId, effect) {
+        await db.read();
+        const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+        
+        if (playerIndex !== -1) {
+            Object.entries(effect).forEach(([stat, value]) => {
+                if (db.data.rpg_stats[playerIndex][stat] !== undefined) {
+                    db.data.rpg_stats[playerIndex][stat] += value;
+                }
+            });
+            
+            await db.write();
+        }
+    }
+
+    static async addTemporaryDefense(userId, amount) {
+        await db.read();
+        const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+        
+        if (playerIndex !== -1) {
+            db.data.rpg_stats[playerIndex].temp_defense = 
+                (db.data.rpg_stats[playerIndex].temp_defense || 0) + amount;
+            db.data.rpg_stats[playerIndex].temp_defense_expires = 
+                new Date(Date.now() + 300000).toISOString(); // 5 menit
+            
+            await db.write();
+        }
+    }
+
+    static async updateMana(userId, amount) {
+        await db.read();
+        const playerIndex = db.data.rpg_stats.findIndex(p => p.user_id === userId);
+        
+        if (playerIndex !== -1) {
+            const player = db.data.rpg_stats[playerIndex];
+            player.mana = Math.max(0, Math.min(player.max_mana, player.mana + amount));
+            await db.write();
+        }
     }
 }
 

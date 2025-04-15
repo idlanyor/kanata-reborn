@@ -4,8 +4,8 @@ export const description = ''
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     sock.sendMessage(m.chat, {
         location: {
-            degreesLatitude: -6.2088, // Ganti dengan latitude lokasi
-            degreesLongitude: 106.8456, // Ganti dengan longitude lokasi
+            degreesLatitude: -7.232864501671495, // Ganti dengan latitude lokasi
+            degreesLongitude: 109.33847051113844, // Ganti dengan longitude lokasi
         },
         caption: "Ini adalah lokasi yang dikirim.",
         footer: "© Kanata",

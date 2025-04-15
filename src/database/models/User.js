@@ -54,43 +54,68 @@ class User {
     }
 
     static async claimDaily(phone) {
-        await db.read()
-        const user = db.data.users.find(u => u.phone === phone)
-        if (!user) throw new Error('User ilang 😭')
+        try {
+            await db.read()
+            const user = db.data.users.find(u => u.phone === phone)
+            if (!user) throw new Error('User tidak ditemukan 😢')
 
-        const now = new Date()
-        const lastDaily = user.last_daily ? new Date(user.last_daily) : null
+            const now = new Date()
+            
+            // Debug log sebelum update
+            console.log('Current user data:', user)
+            
+            // Cek last_daily dari database
+            if (user.last_daily) {
+                const lastDaily = new Date(user.last_daily)
+                const timeDiff = now - lastDaily
+                const hoursLeft = Math.ceil((86400000 - timeDiff) / 3600000)
+                
+                console.log('Time difference (ms):', timeDiff)
+                
+                if (timeDiff < 86400000) {
+                    throw new Error(`⏰ Tunggu ${hoursLeft} jam lagi untuk daily reward berikutnya!`)
+                }
+            }
 
-        if (lastDaily && (now - lastDaily) < 86400000) {
-            throw new Error('Udah ngambil daily cok, sabar 24 jam 😡')
-        }
+            const dailyExp = 1000
+            const result = await this.addExp(phone, dailyExp)
 
-        const dailyExp = 1000
-        const result = await this.addExp(phone, dailyExp)
+            // Update last_daily
+            const userIndex = db.data.users.findIndex(u => u.phone === phone)
+            if (userIndex !== -1) {
+                db.data.users[userIndex] = {
+                    ...db.data.users[userIndex],
+                    last_daily: now.toISOString()
+                }
+                
+                // Pastikan perubahan tersimpan
+                await db.write()
+                
+                // Debug log setelah update
+                console.log('Updated user data:', db.data.users[userIndex])
+            }
 
-        user.last_daily = now.toISOString()
-        await db.write()
-
-        return {
-            ...result,
-            dailyExp
+            return {
+                error: false,
+                ...result,
+                dailyExp
+            }
+        } catch (error) {
+            throw error
         }
     }
 
     static async getLeaderboard(limit = 10) {
         await db.read()
-        return db.data.users
-            .sort((a, b) => b.level !== a.level
-                ? b.level - a.level
-                : b.exp - a.exp)
+        return [...db.data.users]
+            .sort((a, b) => b.exp - a.exp)
             .slice(0, limit)
-            .map(u => ({
-                name: u.name,
-                phone: u.phone,
-                level: u.level,
-                exp: u.exp,
-                total_messages: u.total_messages,
-                total_commands: u.total_commands
+            .map(user => ({
+                name: user.name,
+                level: user.level,
+                exp: user.exp,
+                total_messages: user.total_messages,
+                total_commands: user.total_commands
             }))
     }
 
@@ -101,6 +126,33 @@ class User {
 
         user.total_commands += 1
         await db.write()
+    }
+
+    static async getUserRank(phone) {
+        await db.read();
+        
+        // Sort users berdasarkan exp
+        const sortedUsers = [...db.data.users].sort((a, b) => b.exp - a.exp);
+        
+        // Cari posisi user
+        const position = sortedUsers.findIndex(user => user.phone === phone) + 1;
+        
+        if (position === 0) return null;
+        
+        return {
+            position,
+            total: sortedUsers.length
+        };
+    }
+
+    static async updateBio(phone, type, value) {
+        await db.read();
+        const user = db.data.users.find(u => u.phone === phone);
+        if (!user) throw new Error('User tidak ditemukan');
+        
+        user[type] = value;
+        await db.write();
+        return true;
     }
 }
 
