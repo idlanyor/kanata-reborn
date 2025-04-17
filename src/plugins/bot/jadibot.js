@@ -46,9 +46,16 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await m.react('⏳');
 
         const msgRetryCounterCache = new NodeCache();
-        const MAIN_LOGGER = pino({ timestamp: () => `,"time":"${new Date().toJSON()}"` });
-        const logger = MAIN_LOGGER.child({});
-        logger.level = "silent";
+        const MAIN_LOGGER = pino({
+            timestamp: () => `,"time":"${new Date().toJSON()}"`,
+            level: "silent",
+            transport: {
+                target: 'pino-pretty',
+                options: {
+                    colorize: true
+                }
+            }
+        });
 
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -61,11 +68,11 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
         const jadibotSock = makeWASocket({
             version,
-            logger: pino({ level: "silent" }),
+            logger: MAIN_LOGGER,
             printQRInTerminal: false,
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, logger),
+                keys: makeCacheableSignalKeyStore(state.keys, MAIN_LOGGER),
             },
             msgRetryCounterCache,
             generateHighQualityLinkPreview: true,
@@ -76,7 +83,8 @@ export default async ({ sock, m, id, noTel, psn }) => {
             emitOwnEvents: true,
             fireInitQueries: true,
             syncFullHistory: true,
-            markOnlineOnConnect: true
+            markOnlineOnConnect: true,
+            retryRequestDelayMs: 2000
         });
 
         store?.bind(jadibotSock.ev);
@@ -153,13 +161,28 @@ async function startJadibot(number, dir, sock, m) {
         const { state, saveCreds } = await useMultiFileAuthState(dir);
         const { version } = await fetchLatestBaileysVersion();
         
+        const msgRetryCounterCache = new NodeCache();
+        const MAIN_LOGGER = pino({
+            timestamp: () => `,"time":"${new Date().toJSON()}"`,
+            level: "silent",
+            transport: {
+                target: 'pino-pretty',
+                options: {
+                    colorize: true
+                }
+            }
+        });
+
         const newSock = makeWASocket({
             version,
+            logger: MAIN_LOGGER,
+            printQRInTerminal: false,
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, logger),
+                keys: makeCacheableSignalKeyStore(state.keys, MAIN_LOGGER),
             },
-            printQRInTerminal: false,
+            msgRetryCounterCache,
+            generateHighQualityLinkPreview: true,
             browser: Browsers.macOS("Safari"),
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 0,
@@ -167,7 +190,8 @@ async function startJadibot(number, dir, sock, m) {
             emitOwnEvents: true,
             fireInitQueries: true,
             syncFullHistory: true,
-            markOnlineOnConnect: true
+            markOnlineOnConnect: true,
+            retryRequestDelayMs: 2000
         });
 
         newSock.ev.on('creds.update', saveCreds);
@@ -185,16 +209,36 @@ async function startJadibot(number, dir, sock, m) {
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                 
                 if (shouldReconnect) {
+                    console.log('Mencoba menghubungkan ulang...', { statusCode });
                     setTimeout(async () => {
-                        await startJadibot(number, dir, sock, m);
+                        try {
+                            await startJadibot(number, dir, sock, m);
+                        } catch (err) {
+                            console.error('Reconnect error:', err);
+                            setTimeout(async () => {
+                                await startJadibot(number, dir, sock, m);
+                            }, 10000);
+                        }
                     }, 3000);
                 }
             }
         });
 
+        newSock.ev.on('error', async (err) => {
+            console.error('Socket error:', err);
+            if (sessions.has(number)) {
+                setTimeout(async () => {
+                    await startJadibot(number, dir, sock, m);
+                }, 5000);
+            }
+        });
+
     } catch (error) {
         logger.error('Reconnect Error:', error);
-        await m.reply('❌ Gagal menghubungkan kembali!');
+        await m.reply('❌ Gagal menghubungkan kembali! Mencoba lagi dalam 5 detik...');
+        setTimeout(async () => {
+            await startJadibot(number, dir, sock, m);
+        }, 5000);
     }
 }
 
