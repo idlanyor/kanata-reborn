@@ -158,11 +158,24 @@ const handleAIResponse = async (sock, m, id, noTel, isGroupChat, settings) => {
     return false; // Return false jika tidak ada sesi game
 };
 
+// Tambahkan rate limiting untuk grup
+const groupCooldowns = new Map();
+const COOLDOWN_DURATION = 2000; // 2 detik cooldown per grup
+
 async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
-    // if (!command && !attf) return;
+    // Cek cooldown untuk grup
+    if (id.endsWith('@g.us')) {
+        const lastUsage = groupCooldowns.get(id);
+        const now = Date.now();
+        
+        if (lastUsage && (now - lastUsage) < COOLDOWN_DURATION) {
+            return; // Skip jika masih dalam cooldown
+        }
+        
+        groupCooldowns.set(id, now);
+    }
 
     try {
-
         let cmd = '', args = [];
         if (command && typeof command === 'string') {
             [cmd, ...args] = command.split(' ');
@@ -182,77 +195,30 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
             await Group.initGroup(id);
             const settings = await Group.getSettings(id);
 
-            // Cek spam
+            // Optimasi pengecekan fitur grup
+            const checks = [];
+            
             if (settings.antispam) {
-                const spamCheck = await Group.checkSpam(noTel, id);
-                if (spamCheck.isSpam) {
-                    await Group.incrementWarning(noTel, id);
-                    if (spamCheck.warningCount >= 3) {
-                        await sock.groupParticipantsUpdate(id, [noTel], 'remove');
-                        await sock.sendMessage(id, {
-                            text: `@${noTel.split('@')[0]} telah dikeluarkan karena spam`,
-                            mentions: [noTel]
-                        });
-                        return;
-                    }
-                    await sock.sendMessage(id, {
-                        text: `⚠️ @${noTel.split('@')[0]} Warning ke-${spamCheck.warningCount + 1} untuk spam!`,
-                        mentions: [noTel]
-                    });
-                    return;
-                }
+                checks.push(Group.checkSpam(noTel, id));
             }
-
-            // Cek antipromosi
             if (settings.antipromosi) {
-                try {
-                    const { default: antipromosi } = await import('./src/plugins/hidden/events/antipromosi.js');
-                    await antipromosi({
-                        sock,
-                        m,
-                        id,
-                        psn: m.body,
-                        sender: noTel + '@s.whatsapp.net'
-                    });
-                    // return; // Hentikan proses jika promosi terdeteksi
-                } catch (error) {
-                    logger.error('Error in antipromosi:', error);
-                }
+                checks.push(import('./src/plugins/hidden/events/antipromosi.js')
+                    .then(({ default: antipromosi }) => 
+                        antipromosi({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
-
-            // Cek antilink
             if (settings.antilink) {
-                try {
-                    const { default: antilink } = await import('./src/plugins/hidden/events/antilink.js');
-                    await antilink({
-                        sock,
-                        m,
-                        id,
-                        psn: m.body,
-                        sender: noTel + '@s.whatsapp.net'
-                    });
-                    // return; // Hentikan proses jika link terdeteksi
-                } catch (error) {
-                    logger.error('Error in antilink:', error);
-                }
+                checks.push(import('./src/plugins/hidden/events/antilink.js')
+                    .then(({ default: antilink }) => 
+                        antilink({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
-
-            // Cek antitoxic
             if (settings.antitoxic) {
-                try {
-                    const { default: antitoxic } = await import('./src/plugins/hidden/events/antitoxic.js');
-                    await antitoxic({
-                        sock,
-                        m,
-                        id,
-                        psn: m.body,
-                        sender: noTel + '@s.whatsapp.net'
-                    });
-                    // return; // Hentikan proses jika toxic terdeteksi
-                } catch (error) {
-                    logger.error('Error in antitoxic:', error);
-                }
+                checks.push(import('./src/plugins/hidden/events/antitoxic.js')
+                    .then(({ default: antitoxic }) => 
+                        antitoxic({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
+            
+            // Jalankan semua pengecekan secara paralel
+            await Promise.all(checks);
         } else {
             // if (m.key.fromMe) return;
         }
@@ -397,6 +363,29 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         });
     }
 }
+
+// Optimasi cache untuk plugin
+const pluginCache = new Map();
+async function loadPlugin(cmd) {
+    if (pluginCache.has(cmd)) {
+        return pluginCache.get(cmd);
+    }
+
+    const pluginsDir = path.join(__dirname, 'src/plugins');
+    const plugins = Object.fromEntries(
+        await Promise.all(findJsFiles(pluginsDir).map(async file => {
+            const { default: plugin, handler } = await import(pathToFileURL(file).href);
+            if (Array.isArray(handler) && handler.includes(cmd)) {
+                return [cmd, plugin];
+            }
+            return [handler, plugin];
+        }))
+    );
+
+    pluginCache.set(cmd, plugins[cmd]);
+    return plugins[cmd];
+}
+
 export async function startBot() {
     const phoneNumber = await getPhoneNumber();
     const bot = new Kanata({
@@ -420,7 +409,7 @@ export async function startBot() {
                         if (m.chat.endsWith('@newsletter')) return;
                         if (m.chat.endsWith('@broadcast')) return;
                         if (m.key.fromMe) return
-                        // if (m.isGroup && !m.isOwner()) return
+                        // if (m.isGroup) return
                         // Deteksi media dengan fungsi yang sudah diperbaiki
                         const sender = m.pushName;
                         const id = m.chat;

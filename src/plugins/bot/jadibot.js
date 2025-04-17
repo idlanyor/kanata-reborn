@@ -109,9 +109,8 @@ export default async ({ sock, m, id, noTel, psn }) => {
             console.log('[JADIBOT CONNECTION UPDATE]', update);
             
             if (connection === 'close') {
-                const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
+                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+                
                 if (shouldReconnect) {
                     await m.reply('🔄 Koneksi terputus, mencoba menghubungkan kembali...');
                     sessions.delete(targetNumber);
@@ -135,7 +134,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
                 await m.reply(`✅ *Berhasil terhubung!*\n\n*Device:*\n${JSON.stringify(jadibotSock.user, null, 2)}\n\n*Session akan berakhir dalam 24 jam*`);
                 await sock.sendMessage(targetNumber, {
-                    text: `🤖 *JADIBOT AKTIF*\n\n- Ketik .menu untuk melihat fitur\n- Session berlaku 24 jam\n- Restart otomatis jika terputus\n\n_Powered by Kanata Bot_`
+                    text: `🤖 *JADIBOT AKTIF*\n\n- Ketik .menu untuk melihat fitur\n- Hanya ada mode self(untuk public hubungi atemin/owner)\n- Restart otomatis jika terputus\n\n_Powered by Kanata Bot_`
                 });
             }
         });
@@ -184,7 +183,7 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
         const storeInterval = setInterval(() => {
             store.writeToFile(`${dir}/store.json`);
             saveSessionsToFile();
-        }, 5 * 60 * 1000);
+        }, 30 * 24 * 60 * 60 * 1000);
 
         const newSock = makeWASocket({
             version,
@@ -243,8 +242,7 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                     console.error('Error sending status message:', err);
                 }
             } else if (connection === 'close') {
-                const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
                 
                         // Clear interval
                         const session = sessions.get(number);
@@ -303,21 +301,25 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                 if (events['messages.upsert']) {
                     const chatUpdate = events['messages.upsert'];
                     try {
-                        let msg = chatUpdate.messages[0];
-                        msg = addMessageHandler(msg, newSock);
+                        let m = chatUpdate.messages[0];
+                        m = addMessageHandler(m, newSock);
                         
-                        if (msg.chat.endsWith('@newsletter')) return;
-                        if (msg.chat.endsWith('@broadcast')) return;
-                        if (!msg.key.fromMe) return;
-
-                        const sender = msg.pushName;
-                        const id = msg.chat;
+                        if (m.chat.endsWith('@newsletter')) return;
+                        if (m.chat.endsWith('@broadcast')) return;
+                        if (!m.key.fromMe) return;
+                        
+                        const sender = m.pushName;
+                        const id = m.chat;
                         const noTel = (id.endsWith('@g.us')) 
-                            ? msg.sender.split('@')[0].replace(/[^0-9]/g, '') 
-                            : msg.chat.split('@')[0].replace(/[^0-9]/g, '');
+                            ? m.sender.split('@')[0].replace(/[^0-9]/g, '') 
+                            : m.chat.split('@')[0].replace(/[^0-9]/g, '');
+                        const botId = newSock.user.id.replace(/:\d+/, '');
+                        const botMentioned = m.message?.extendedTextMessage?.contextInfo?.participant?.includes(botId)
+                            || m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(botId);
+                        const isGroupChat = id.endsWith('@g.us');
 
                         // Handle status command
-                        if (msg.message?.conversation === '.status') {
+                        if (m.message?.conversation === '.status') {
                             const session = sessions.get(number);
                             const uptime = session ? Date.now() - session.startTime : 0;
                             await newSock.sendMessage(id, {
@@ -356,16 +358,16 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                         // Cek dan buat user jika belum ada
                         let user = await User.getUser(noTel);
                         if (!user) {
-                            await User.create(noTel, msg.pushName || 'User');
+                            await User.create(noTel, m.pushName || 'User');
                         }
 
                         // Handle commands
-                        if (msg.body && (msg.body.startsWith('!') || msg.body.startsWith('.'))) {
-                            const command = msg.quoted?.text || msg.body;
+                        if (m.body && (m.body.startsWith('!') || m.body.startsWith('.'))) {
+                            const command = m.quoted?.text || m.body;
                             await prosesPerintah({ 
                                 command, 
                                 sock: newSock, 
-                                m: msg, 
+                                m: m, 
                                 id, 
                                 sender, 
                                 noTel, 
@@ -375,18 +377,18 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                         }
 
                         // Handle media messages
-                        if (msg.type === 'imageMessage' || msg.type === 'videoMessage' || 
-                            msg.type === 'documentMessage' || msg.type === 'audioMessage') {
-                            const caption = msg.message?.[`${msg.type}`]?.caption || '';
+                        if (m.type === 'imageMessage' || m.type === 'videoMessage' || 
+                            m.type === 'documentMessage' || m.type === 'audioMessage') {
+                            const caption = m.message?.[`${m.type}`]?.caption || '';
                             if (caption.startsWith('!') || caption.startsWith('.')) {
                                 await prosesPerintah({
                                     command: caption,
                                     sock: newSock,
-                                    m: msg,
+                                    m: m,
                                     id,
                                     sender,
                                     noTel,
-                                    attf: msg.message
+                                    attf: m.message
                                 });
                             }
                         }
