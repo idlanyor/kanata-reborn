@@ -40,7 +40,7 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Fungsi untuk mencari semua file .js secara rekursif
-function findJsFiles(dir) {
+export const findJsFiles = (dir) => {
     let results = [];
     const list = fs.readdirSync(dir);
     list.forEach(file => {
@@ -407,397 +407,383 @@ export async function startBot() {
     bot.start().then(sock => {
         logger.success('Bot started successfully!');
         logger.divider();
-        sock.ev.removeAllListeners('messages.upsert');
-        sock.ev.on('messages.upsert', async (chatUpdate) => {
-            try {
-                let m = chatUpdate.messages[0];
-                m = addMessageHandler(m, sock);
-                if (m.chat.endsWith('@newsletter')) return;
-                if (m.chat.endsWith('@broadcast')) return;
-                if (m.key.fromMe) return
-                // if (m.isGroup) return
-                // if (m.isGroup && !m.isOwner()) return
-                // Deteksi media dengan fungsi yang sudah diperbaiki
-                const sender = m.pushName;
-                const id = m.chat;
-                // if(id.endsWith('@g.us')) return
-                const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
-                const botId = sock.user.id.replace(/:\d+/, '');
-                const botMentioned = m.message?.extendedTextMessage?.contextInfo?.participant?.includes(botId)
-                    || m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(botId);
-                const isGroupChat = id.endsWith('@g.us');
 
-                // Proses button responses
-                if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage) {
-                    const cmd = JSON.parse(m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson);
-                    await prosesPerintah({ command: `!${cmd.id}`, sock, m, id, sender, noTel, attf: null, mime: null });
-                    return;
-                }
-                if (m.message?.templateButtonReplyMessage) {
-                    const cmd = m.message?.templateButtonReplyMessage?.selectedId;
-                    await prosesPerintah({ command: `!${cmd}`, sock, m, id, sender, noTel, attf: null, mime: null });
-                    return;
-                }
-                if (m.message?.buttonsResponseMessage) {
-                    const cmd = m.message?.buttonsResponseMessage?.selectedButtonId;
-                    await prosesPerintah({ command: `!${cmd}`, sock, m, id, sender, noTel, attf: null, mime: null });
-                    return;
-                }
+        // Gunakan process untuk semua events
+        sock.ev.process(
+            async (events) => {
+                // Messages.upsert
+                if (events['messages.upsert']) {
+                    const chatUpdate = events['messages.upsert'];
+                    try {
+                        let m = chatUpdate.messages[0];
+                        m = addMessageHandler(m, sock);
+                        if (m.chat.endsWith('@newsletter')) return;
+                        if (m.chat.endsWith('@broadcast')) return;
+                        if (m.key.fromMe) return
+                        if (m.isGroup) return
+                        // if (m.isGroup && !m.isOwner()) return
+                        // Deteksi media dengan fungsi yang sudah diperbaiki
+                        const sender = m.pushName;
+                        const id = m.chat;
+                        // if(id.endsWith('@g.us')) return
+                        const noTel = (id.endsWith('@g.us')) ? m.sender.split('@')[0].replace(/[^0-9]/g, '') : m.chat.split('@')[0].replace(/[^0-9]/g, '');
+                        const botId = sock.user.id.replace(/:\d+/, '');
+                        const botMentioned = m.message?.extendedTextMessage?.contextInfo?.participant?.includes(botId)
+                            || m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.includes(botId);
+                        const isGroupChat = id.endsWith('@g.us');
 
-                // Handle media messages first (image, video, audio)
-                const mediaTypes = ['image', 'video', 'audio', 'document'];
-                let isMediaProcessed = false;
-
-                for (const type of mediaTypes) {
-                    if (m.type === type || (m.quoted && m.quoted.type === type)) {
-                        isMediaProcessed = true;
-                        const messageKey = `${type}Message`;
-                        const mediaMessage = m.message?.[messageKey] || m.quoted?.message?.[messageKey];
-
-                        if (!mediaMessage) continue;
-
-                        try {
-                            const mediaBuffer = await getMedia({ message: { [messageKey]: mediaMessage } });
-                            const caption = mediaMessage.caption || m.message?.extendedTextMessage?.text || '';
-                            const mime = mediaMessage.mimetype;
-
-                            if (Buffer.isBuffer(mediaBuffer.buffer)) {
-                                // Handle media dengan command
-                                if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
-                                    // const command = m.quoted?.text || caption.startsWith('!') || caption.startsWith('.') ? caption : m.quoted?.text;
-                                    const command = m.quoted?.text || caption
-
-                                    await prosesPerintah({
-                                        command,
-                                        sock, m, id,
-                                        sender, noTel,
-                                        attf: mediaBuffer.buffer,
-                                        mime: mediaBuffer.mimetype,
-                                        filename: mediaBuffer.fileName,
-                                    });
-                                    return;
-                                }
-
-                                // Khusus untuk gambar, proses dengan Gemini jika bot di-mention/reply
-                                if (type === 'image') {
-                                    if (isGroupChat) {
-                                        // Di grup harus di-mention/reply
-                                        if (!botMentioned && !m.quoted?.participant?.includes(botId)) continue;
-
-                                        // Cek apakah autoai diaktifkan di grup
-                                        const settings = await Group.getSettings(id);
-                                        if (settings.autoai !== 1) continue;
-                                    }
-
-                                    // Cek sesi game sebelum proses AI
-                                    if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
-                                        continue;
-                                    }
-
-                                    const imageResponse = await geminiHandler.analyzeImage(
-                                        mediaBuffer.buffer,
-                                        m.quoted?.text || caption || m.body,
-                                        { id, m }
-                                    );
-                                    await sock.sendMessage(id, {
-                                        text: imageResponse.message
-                                    }, {
-                                        quoted: m
-                                    });
-                                    return;
-                                }
-                                if (type === 'audio') {
-                                    // Jika di grup dan tidak ada caption, return
-                                    if (isGroupChat && !caption) {
-                                        // Cek apakah autoai diaktifkan
-                                        const settings = await Group.getSettings(id);
-                                        if (settings.autoai !== 1) return;
-                                    }
-
-                                    const audioResponse = await geminiHandler.analyzeAudio(
-                                        mediaBuffer.buffer,
-                                        caption || m.body || '',
-                                        { id, m }
-                                    );
-                                    await sock.sendMessage(id, {
-                                        text: audioResponse.message
-                                    }, {
-                                        quoted: m
-                                    });
-                                    return;
-                                }
-                            }
-                        } catch (error) {
-                            logger.error(`Error processing ${type}:`, error);
-                        }
-                    }
-                }
-
-                // Jika bukan media message, proses text message
-                if (!isMediaProcessed && m.type === 'text') {
-                    // Handle game answers first
-                    if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
-                        if (!m.body.startsWith('!') && !m.body.startsWith('.')) {
-                            console.log('Processing game answer:', m.body);
-                            await checkAnswer(id, m.body, sock, m, noTel);
+                        // Proses button responses
+                        if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage) {
+                            const cmd = JSON.parse(m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson);
+                            await prosesPerintah({ command: `!${cmd.id}`, sock, m, id, sender, noTel, attf: null, mime: null });
                             return;
                         }
-                    }
-
-                    // Then handle commands
-                    if (m.body && (m.body.startsWith('!') || m.body.startsWith('.'))) {
-                        const command = m.quoted?.text || m.body;
-                        await prosesPerintah({ command, sock, m, id, sender, noTel, attf: null, mime: null });
-                        return;
-                    }
-
-                    // Auto AI untuk mention bot
-                    if (botMentioned) {
-                        if (m.key.fromMe) return;
-
-                        // Cek sesi game
-                        if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
+                        if (m.message?.templateButtonReplyMessage) {
+                            const cmd = m.message?.templateButtonReplyMessage?.selectedId;
+                            await prosesPerintah({ command: `!${cmd}`, sock, m, id, sender, noTel, attf: null, mime: null });
+                            return;
+                        }
+                        if (m.message?.buttonsResponseMessage) {
+                            const cmd = m.message?.buttonsResponseMessage?.selectedButtonId;
+                            await prosesPerintah({ command: `!${cmd}`, sock, m, id, sender, noTel, attf: null, mime: null });
                             return;
                         }
 
-                        try {
-                            // Cek apakah ini private chat atau grup
-                            if (!isGroupChat) {
-                                logger.info(`AutoAI diaktifkan di private chat dengan ${m.pushName || noTel}`);
-                                const userId = `private_${noTel}`;
-                                const quotedText = m.quoted?.text || "";
+                        // Handle media messages first (image, video, audio)
+                        const mediaTypes = ['image', 'video', 'audio', 'document'];
+                        let isMediaProcessed = false;
+
+                        for (const type of mediaTypes) {
+                            if (m.type === type || (m.quoted && m.quoted.type === type)) {
+                                isMediaProcessed = true;
+                                const messageKey = `${type}Message`;
+                                const mediaMessage = m.message?.[messageKey] || m.quoted?.message?.[messageKey];
+
+                                if (!mediaMessage) continue;
 
                                 try {
-                                    const response = await geminiHandler.chatWithMemory(
-                                        m.body,
-                                        userId,
-                                        {
-                                            pushName: m.pushName,
-                                            noTel: noTel,
-                                            quoted: quotedText
-                                        }
-                                    );
-                                    await sock.sendMessage(id, { text: response }, {
-                                        quoted: m
-                                    });
-                                } catch (aiError) {
-                                    logger.error(`Error di autoAI private chat:`, aiError);
-                                    await sock.sendMessage(id, {
-                                        text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                                    }, {
-                                        quoted: m
-                                    });
-                                }
-                                return;
-                            }
+                                    const mediaBuffer = await getMedia({ message: { [messageKey]: mediaMessage } });
+                                    const caption = mediaMessage.caption || m.message?.extendedTextMessage?.text || '';
+                                    const mime = mediaMessage.mimetype;
 
-                            // Untuk grup chat
-                            const settings = await Group.getSettings(id);
-                            console.log('hallo', settings)
-                            if (settings.autoai) {
-                                logger.info(`AutoAI diaktifkan di grup ${id}`);
-                                const groupId = `group_${id}`;
-                                const quotedText = m.quoted?.text || "";
+                                    if (Buffer.isBuffer(mediaBuffer.buffer)) {
+                                        // Handle media dengan command
+                                        if (caption.startsWith('!') || caption.startsWith('.') || m.body?.startsWith('!') || m.body?.startsWith('.')) {
+                                            // const command = m.quoted?.text || caption.startsWith('!') || caption.startsWith('.') ? caption : m.quoted?.text;
+                                            const command = m.quoted?.text || caption
 
-                                try {
-                                    const response = await geminiHandler.chatWithMemory(
-                                        m.body,
-                                        groupId,
-                                        {
-                                            pushName: m.pushName,
-                                            noTel: noTel,
-                                            quoted: quotedText
+                                            await prosesPerintah({
+                                                command,
+                                                sock, m, id,
+                                                sender, noTel,
+                                                attf: mediaBuffer.buffer,
+                                                mime: mediaBuffer.mimetype,
+                                                filename: mediaBuffer.fileName,
+                                            });
+                                            return;
                                         }
-                                    );
-                                    await sock.sendMessage(id, { text: response }, {
-                                        quoted: m
-                                    });
-                                } catch (aiError) {
-                                    logger.error(`Error di autoAI grup:`, aiError);
-                                    await sock.sendMessage(id, {
-                                        text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                                    }, {
-                                        quoted: m
-                                    });
-                                }
-                            } else {
-                                logger.info(`AutoAI tidak aktif di grup ${id}`);
-                            }
-                        } catch (error) {
-                            logger.error(`Error umum di handler botMentioned:`, error);
-                            await sock.sendMessage(id, {
-                                text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi nanti ya!'
-                            }, {
-                                quoted: {
-                                    key: {
-                                        remoteJid: 'status@broadcast',
-                                        participant: "13135550002@s.whatsapp.net",
-                                    },
-                                    message: {
-                                        newsletterAdminInviteMessage: {
-                                            newsletterJid: '120363293401077915@newsletter',
-                                            newsletterName: 'Roy',
-                                            caption: 'Kanata V3'
+
+                                        // Khusus untuk gambar, proses dengan Gemini jika bot di-mention/reply
+                                        if (type === 'image') {
+                                            if (isGroupChat) {
+                                                // Di grup harus di-mention/reply
+                                                if (!botMentioned && !m.quoted?.participant?.includes(botId)) continue;
+
+                                                // Cek apakah autoai diaktifkan di grup
+                                                const settings = await Group.getSettings(id);
+                                                if (settings.autoai !== 1) continue;
+                                            }
+
+                                            // Cek sesi game sebelum proses AI
+                                            if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
+                                                continue;
+                                            }
+
+                                            const imageResponse = await geminiHandler.analyzeImage(
+                                                mediaBuffer.buffer,
+                                                m.quoted?.text || caption || m.body,
+                                                { id, m }
+                                            );
+                                            await sock.sendMessage(id, {
+                                                text: imageResponse.message
+                                            }, {
+                                                quoted: m
+                                            });
+                                            return;
+                                        }
+                                        if (type === 'audio') {
+                                            // Jika di grup dan tidak ada caption, return
+                                            if (isGroupChat && !caption) {
+                                                // Cek apakah autoai diaktifkan
+                                                const settings = await Group.getSettings(id);
+                                                if (settings.autoai !== 1) return;
+                                            }
+
+                                            const audioResponse = await geminiHandler.analyzeAudio(
+                                                mediaBuffer.buffer,
+                                                caption || m.body || '',
+                                                { id, m }
+                                            );
+                                            await sock.sendMessage(id, {
+                                                text: audioResponse.message
+                                            }, {
+                                                quoted: m
+                                            });
+                                            return;
                                         }
                                     }
+                                } catch (error) {
+                                    logger.error(`Error processing ${type}:`, error);
                                 }
-                            });
+                            }
                         }
-                        return;
-                    }
 
-                    // Tambahkan pengecekan sesi game
-                    if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
-                        return; // Skip proses autoAI jika sedang ada sesi game
-                    }
+                        // Jika bukan media message, proses text message
+                        if (!isMediaProcessed && m.type === 'text') {
+                            // Handle game answers first
+                            if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+                                if (!m.body.startsWith('!') && !m.body.startsWith('.')) {
+                                    console.log('Processing game answer:', m.body);
+                                    await checkAnswer(id, m.body, sock, m, noTel);
+                                    return;
+                                }
+                            }
 
-                    // Handle pesan teks biasa (minimal 3 karakter)
-                    if (m.body && m.body.length >= 3 && sender !== globalThis.botNumber) {
-                        // Untuk grup chat, hanya proses jika autoai aktif dan bot di-mention/reply
-                        if (isGroupChat) {
-                            const settings = await Group.getSettings(id);
-                            if (settings.autoai !== 1) return;
-
-                            // Cek sesi game
-                            if (await handleAIResponse(sock, m, id, noTel, isGroupChat, settings)) {
+                            // Then handle commands
+                            if (m.body && (m.body.startsWith('!') || m.body.startsWith('.'))) {
+                                const command = m.quoted?.text || m.body;
+                                await prosesPerintah({ command, sock, m, id, sender, noTel, attf: null, mime: null });
                                 return;
                             }
 
-                            // Di grup harus di-mention atau di-reply
-                            if (!botMentioned && !m.quoted?.participant?.includes(botId)) return;
-                        }
+                            // Auto AI untuk mention bot
+                            if (botMentioned) {
+                                if (m.key.fromMe) return;
 
-                        // Jika sampai di sini berarti:
-                        // 1. Ini private chat, atau
-                        // 2. Ini grup dengan autoai aktif dan bot di-mention/reply
-                        try {
-                            logger.info(`Processing message: ${m.body.substring(0, 30)}...`);
-                            const response = await geminiHandler.analyzeMessage(m.body);
-
-                            if (response.success && response.command) {
-                                // Jika ada command yang terdeteksi
-                                const pluginsDir = path.join(__dirname, 'src/plugins');
-                                const plugins = Object.fromEntries(
-                                    await Promise.all(findJsFiles(pluginsDir).map(async file => {
-                                        const { default: plugin, handler } = await import(pathToFileURL(file).href);
-                                        if (Array.isArray(handler) && handler.includes(response.command)) {
-                                            return [response.command, plugin];
-                                        }
-                                        return [handler, plugin];
-                                    }))
-                                );
-
-                                if (plugins[response.command]) {
-                                    await sock.sendMessage(id, { text: response.message });
-                                    await plugins[response.command]({
-                                        sock, m, id,
-                                        psn: response.args,
-                                        sender, noTel,
-                                        attf: null,
-                                        cmd: response.command
-                                    });
-                                } else {
-                                    // Command tidak ditemukan, gunakan chat biasa
-                                    const chatResponse = await geminiHandler.chat(m.body);
-                                    await sock.sendMessage(id, { text: chatResponse }, {
-                                        quoted: m
-                                    });
+                                // Cek sesi game
+                                if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
+                                    return;
                                 }
-                            } else {
-                                // Tidak ada command, gunakan chat biasa
-                                const chatResponse = await geminiHandler.chat(m.body);
-                                await sock.sendMessage(id, { text: chatResponse }, {
-                                    quoted: {
-                                        key: {
-                                            remoteJid: 'status@broadcast',
-                                            participant: "13135550002@s.whatsapp.net",
-                                        },
-                                        message: {
-                                            newsletterAdminInviteMessage: {
-                                                newsletterJid: '120363293401077915@newsletter',
-                                                newsletterName: 'Roy',
-                                                caption: 'Kanata V3'
+
+                                try {
+                                    // Cek apakah ini private chat atau grup
+                                    if (!isGroupChat) {
+                                        logger.info(`AutoAI diaktifkan di private chat dengan ${m.pushName || noTel}`);
+                                        const userId = `private_${noTel}`;
+                                        const quotedText = m.quoted?.text || "";
+
+                                        try {
+                                            const response = await geminiHandler.chatWithMemory(
+                                                m.body,
+                                                userId,
+                                                {
+                                                    pushName: m.pushName,
+                                                    noTel: noTel,
+                                                    quoted: quotedText
+                                                }
+                                            );
+                                            await sock.sendMessage(id, { text: response }, {
+                                                quoted: m
+                                            });
+                                        } catch (aiError) {
+                                            logger.error(`Error di autoAI private chat:`, aiError);
+                                            await sock.sendMessage(id, {
+                                                text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
+                                            }, {
+                                                quoted: m
+                                            });
+                                        }
+                                        return;
+                                    }
+
+                                    // Untuk grup chat
+                                    const settings = await Group.getSettings(id);
+                                    console.log('hallo', settings)
+                                    if (settings.autoai) {
+                                        logger.info(`AutoAI diaktifkan di grup ${id}`);
+                                        const groupId = `group_${id}`;
+                                        const quotedText = m.quoted?.text || "";
+
+                                        try {
+                                            const response = await geminiHandler.chatWithMemory(
+                                                m.body,
+                                                groupId,
+                                                {
+                                                    pushName: m.pushName,
+                                                    noTel: noTel,
+                                                    quoted: quotedText
+                                                }
+                                            );
+                                            await sock.sendMessage(id, { text: response }, {
+                                                quoted: m
+                                            });
+                                        } catch (aiError) {
+                                            logger.error(`Error di autoAI grup:`, aiError);
+                                            await sock.sendMessage(id, {
+                                                text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
+                                            }, {
+                                                quoted: m
+                                            });
+                                        }
+                                    } else {
+                                        logger.info(`AutoAI tidak aktif di grup ${id}`);
+                                    }
+                                } catch (error) {
+                                    logger.error(`Error umum di handler botMentioned:`, error);
+                                    await sock.sendMessage(id, {
+                                        text: 'Ups, ada yang salah dengan sistem AI-nya. Coba lagi nanti ya!'
+                                    }, {
+                                        quoted: {
+                                            key: {
+                                                remoteJid: 'status@broadcast',
+                                                participant: "13135550002@s.whatsapp.net",
+                                            },
+                                            message: {
+                                                newsletterAdminInviteMessage: {
+                                                    newsletterJid: '120363293401077915@newsletter',
+                                                    newsletterName: 'Roy',
+                                                    caption: 'Kanata V3'
+                                                }
                                             }
                                         }
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            logger.error('Error in message processing:', error);
-                            await sock.sendMessage(id, {
-                                text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
-                            }, {
-                                quoted: {
-                                    key: {
-                                        remoteJid: 'status@broadcast',
-                                        participant: "13135550002@s.whatsapp.net",
-                                    },
-                                    message: {
-                                        newsletterAdminInviteMessage: {
-                                            newsletterJid: '120363293401077915@newsletter',
-                                            newsletterName: 'Roy',
-                                            caption: 'Kanata V3'
-                                        }
-                                    }
+                                    });
                                 }
-                            });
+                                return;
+                            }
+
+                            // Tambahkan pengecekan sesi game
+                            if (global.tebakGame && global.tebakGame[id] && global.tebakGame[id].session) {
+                                return; // Skip proses autoAI jika sedang ada sesi game
+                            }
+
+                            // Handle pesan teks biasa (minimal 3 karakter)
+                            if (m.body && m.body.length >= 3 && sender !== globalThis.botNumber) {
+                                // Untuk grup chat, hanya proses jika autoai aktif dan bot di-mention/reply
+                                if (isGroupChat) {
+                                    const settings = await Group.getSettings(id);
+                                    if (settings.autoai !== 1) return;
+
+                                    // Cek sesi game
+                                    if (await handleAIResponse(sock, m, id, noTel, isGroupChat, settings)) {
+                                        return;
+                                    }
+
+                                    // Di grup harus di-mention atau di-reply
+                                    if (!botMentioned && !m.quoted?.participant?.includes(botId)) return;
+                                }
+
+                                // Jika sampai di sini berarti:
+                                // 1. Ini private chat, atau
+                                // 2. Ini grup dengan autoai aktif dan bot di-mention/reply
+                                try {
+                                    logger.info(`Processing message: ${m.body.substring(0, 30)}...`);
+                                    const response = await geminiHandler.analyzeMessage(m.body);
+
+                                    if (response.success && response.command) {
+                                        // Jika ada command yang terdeteksi
+                                        const pluginsDir = path.join(__dirname, 'src/plugins');
+                                        const plugins = Object.fromEntries(
+                                            await Promise.all(findJsFiles(pluginsDir).map(async file => {
+                                                const { default: plugin, handler } = await import(pathToFileURL(file).href);
+                                                if (Array.isArray(handler) && handler.includes(response.command)) {
+                                                    return [response.command, plugin];
+                                                }
+                                                return [handler, plugin];
+                                            }))
+                                        );
+
+                                        if (plugins[response.command]) {
+                                            await sock.sendMessage(id, { text: response.message });
+                                            await plugins[response.command]({
+                                                sock, m, id,
+                                                psn: response.args,
+                                                sender, noTel,
+                                                attf: null,
+                                                cmd: response.command
+                                            });
+                                        } else {
+                                            // Command tidak ditemukan, gunakan chat biasa
+                                            const chatResponse = await geminiHandler.chat(m.body);
+                                            await sock.sendMessage(id, { text: chatResponse }, {
+                                                quoted: m
+                                            });
+                                        }
+                                    } else {
+                                        // Tidak ada command, gunakan chat biasa
+                                        const chatResponse = await geminiHandler.chat(m.body);
+                                        await sock.sendMessage(id, { text: chatResponse }, {
+                                            quoted: {
+                                                key: {
+                                                    remoteJid: 'status@broadcast',
+                                                    participant: "13135550002@s.whatsapp.net",
+                                                },
+                                                message: {
+                                                    newsletterAdminInviteMessage: {
+                                                        newsletterJid: '120363293401077915@newsletter',
+                                                        newsletterName: 'Roy',
+                                                        caption: 'Kanata V3'
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                } catch (error) {
+                                    logger.error('Error in message processing:', error);
+                                    await sock.sendMessage(id, {
+                                        text: "Maaf, terjadi kesalahan. Coba lagi nanti ya! 🙏"
+                                    }, {
+                                        quoted: {
+                                            key: {
+                                                remoteJid: 'status@broadcast',
+                                                participant: "13135550002@s.whatsapp.net",
+                                            },
+                                            message: {
+                                                newsletterAdminInviteMessage: {
+                                                    newsletterJid: '120363293401077915@newsletter',
+                                                    newsletterName: 'Roy',
+                                                    caption: 'Kanata V3'
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        logger.error('Error handling message:', error);
+                    }
+                }
+
+                // Group participants update
+                if (events['group-participants.update']) {
+                    groupParticipants(events['group-participants.update'], sock);
+                }
+
+                // Groups update
+                if (events['groups.update']) {
+                    groupUpdate(events['groups.update'], sock);
+                }
+
+                // Call events
+                if (events['call']) {
+                    call(events['call'], sock);
+                }
+
+                // Connection update & load saved sessions
+                if (events['connection.update']) {
+                    const { connection } = events['connection.update'];
+                    if (connection === 'open') {
+                        try {
+                            await loadSavedSessions(sock);
+                            logger.success('Successfully loaded saved jadibot sessions');
+                        } catch (err) {
+                            logger.error('Error loading saved sessions:', err);
                         }
                     }
                 }
-                // const groups = await sock.groupFetchAllParticipating();
-                // const groupJids = Object.keys(groups);
-                // console.log(groupJids)
-
-            } catch (error) {
-                logger.error('Error handling message:', error);
             }
-        });
+        );
 
-        // schedulePrayerReminders(sock, '62895395590009@s.whatsapp.net');
-        // schedulePrayerReminders(sock, globalThis.newsLetterJid);
-        // const jids = [
-        //     '120363322355235306@g.us',
-        //     '120363168824825004@g.us',
-        //     '120363331973486203@g.us',
-        //     '120363313225939444@g.us',
-        //     '120363025048735374@g.us',
-        //     '120363170175024834@g.us',
-        //     '120363333206963062@g.us',
-        //     '120363420976976851@g.us',
-        //     '120363378930842508@g.us',
-        //     '120363393072539921@g.us',
-        //     '120363320183359410@g.us',
-        //     '120363349495948665@g.us',
-        //     '120363176955019646@g.us',
-        //     '120363152273645676@g.us',
-        //     '120363299623971703@g.us'
-        // ]
-        // for (const jid of jids) {
-        //     schedulePrayerReminders(sock, jid);
-        // }
-
-        sock.ev.on('group-participants.update', ev => groupParticipants(ev, sock));
-        sock.ev.on('groups.update', ev => groupUpdate(ev, sock));
-        sock.ev.on('call', (callEv) => {
-            call(callEv, sock)
-        })
-
-            // Tambahkan ini setelah bot utama terkoneksi
-            (async () => {
-                await loadSavedSessions(sock);
-            })()
-
-        // Setelah bot utama terkoneksi
-        sock.ev.on('connection.update', async (update) => {
-            const { connection } = update;
-            if (connection === 'open') {
-                try {
-                    await loadSavedSessions(sock);
-                } catch (err) {
-                    console.error('Error loading saved sessions:', err);
-                }
-            }
-        });
     }).catch(error => logger.error('Fatal error starting bot:', error));
 }
 

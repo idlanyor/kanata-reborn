@@ -5,6 +5,12 @@ import pino from "pino";
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { fileURLToPath, pathToFileURL } from 'url';
+import { join, dirname } from 'path';
+import { addMessageHandler } from '../../helper/message.js';
+import User from '../../database/models/User.js';
+import Group from '../../database/models/Group.js';
+import { findJsFiles } from '../../../app.js';
 
 const sessions = new Map();
 const SESSION_FOLDER = 'jadibots';
@@ -13,6 +19,9 @@ const MAIN_LOGGER = pino({
     timestamp: () => `,"time":"${new Date().toJSON()}"`,
     level: "silent"
 });
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pluginsDir = join(__dirname, '../../plugins');
 
 export default async ({ sock, m, id, noTel, psn }) => {
     try {
@@ -201,19 +210,30 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
         store?.bind(newSock.ev);
         newSock.ev.on('creds.update', saveCreds);
 
-        newSock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect } = update;
-            if (connection === 'open') {
-                sessions.set(number, {
-                    socket: newSock,
-                    startTime: Date.now(),
-                    store,
-                    storeInterval
-                });
+        let retriesLeft = 1; // Tambahkan counter untuk retry
                 
-                if (!isRestore && m) {
-                    await m.reply('✅ Berhasil terhubung kembali!');
+        newSock.ev.process(
+            async (events) => {
+                if (events['creds.update']) {
+                    await saveCreds();
                 }
+
+                if (events['connection.update']) {
+                    const update = events['connection.update'];
+                    const { connection, lastDisconnect } = update;
+                    
+            if (connection === 'open') {
+                        retriesLeft = 3; // Reset counter saat berhasil connect
+                        sessions.set(number, {
+                            socket: newSock,
+                            startTime: Date.now(),
+                            store,
+                            storeInterval
+                        });
+                        
+                        if (!isRestore && m) {
+                await m.reply('✅ Berhasil terhubung kembali!');
+                        }
                 
                 try {
                     await newSock.sendMessage(number, {
@@ -222,45 +242,161 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                 } catch (err) {
                     console.error('Error sending status message:', err);
                 }
-                
             } else if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                 
-                clearInterval(storeInterval);
+                        // Clear interval
+                        const session = sessions.get(number);
+                        if (session?.storeInterval) {
+                            clearInterval(session.storeInterval);
+                        }
                 
-                if (shouldReconnect) {
-                    console.log('Mencoba menghubungkan ulang...', { statusCode });
-                    setTimeout(async () => {
-                        try {
+                        // Handle reconnect dengan lebih baik
+                        if (shouldReconnect && retriesLeft > 0) {
+                            console.log(`Mencoba menghubungkan ulang... (${retriesLeft} kesempatan tersisa)`);
+                            retriesLeft--;
+                            
+                            // Tunggu sebentar sebelum reconnect
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+
+                            try {
+                                if (!isRestore && m) {
+                                    await m.reply(`🔄 Mencoba menghubungkan ulang... (${retriesLeft + 1} kesempatan tersisa)`);
+                                }
+                                
+                                // Jika belum terdaftar, coba request pairing code lagi
+                                if (!newSock.authState.creds.registered) {
+                                    try {
+                                        const code = await newSock.requestPairingCode(number.split('@')[0]);
+                                        await sock.sendMessage(number, {
+                                            text: `🔑 *KODE PAIRING BARU*\n\n${code}\n\n*Cara Pairing:*\n1. Buka WhatsApp\n2. Klik Perangkat Tertaut\n3. Klik Tautkan Perangkat\n4. Masukkan kode di atas`
+                                        });
+                                    } catch (err) {
+                                        console.error('Error requesting pairing code:', err);
+                                    }
+                                }
+
                             await startJadibot(number, dir, sock, m);
                         } catch (err) {
                             console.error('Reconnect error:', err);
+                                if (retriesLeft > 0) {
                             setTimeout(async () => {
                                 await startJadibot(number, dir, sock, m);
                             }, 10000);
-                        }
-                    }, 3000);
+                                } else {
+                                    cleanupSession(number, dir);
+                                    if (!isRestore && m) {
+                                        await m.reply('❌ Gagal menghubungkan setelah beberapa percobaan. Silahkan buat ulang session.');
+                                    }
+                                }
+                            }
                 } else {
                     cleanupSession(number, dir);
-                    if (m) await m.reply('❌ Session invalid, silahkan buat ulang!');
+                            if (!isRestore && m) {
+                                await m.reply('❌ Session invalid atau melebihi batas percobaan, silahkan buat ulang!');
+                            }
                 }
             }
-        });
+                }
 
-        // Tambahkan handler untuk monitoring status
-        newSock.ev.on('messages.upsert', async (m) => {
-            if (m.messages[0].key.remoteJid === number) {
-                const msg = m.messages[0];
-                if (msg.message?.conversation === '.status') {
-                    const session = sessions.get(number);
-                    const uptime = session ? Date.now() - session.startTime : 0;
-                    await newSock.sendMessage(number, {
-                        text: `🤖 *STATUS BOT*\n\n⏱️ Uptime: ${formatUptime(uptime)}\n📱 Nomor: ${number.split('@')[0]}\n🔄 Koneksi: Aktif`
-                    });
+                if (events['messages.upsert']) {
+                    const chatUpdate = events['messages.upsert'];
+                    try {
+                        let msg = chatUpdate.messages[0];
+                        msg = addMessageHandler(msg, newSock);
+                        
+                        if (msg.chat.endsWith('@newsletter')) return;
+                        if (msg.chat.endsWith('@broadcast')) return;
+                        if (!msg.key.fromMe) return;
+
+                        const sender = msg.pushName;
+                        const id = msg.chat;
+                        const noTel = (id.endsWith('@g.us')) 
+                            ? msg.sender.split('@')[0].replace(/[^0-9]/g, '') 
+                            : msg.chat.split('@')[0].replace(/[^0-9]/g, '');
+
+                        // Handle status command
+                        if (msg.message?.conversation === '.status') {
+                            const session = sessions.get(number);
+                            const uptime = session ? Date.now() - session.startTime : 0;
+                            await newSock.sendMessage(id, {
+                                text: `🤖 *STATUS BOT*\n\n⏱️ Uptime: ${formatUptime(uptime)}\n📱 Nomor: ${number.split('@')[0]}\n🔄 Koneksi: Aktif`
+                            });
+                            return;
+                        }
+
+                        // Handle grup settings jika pesan dari grup
+                        if (id.endsWith('@g.us')) {
+                            await Group.initGroup(id);
+                            const settings = await Group.getSettings(id);
+                            
+                            // Cek fitur grup (antispam, antipromosi, dll)
+                            if (settings.antispam) {
+                                const spamCheck = await Group.checkSpam(noTel, id);
+                                if (spamCheck.isSpam) {
+                                    await Group.incrementWarning(noTel, id);
+                                    if (spamCheck.warningCount >= 3) {
+                                        await newSock.groupParticipantsUpdate(id, [noTel], 'remove');
+                                        await newSock.sendMessage(id, {
+                                            text: `@${noTel.split('@')[0]} telah dikeluarkan karena spam`,
+                                            mentions: [noTel]
+                                        });
+                                        return;
+                                    }
+                                    await newSock.sendMessage(id, {
+                                        text: `⚠️ @${noTel.split('@')[0]} Warning ke-${spamCheck.warningCount + 1} untuk spam!`,
+                                        mentions: [noTel]
+                                    });
+                                    return;
+                                }
+                            }
+                        }
+
+                        // Cek dan buat user jika belum ada
+                        let user = await User.getUser(noTel);
+                        if (!user) {
+                            await User.create(noTel, msg.pushName || 'User');
+                        }
+
+                        // Handle commands
+                        if (msg.body && (msg.body.startsWith('!') || msg.body.startsWith('.'))) {
+                            const command = msg.quoted?.text || msg.body;
+                            await prosesPerintah({ 
+                                command, 
+                                sock: newSock, 
+                                m: msg, 
+                                id, 
+                                sender, 
+                                noTel, 
+                                attf: null 
+                            });
+                            return;
+                        }
+
+                        // Handle media messages
+                        if (msg.type === 'imageMessage' || msg.type === 'videoMessage' || 
+                            msg.type === 'documentMessage' || msg.type === 'audioMessage') {
+                            const caption = msg.message?.[`${msg.type}`]?.caption || '';
+                            if (caption.startsWith('!') || caption.startsWith('.')) {
+                                await prosesPerintah({
+                                    command: caption,
+                                    sock: newSock,
+                                    m: msg,
+                                    id,
+                                    sender,
+                                    noTel,
+                                    attf: msg.message
+                                });
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('Error handling message:', error);
+                    }
                 }
             }
-        });
+        );
 
     } catch (error) {
         console.error('Reconnect Error:', error);
@@ -278,6 +414,9 @@ function cleanupSession(number, dir) {
     }
     sessions.delete(number);
     saveSessionsToFile();
+    if (fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+    }
 }
 
 function saveSessionsToFile() {
@@ -315,6 +454,52 @@ function formatUptime(ms) {
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+
+async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
+    try {
+        let cmd = '', args = [];
+        if (command && typeof command === 'string') {
+            [cmd, ...args] = command.split(' ');
+        }
+        
+        cmd = cmd.toLowerCase();
+        if (command.startsWith('!') || command.startsWith('.')) {
+            cmd = command.split(' ')[0].replace('!', '').replace('.', '');
+            args = command.split(' ').slice(1);
+        }
+
+        // Load plugins
+        const plugins = Object.fromEntries(
+            await Promise.all(findJsFiles(pluginsDir).map(async file => {
+                const { default: plugin, handler, command } = await import(pathToFileURL(file).href);
+                if (Array.isArray(command) && command.includes(cmd)) {
+                    return [cmd, plugin];
+                }
+                return [handler, plugin];
+            }))
+        );
+
+        if (plugins[cmd]) {
+            await plugins[cmd]({ 
+                sock, 
+                m: {
+                    ...m,
+                    reply: (text) => sock.sendMessage(id, { text }, { quoted: m }),
+                    react: (emoji) => sock.sendMessage(id, { 
+                        react: { text: emoji, key: m.key }
+                    })
+                }, 
+                id, 
+                psn: args.join(' '), 
+                sender, 
+                noTel,
+                attf
+            });
+        }
+    } catch (error) {
+        console.error('Error processing command:', error);
+    }
 }
 
 export const handler = 'jadibot';
