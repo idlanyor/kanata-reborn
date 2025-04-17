@@ -156,7 +156,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
     }
 };
 
-async function startJadibot(number, dir, sock, m) {
+async function startJadibot(number, dir, sock, m, isRestore = false) {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(dir);
         const { version } = await fetchLatestBaileysVersion();
@@ -167,12 +167,13 @@ async function startJadibot(number, dir, sock, m) {
             level: "silent",
             transport: {
                 target: 'pino-pretty',
-                options: {
-                    colorize: true
-                }
+                options: { colorize: true }
             }
         });
 
+        const store = makeInMemoryStore({ logger: MAIN_LOGGER });
+        store.readFromFile(`${dir}/store.json`);
+        
         const newSock = makeWASocket({
             version,
             logger: MAIN_LOGGER,
@@ -194,19 +195,39 @@ async function startJadibot(number, dir, sock, m) {
             retryRequestDelayMs: 2000
         });
 
+        store?.bind(newSock.ev);
         newSock.ev.on('creds.update', saveCreds);
-        
+
+        // Auto-save session setiap 5 menit
+        const saveInterval = setInterval(() => {
+            store.writeToFile(`${dir}/store.json`);
+            saveSessionsToFile();
+        }, 5 * 60 * 1000);
+
         newSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
             if (connection === 'open') {
                 sessions.set(number, {
                     socket: newSock,
-                    startTime: Date.now()
+                    startTime: Date.now(),
+                    store,
+                    saveInterval
                 });
-                await m.reply('✅ Berhasil terhubung kembali!');
+                
+                if (!isRestore && m) {
+                    await m.reply('✅ Berhasil terhubung kembali!');
+                }
+                
+                // Kirim pesan status ke nomor jadibot
+                await newSock.sendMessage(number, {
+                    text: `🤖 *BOT STATUS UPDATE*\n\n✅ Terhubung kembali\n⏰ Waktu: ${new Date().toLocaleString()}`
+                }).catch(console.error);
+                
             } else if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                
+                clearInterval(saveInterval);
                 
                 if (shouldReconnect) {
                     console.log('Mencoba menghubungkan ulang...', { statusCode });
@@ -220,22 +241,30 @@ async function startJadibot(number, dir, sock, m) {
                             }, 10000);
                         }
                     }, 3000);
+                } else {
+                    cleanupSession(number, dir);
+                    if (m) await m.reply('❌ Session invalid, silahkan buat ulang!');
                 }
             }
         });
 
-        newSock.ev.on('error', async (err) => {
-            console.error('Socket error:', err);
-            if (sessions.has(number)) {
-                setTimeout(async () => {
-                    await startJadibot(number, dir, sock, m);
-                }, 5000);
+        // Tambahkan handler untuk monitoring status
+        newSock.ev.on('messages.upsert', async (m) => {
+            if (m.messages[0].key.remoteJid === number) {
+                const msg = m.messages[0];
+                if (msg.message?.conversation === '.status') {
+                    const session = sessions.get(number);
+                    const uptime = session ? Date.now() - session.startTime : 0;
+                    await newSock.sendMessage(number, {
+                        text: `🤖 *STATUS BOT*\n\n⏱️ Uptime: ${formatUptime(uptime)}\n📱 Nomor: ${number.split('@')[0]}\n🔄 Koneksi: Aktif`
+                    });
+                }
             }
         });
 
     } catch (error) {
-        logger.error('Reconnect Error:', error);
-        await m.reply('❌ Gagal menghubungkan kembali! Mencoba lagi dalam 5 detik...');
+        console.error('Reconnect Error:', error);
+        if (m) await m.reply('❌ Gagal menghubungkan kembali! Mencoba lagi dalam 5 detik...');
         setTimeout(async () => {
             await startJadibot(number, dir, sock, m);
         }, 5000);
@@ -243,11 +272,54 @@ async function startJadibot(number, dir, sock, m) {
 }
 
 function cleanupSession(number, dir) {
+    const session = sessions.get(number);
+    if (session?.saveInterval) {
+        clearInterval(session.saveInterval);
+    }
     sessions.delete(number);
-    fs.rmSync(dir, { recursive: true, force: true });
+    saveSessionsToFile();
+}
+
+function saveSessionsToFile() {
+    const sessionData = {};
+    sessions.forEach((value, key) => {
+        sessionData[key] = {
+            sessionId: value.sessionId,
+            startTime: value.startTime,
+            dir: path.join(process.cwd(), SESSION_FOLDER, key.split('@')[0])
+        };
+    });
+    fs.writeFileSync('jadibot-sessions.json', JSON.stringify(sessionData, null, 2));
+}
+
+async function loadSavedSessions(sock) {
+    try {
+        if (fs.existsSync('jadibot-sessions.json')) {
+            const sessionData = JSON.parse(fs.readFileSync('jadibot-sessions.json'));
+            for (const [number, data] of Object.entries(sessionData)) {
+                if (fs.existsSync(data.dir)) {
+                    console.log(`Memulai ulang session untuk ${number}...`);
+                    await startJadibot(number, data.dir, sock, null, true);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading saved sessions:', error);
+    }
+}
+
+function formatUptime(ms) {
+    const seconds = Math.floor((ms / 1000) % 60);
+    const minutes = Math.floor((ms / (1000 * 60)) % 60);
+    const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
 export const handler = 'jadibot';
 export const tags = ['owner'];
 export const command = ['jadibot'];
 export const help = 'Jadikan nomor lain sebagai bot (Owner Only)';
+
+export { loadSavedSessions };

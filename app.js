@@ -22,6 +22,7 @@ import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
 // import { autoAI } from './src/lib/autoai.js'
 import GeminiHandler from './src/lib/geminiHandler.js';
+import { loadSavedSessions } from './plugins/bot/jadibot.js';
 
 const app = express()
 const server = createServer(app)
@@ -780,6 +781,9 @@ export async function startBot() {
         sock.ev.on('call', (callEv) => {
             call(callEv, sock)
         })
+
+        // Tambahkan ini setelah bot utama terkoneksi
+        await loadSavedSessions(sock);
     }).catch(error => logger.error('Fatal error starting bot:', error));
 }
 
