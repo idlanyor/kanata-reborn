@@ -85,6 +85,24 @@ export default async ({ sock, m, id, noTel, psn }) => {
         jadibotSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
             console.log('[JADIBOT CONNECTION UPDATE]', update);
+            
+            if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+                if (shouldReconnect) {
+                    await m.reply('🔄 Koneksi terputus, mencoba menghubungkan kembali...');
+                    sessions.delete(targetNumber);
+                    setTimeout(async () => {
+                        await startJadibot(targetNumber, sessionDir, sock, m);
+                    }, 3000);
+                } else {
+                    cleanupSession(targetNumber, sessionDir);
+                    await m.reply('❌ Session invalid, silahkan buat ulang!');
+                }
+                return;
+            }
+
             if (connection === 'open') {
                 sessions.set(targetNumber, {
                     socket: jadibotSock,
@@ -97,19 +115,6 @@ export default async ({ sock, m, id, noTel, psn }) => {
                 await sock.sendMessage(targetNumber, {
                     text: `🤖 *JADIBOT AKTIF*\n\n- Ketik .menu untuk melihat fitur\n- Session berlaku 24 jam\n- Restart otomatis jika terputus\n\n_Powered by Kanata Bot_`
                 });
-            }
-
-            if (connection === 'close') {
-                const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-                if (shouldReconnect) {
-                    await m.reply('🔄 Koneksi terputus, mencoba menghubungkan kembali...');
-                    startJadibot(targetNumber, sessionDir, sock, m);
-                } else {
-                    cleanupSession(targetNumber, sessionDir);
-                    await m.reply('❌ Session invalid, silahkan buat ulang!');
-                }
             }
         });
 
@@ -145,28 +150,45 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
 async function startJadibot(number, dir, sock, m) {
     try {
-        const { state } = await useMultiFileAuthState(dir);
+        const { state, saveCreds } = await useMultiFileAuthState(dir);
+        const { version } = await fetchLatestBaileysVersion();
+        
         const newSock = makeWASocket({
-            auth: state,
+            version,
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, logger),
+            },
             printQRInTerminal: false,
-            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            browser: Browsers.macOS("Safari"),
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 0,
-            keepAliveIntervalMs: 10000
+            keepAliveIntervalMs: 10000,
+            emitOwnEvents: true,
+            fireInitQueries: true,
+            syncFullHistory: true,
+            markOnlineOnConnect: true
         });
 
-        if (!sessions.has(number)) {
-            sessions.set(number, {});
-        }
-
-        const session = sessions.get(number);
-        session.socket = newSock;
-
-        // Bind event handlers
+        newSock.ev.on('creds.update', saveCreds);
+        
         newSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
             if (connection === 'open') {
+                sessions.set(number, {
+                    socket: newSock,
+                    startTime: Date.now()
+                });
                 await m.reply('✅ Berhasil terhubung kembali!');
+            } else if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                
+                if (shouldReconnect) {
+                    setTimeout(async () => {
+                        await startJadibot(number, dir, sock, m);
+                    }, 3000);
+                }
             }
         });
 
@@ -175,7 +197,6 @@ async function startJadibot(number, dir, sock, m) {
         await m.reply('❌ Gagal menghubungkan kembali!');
     }
 }
-
 
 function cleanupSession(number, dir) {
     sessions.delete(number);
