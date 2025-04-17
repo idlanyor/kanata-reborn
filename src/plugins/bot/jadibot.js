@@ -306,6 +306,8 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                         
                         if (msg.chat.endsWith('@newsletter')) return;
                         if (msg.chat.endsWith('@broadcast')) return;
+                        console.log(msg)
+                        console.log(msg.key.fromMe)
                         if (!msg.key.fromMe) return;
 
                         const sender = msg.pushName;
