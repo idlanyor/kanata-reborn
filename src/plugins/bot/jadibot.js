@@ -22,7 +22,6 @@ export default async ({ sock, m, id, noTel, psn }) => {
         }
 
         let targetNumber = psn.replace(/[^0-9]/g, '');
-        if (!targetNumber.startsWith('62')) targetNumber = '62' + targetNumber;
         targetNumber = targetNumber + '@s.whatsapp.net';
 
         const [result] = await sock.onWhatsApp(targetNumber);
