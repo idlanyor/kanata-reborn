@@ -149,8 +149,8 @@ const handleAIResponse = async (sock, m, id, noTel, isGroupChat, settings) => {
     if (isGameSession(id)) {
         // Jika ada sesi game dan user mention bot, beri peringatan
         if (m.body.includes('@' + sock.user.id.split(':')[0])) {
-            await sock.sendMessage(id, { 
-                text: "🎮 Sedang ada sesi game berlangsung. Selesaikan dulu gamenya ya!" 
+            await sock.sendMessage(id, {
+                text: "🎮 Sedang ada sesi game berlangsung. Selesaikan dulu gamenya ya!"
             }, { quoted: m });
         }
         return true; // Return true untuk menandakan ada sesi game
@@ -271,8 +271,8 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
         if (expResult.levelUp) {
             await sock.sendMessage(id, {
                 text: `🎉 *LEVEL UP!*\n\n` +
-                      `📊 Level kamu naik ke level ${expResult.newLevel}!\n` +
-                      `✨ EXP: ${expResult.currentExp}/${expResult.expNeeded}`,
+                    `📊 Level kamu naik ke level ${expResult.newLevel}!\n` +
+                    `✨ EXP: ${expResult.currentExp}/${expResult.expNeeded}`,
                 contextInfo: {
                     externalAdReply: {
                         title: '🎮 Level Up!',
@@ -354,7 +354,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 // console.log('Game session cleared after correct answer');
 
                 // Kirim pesan berhasil
-                await sock.sendMessage(id, { 
+                await sock.sendMessage(id, {
                     text: `🎉 *BENAR!*\n\n✅ Jawaban: *${answer}*\n💰 Kamu mendapatkan 100 points!`,
                     contextInfo: {
                         externalAdReply: {
@@ -368,11 +368,11 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 });
 
                 // Kirim reaksi sukses
-                await sock.sendMessage(id, { 
-                    react: { 
-                        text: '🎮', 
-                        key: m.key 
-                    } 
+                await sock.sendMessage(id, {
+                    react: {
+                        text: '🎮',
+                        key: m.key
+                    }
                 });
             } else {
                 // Tambah debug untuk jawaban salah
@@ -382,7 +382,7 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
                 //     userAnswerChars: Array.from(userAnswer),
                 //     correctAnswerChars: Array.from(answer)
                 // });
-                
+
                 await sock.sendMessage(id, {
                     text: '❌ Jawaban salah, coba lagi!'
                 });
@@ -554,7 +554,7 @@ export async function startBot() {
                     // Auto AI untuk mention bot
                     if (botMentioned) {
                         if (m.key.fromMe) return;
-                        
+
                         // Cek sesi game
                         if (await handleAIResponse(sock, m, id, noTel, isGroupChat, null)) {
                             return;
@@ -782,8 +782,10 @@ export async function startBot() {
             call(callEv, sock)
         })
 
-        // Tambahkan ini setelah bot utama terkoneksi
-        await loadSavedSessions(sock);
+            // Tambahkan ini setelah bot utama terkoneksi
+            (async () => {
+                await loadSavedSessions(sock);
+            })()
     }).catch(error => logger.error('Fatal error starting bot:', error));
 }
 
