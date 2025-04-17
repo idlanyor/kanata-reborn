@@ -28,7 +28,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
     }
 };
 
-export const handler = ['#', 'exec'];
+export const handler = ['#', 'x', '.'];
 export const tags = ['owner'];
 export const command = ['#', 'exec'];
 export const help = 'Mengeksekusi perintah shell'; 

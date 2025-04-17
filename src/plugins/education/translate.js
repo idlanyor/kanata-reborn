@@ -1,119 +1,164 @@
-import translate from '@vitalets/google-translate-api';
 
-export const handler = 'tr2'
-export const description = 'Translator multi bahasa dengan deteksi otomatis'
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const helpText = `⚡ *TRANSLATOR* ⚡
+export const handler = "tr";
+export const description = "🌐 Translator multi bahasa\n*.tr [kode_bahasa] [teks]*\n*.tr id Hello World*";
 
-*1. Terjemahkan ke Indonesia*
-▸ .tr <teks>
-  Contoh: .tr how are you
+const languageCodes = {
+    'af': 'Afrikaans',
+    'sq': 'Albania',
+    'am': 'Amharik',
+    'ar': 'Arab',
+    'hy': 'Armenia',
+    'az': 'Azerbaijani',
+    'eu': 'Basque',
+    'be': 'Belarusia',
+    'bn': 'Bengali',
+    'bs': 'Bosnia',
+    'bg': 'Bulgaria',
+    'ca': 'Catalan',
+    'ceb': 'Cebuano',
+    'zh': 'Mandarin (Cina)',
+    'co': 'Korsika',
+    'hr': 'Kroasia',
+    'cs': 'Ceko',
+    'da': 'Denmark',
+    'nl': 'Belanda',
+    'en': 'Inggris',
+    'eo': 'Esperanto',
+    'et': 'Estonia',
+    'fi': 'Finlandia',
+    'fr': 'Perancis',
+    'fy': 'Frisia',
+    'gl': 'Galicia',
+    'ka': 'Georgia',
+    'de': 'Jerman',
+    'el': 'Yunani',
+    'gu': 'Gujarati',
+    'ht': 'Kreol Haiti',
+    'ha': 'Hausa',
+    'haw': 'Hawaii',
+    'he': 'Ibrani',
+    'hi': 'Hindi',
+    'hmn': 'Hmong',
+    'hu': 'Hungaria',
+    'is': 'Islandia',
+    'ig': 'Igbo',
+    'id': 'Indonesia',
+    'ga': 'Irlandia',
+    'it': 'Italia',
+    'ja': 'Jepang',
+    'jw': 'Jawa',
+    'kn': 'Kannada',
+    'kk': 'Kazakh',
+    'km': 'Khmer',
+    'rw': 'Kinyarwanda',
+    'ko': 'Korea',
+    'ku': 'Kurdi (Kurmanji)',
+    'ky': 'Kirgiz',
+    'lo': 'Laos',
+    'la': 'Latin',
+    'lv': 'Latvia',
+    'lt': 'Lituania',
+    'lb': 'Luksemburg',
+    'mk': 'Makedonia',
+    'mg': 'Malagasi',
+    'ms': 'Melayu',
+    'ml': 'Malayalam',
+    'mt': 'Malta',
+    'mi': 'Maori',
+    'mr': 'Marathi',
+    'mn': 'Mongolia',
+    'my': 'Myanmar (Burma)',
+    'ne': 'Nepali',
+    'no': 'Norwegia',
+    'ny': 'Nyanja (Chichewa)',
+    'or': 'Odia (Oriya)',
+    'ps': 'Pashto',
+    'fa': 'Persia',
+    'pl': 'Polandia',
+    'pt': 'Portugis',
+    'pa': 'Punjabi',
+    'ro': 'Rumania',
+    'ru': 'Rusia',
+    'sm': 'Samoa',
+    'gd': 'Skotlandia Gaelic',
+    'sr': 'Serbia',
+    'st': 'Sesotho',
+    'sn': 'Shona',
+    'sd': 'Sindhi',
+    'si': 'Sinhala',
+    'sk': 'Slovakia',
+    'sl': 'Slovenia',
+    'so': 'Somali',
+    'es': 'Spanyol',
+    'su': 'Sunda',
+    'sw': 'Swahili',
+    'sv': 'Swedia',
+    'tl': 'Tagalog (Filipina)',
+    'tg': 'Tajik',
+    'ta': 'Tamil',
+    'tt': 'Tatar',
+    'te': 'Telugu',
+    'th': 'Thailand',
+    'tr': 'Turki',
+    'tk': 'Turkmen',
+    'uk': 'Ukraina',
+    'ur': 'Urdu',
+    'ug': 'Uighur',
+    'uz': 'Uzbek',
+    'vi': 'Vietnam',
+    'cy': 'Welsh',
+    'xh': 'Xhosa',
+    'yi': 'Yiddish',
+    'yo': 'Yoruba',
+    'zu': 'Zulu'
+};
 
-*2. Terjemahkan ke Bahasa Lain*
-▸ .tr <kode_bahasa> <teks>
-  Contoh: .tr en apa kabar
 
-*Kode Bahasa:*
-• id = Indonesia
-• en = Inggris
-• ar = Arab
-• ja = Jepang
-• ko = Korea
-• es = Spanyol
-• de = Jerman
-• fr = Prancis
-• it = Italia
-• ru = Rusia
-
-_Powered by Kanata-V3_`;
-
-export default async ({ sock, m, id, psn, sender }) => {
+export default async ({ sock, m, id, psn }) => {
     if (!psn) {
         await sock.sendMessage(id, {
-            text: helpText,
-            contextInfo: {
-                externalAdReply: {
-                    title: '乂 Multi Language Translator 乂',
-                    body: 'Powered by Google Translate',
-                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
-            }
+            text: `🌐 Format: *.tr [kode_bahasa] [teks]*
+
+Contoh:
+*.tr id Hello World*
+*.tr en Apa kabar*
+*.tr ja Good morning*
+
+Kode bahasa:
+${Object.entries(languageCodes).map(([code, lang]) => `${code} = ${lang}`).join('\n')}`
         });
         return;
     }
 
     try {
-        let targetLang = 'id';
-        let text = psn;
+        const [targetLang, ...textParts] = psn.split(' ');
+        const text = textParts.join(' ');
 
-        // Cek jika ada kode bahasa
-        const firstWord = psn.split(' ')[0];
-        if (firstWord.length === 2) {
-            targetLang = firstWord;
-            text = psn.slice(3); // Hapus kode bahasa + spasi
+        if (!text || !languageCodes[targetLang]) {
+            throw new Error('Invalid format or language code ');
         }
 
-        // Terjemahkan teks
-        const result = await translate(text, { to: targetLang });
+        const prompt = `Translate this text to ${languageCodes[targetLang]}:
+"${text}"
 
-        const message = `╭─「 *HASIL TERJEMAHAN* 」
-├ *Dari:* ${result.from.language.iso.toUpperCase()}
-├ *Ke:* ${targetLang.toUpperCase()}
-│
-├ *Teks Asli:*
-├ ${text}
-│
-├ *Terjemahan:*
-├ ${result.text}
-╰──────────────────
-
-_Powered by Kanata-V3_`;
-
-        await sock.sendMessage(id, {
-            text: message,
-            contextInfo: {
-                externalAdReply: {
-                    title: '乂 Translation Result 乂',
-                    body: 'Powered by Google Translate',
-                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
-            }
+Please provide:
+1. Original text
+2. Translation
+3. Pronunciation (if applicable)`;
+        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini2);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash-lite"
         });
 
-        // Kirim reaksi sukses
-        await sock.sendMessage(id, {
-            react: {
-                text: '🌐',
-                key: m.key
-            }
-        });
+        const result = await model.generateContent(prompt);
+        await sock.sendMessage(id, { text: result.response.text() });
 
     } catch (error) {
+        console.error("Error in translation:", error);
         await sock.sendMessage(id, {
-            text: '❌ Error: ' + error.message + '\n\nGunakan .tr untuk melihat panduan penggunaan.',
-            contextInfo: {
-                externalAdReply: {
-                    title: '❌ Translation Error',
-                    body: 'An error occurred while translating',
-                    thumbnailUrl: 'https://files.catbox.moe/2wynab.jpg',
-                    sourceUrl: 'https://whatsapp.com/channel/0029VagADOLLSmbaxFNswH1m',
-                    mediaType: 1,
-                }
-            }
-        });
-
-        // Kirim reaksi error
-        await sock.sendMessage(id, {
-            react: {
-                text: '❌',
-                key: m.key
-            }
+            text: "⚠️ Format salah atau bahasa tidak didukung! Coba *.tr* untuk bantuan."
         });
     }
 }; 

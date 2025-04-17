@@ -783,8 +783,8 @@ export async function startBot() {
     }).catch(error => logger.error('Fatal error starting bot:', error));
 }
 
-server.listen(3035, '0.0.0.0', () => {
-    console.log('server running at http://0.0.0.0:3035');
-});
+// server.listen(3037, '0.0.0.0', () => {
+//     console.log('server running at http://0.0.0.0:3037');
+// });
 watchCodeChanges();
 startBot()

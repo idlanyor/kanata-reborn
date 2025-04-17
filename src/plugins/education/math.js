@@ -1,3 +1,5 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export const handler = "math";
 export const description = "🔢 Kalkulator dengan langkah penyelesaian";
 
@@ -26,8 +28,8 @@ Format jawaban:
 2. [langkah 2]
 dst.
 ✨ Jawaban akhir: [hasil]`;
-
-        const model = globalThis.genAI.getGenerativeModel({ 
+        const genAI = new GoogleGenerativeAI(globalThis.apiKey.gemini2);
+        const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash-lite",
             generationConfig: {
                 temperature: 0.1 // Lebih presisi untuk matematika
@@ -39,8 +41,8 @@ dst.
 
     } catch (error) {
         console.error("Error in math solver:", error);
-        await sock.sendMessage(id, { 
-            text: "⚠️ Waduh error nih bestie! Coba lagi ntar ya? 🙏" 
+        await sock.sendMessage(id, {
+            text: "⚠️ Waduh error nih bestie! Coba lagi ntar ya? 🙏"
         });
     }
 }; 

@@ -77,12 +77,8 @@ class Kanata {
                 connectOptions: {
                     maxRetries: 5,
                     keepAlive: true,
-                    // Menambahkan opsi untuk mencegah koneksi idle
-                    connectTimeout: 30000, // waktu timeout koneksi dalam milidetik
-                    onConnectionLost: () => {
-                        logger.error("Koneksi hilang, mencoba untuk menyambung kembali...");
-                        this.io?.emit("broadcastMessage", "Koneksi hilang, mencoba untuk menyambung kembali...");
-                    },
+                    connectTimeout: 30000,
+                    
                 },
             });
 
@@ -146,11 +142,10 @@ class Kanata {
                         } else if (reason === DisconnectReason.badSession) {
                             logger.system("Bad session, restarting...");
                             this.io?.emit("broadcastMessage", "Bad session, restarting...");
+                            // await fs.remove(`./${this.sessionId}`);
                             await startBot();
                         } else {
                             logger.system("Restarting connection...");
-                            // await fs.remove(`./${this.sessionId}`);
-                            logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
                         }
                         break;

@@ -55,7 +55,7 @@ export const pddiktiSearch = async (q) => {
 
 export const mahasiswaDetail = async (link) => {
     try {
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
         await page.goto(link, { waitUntil: 'networkidle0' });
         await page.waitForSelector('div.w-full.bg-white.rounded-lg.p-5');
@@ -99,6 +99,6 @@ export const mahasiswaDetail = async (link) => {
 };
 
 // (async () => {
-// //     // console.log(await pddiktiSearch('STMIK Widya Utama'))
+//     console.log(await pddiktiSearch('SSI202203088'))
 //     console.log(await pddiktiSearch('SSI202203088').then(async (res) => { return await mahasiswaDetail(res.data[0].link) }))
 // })()

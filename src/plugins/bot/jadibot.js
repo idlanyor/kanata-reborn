@@ -26,6 +26,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
         targetNumber = targetNumber + '@s.whatsapp.net';
 
         const [result] = await sock.onWhatsApp(targetNumber);
+        console.log(result)
         if (!result?.exists) {
             await m.reply('❌ Nomor tidak terdaftar di WhatsApp!');
             return;
@@ -69,7 +70,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
             },
             msgRetryCounterCache,
             generateHighQualityLinkPreview: true,
-            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            browser: Browsers.macOS("Safari"),
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 0,
             keepAliveIntervalMs: 10000,
@@ -84,7 +85,7 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
         jadibotSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
-
+            console.log('[JADIBOT CONNECTION UPDATE]', update);
             if (connection === 'open') {
                 sessions.set(targetNumber, {
                     socket: jadibotSock,
@@ -114,10 +115,21 @@ export default async ({ sock, m, id, noTel, psn }) => {
         });
 
         if (!jadibotSock.authState.creds.registered) {
-            const code = await jadibotSock.requestPairingCode(targetNumber.split('@')[0]);
+            const code = await new Promise((resolve, reject) => {
+                setTimeout(async () => {
+                    try {
+                        const pairingCode = await jadibotSock.requestPairingCode(targetNumber.split('@')[0]);
+                        resolve(pairingCode);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }, 3000); // delay 3 detik sebelum request
+            });
+
             await sock.sendMessage(targetNumber, {
                 text: `🔑 *KODE PAIRING KAMU*\n\n${code}\n\n*Cara Pairing:*\n1. Buka WhatsApp\n2. Klik Perangkat Tertaut\n3. Klik Tautkan Perangkat\n4. Masukkan kode di atas`
             });
+
             await m.reply(`✅ Kode pairing telah dikirim ke wa.me/${targetNumber.split('@')[0]}`);
         }
 

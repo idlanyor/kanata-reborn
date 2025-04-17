@@ -43,7 +43,7 @@ export default async ({ sock, m, id, psn, sender }) => {
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
         // Buat prompt untuk Gemini
-        const prompt = `Berikan definisi kata "${word}" dalam Bahasa Indonesia dengan format berikut:
+        const prompt = `Berikan definisi kata "${word}" dari bahasa yang dideteksi ke dalam Bahasa Indonesia dengan format berikut:
 1. Jenis kata (noun/verb/adjective dll)
 2. Arti kata
 3. Contoh penggunaan dalam kalimat
