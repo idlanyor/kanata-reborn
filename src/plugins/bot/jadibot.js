@@ -9,6 +9,11 @@ import crypto from 'crypto';
 const sessions = new Map();
 const SESSION_FOLDER = 'jadibots';
 
+const MAIN_LOGGER = pino({
+    timestamp: () => `,"time":"${new Date().toJSON()}"`,
+    level: "silent"
+});
+
 export default async ({ sock, m, id, noTel, psn }) => {
     try {
         if (!m.isOwner) {
@@ -46,33 +51,25 @@ export default async ({ sock, m, id, noTel, psn }) => {
         await m.react('⏳');
 
         const msgRetryCounterCache = new NodeCache();
-        const MAIN_LOGGER = pino({
-            timestamp: () => `,"time":"${new Date().toJSON()}"`,
-            level: "silent",
-            transport: {
-                target: 'pino-pretty',
-                options: {
-                    colorize: true
-                }
-            }
-        });
+        const logger = MAIN_LOGGER.child({});
 
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version, isLatest } = await fetchLatestBaileysVersion();
 
         const store = makeInMemoryStore({ logger });
         store.readFromFile(`${sessionDir}/store.json`);
-        setInterval(() => {
+        
+        const storeInterval = setInterval(() => {
             store.writeToFile(`${sessionDir}/store.json`);
         }, 10000 * 6);
 
         const jadibotSock = makeWASocket({
             version,
-            logger: MAIN_LOGGER,
+            logger,
             printQRInTerminal: false,
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, MAIN_LOGGER),
+                keys: makeCacheableSignalKeyStore(state.keys, logger),
             },
             msgRetryCounterCache,
             generateHighQualityLinkPreview: true,
@@ -89,6 +86,14 @@ export default async ({ sock, m, id, noTel, psn }) => {
 
         store?.bind(jadibotSock.ev);
         jadibotSock.ev.on('creds.update', saveCreds);
+
+        sessions.set(targetNumber, {
+            socket: jadibotSock,
+            sessionId,
+            startTime: Date.now(),
+            store,
+            storeInterval
+        });
 
         jadibotSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
@@ -162,25 +167,23 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
         const { version } = await fetchLatestBaileysVersion();
         
         const msgRetryCounterCache = new NodeCache();
-        const MAIN_LOGGER = pino({
-            timestamp: () => `,"time":"${new Date().toJSON()}"`,
-            level: "silent",
-            transport: {
-                target: 'pino-pretty',
-                options: { colorize: true }
-            }
-        });
+        const logger = MAIN_LOGGER.child({});
 
-        const store = makeInMemoryStore({ logger: MAIN_LOGGER });
+        const store = makeInMemoryStore({ logger });
         store.readFromFile(`${dir}/store.json`);
         
+        const storeInterval = setInterval(() => {
+            store.writeToFile(`${dir}/store.json`);
+            saveSessionsToFile();
+        }, 5 * 60 * 1000);
+
         const newSock = makeWASocket({
             version,
-            logger: MAIN_LOGGER,
+            logger,
             printQRInTerminal: false,
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, MAIN_LOGGER),
+                keys: makeCacheableSignalKeyStore(state.keys, logger),
             },
             msgRetryCounterCache,
             generateHighQualityLinkPreview: true,
@@ -198,12 +201,6 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
         store?.bind(newSock.ev);
         newSock.ev.on('creds.update', saveCreds);
 
-        // Auto-save session setiap 5 menit
-        const saveInterval = setInterval(() => {
-            store.writeToFile(`${dir}/store.json`);
-            saveSessionsToFile();
-        }, 5 * 60 * 1000);
-
         newSock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect } = update;
             if (connection === 'open') {
@@ -211,23 +208,26 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
                     socket: newSock,
                     startTime: Date.now(),
                     store,
-                    saveInterval
+                    storeInterval
                 });
                 
                 if (!isRestore && m) {
                     await m.reply('✅ Berhasil terhubung kembali!');
                 }
                 
-                // Kirim pesan status ke nomor jadibot
-                await newSock.sendMessage(number, {
-                    text: `🤖 *BOT STATUS UPDATE*\n\n✅ Terhubung kembali\n⏰ Waktu: ${new Date().toLocaleString()}`
-                }).catch(console.error);
+                try {
+                    await newSock.sendMessage(number, {
+                        text: `🤖 *BOT STATUS UPDATE*\n\n✅ Terhubung kembali\n⏰ Waktu: ${new Date().toLocaleString()}`
+                    });
+                } catch (err) {
+                    console.error('Error sending status message:', err);
+                }
                 
             } else if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                 
-                clearInterval(saveInterval);
+                clearInterval(storeInterval);
                 
                 if (shouldReconnect) {
                     console.log('Mencoba menghubungkan ulang...', { statusCode });
@@ -273,8 +273,8 @@ async function startJadibot(number, dir, sock, m, isRestore = false) {
 
 function cleanupSession(number, dir) {
     const session = sessions.get(number);
-    if (session?.saveInterval) {
-        clearInterval(session.saveInterval);
+    if (session?.storeInterval) {
+        clearInterval(session.storeInterval);
     }
     sessions.delete(number);
     saveSessionsToFile();

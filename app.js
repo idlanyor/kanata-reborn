@@ -22,7 +22,7 @@ import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
 // import { autoAI } from './src/lib/autoai.js'
 import GeminiHandler from './src/lib/geminiHandler.js';
-import { loadSavedSessions } from './plugins/bot/jadibot.js';
+import { loadSavedSessions } from './src/plugins/bot/jadibot.js';
 
 const app = express()
 const server = createServer(app)
@@ -786,6 +786,18 @@ export async function startBot() {
             (async () => {
                 await loadSavedSessions(sock);
             })()
+
+        // Setelah bot utama terkoneksi
+        sock.ev.on('connection.update', async (update) => {
+            const { connection } = update;
+            if (connection === 'open') {
+                try {
+                    await loadSavedSessions(sock);
+                } catch (err) {
+                    console.error('Error loading saved sessions:', err);
+                }
+            }
+        });
     }).catch(error => logger.error('Fatal error starting bot:', error));
 }
 
