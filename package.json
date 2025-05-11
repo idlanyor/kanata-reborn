@@ -16,7 +16,7 @@
   "author": "Roynaldi",
   "license": "MIT",
   "dependencies": {
-    "@fizzxydev/baileys-pro": "npm:@seaavey/baileys@latest",
+    "@fizzxydev/baileys-pro": "npm:@neoxr/baileys@7.6.15",
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
@@ -50,6 +50,7 @@
     "lowdb": "latest",
     "mathjs": "^14.4.0",
     "moment": "latest",
+    "node-cache": "^5.1.2",
     "node-cron": "latest",
     "node-emoji": "latest",
     "node-fetch": "latest",

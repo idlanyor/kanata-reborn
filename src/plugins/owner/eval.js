@@ -52,7 +52,7 @@ export default async ({ sock, m, id, noTel, psn, sender }) => {
     }
 };
 
-export const handler = ['>', 'eval'];
+export const handler = ['...', 'eval'];
 export const tags = ['owner'];
 export const command = ['>', 'eval'];
 export const help = 'Mengevaluasi kode JavaScript'; 

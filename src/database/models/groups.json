@@ -8,13 +8,13 @@
       "antilink": false,
       "welcome": true,
       "goodbye": true,
-      "antitoxic": false,
+      "antitoxic": true,
       "antipromosi": false,
-      "only_admin": false
+      "only_admin": true
     },
     {
       "group_id": "120363176955019646@g.us",
-      "welcome_message": "welkam @user",
+      "welcome_message": "welkam @user in @group",
       "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
       "autoai": false,
       "antilink": false,
@@ -88,14 +88,15 @@
     {
       "group_id": "120363178856068106@g.us",
       "welcome_message": "♥︎𝑊𝑒𝑙𝑐𝑜𝑚𝑒 𝑡𝑜 𝑜𝑛𝑙𝑖𝑛𝑒 𝑓𝑟𝑖𝑒𝑛𝑑 𝑔𝑐\n          ✿︎ 𝐼𝑛𝑡𝑟𝑜 𝑐𝑎𝑟𝑑 ✿︎\n𝑁𝑎𝑚𝑒 -\n𝐴𝑔𝑒 -\n𝑆𝑡𝑎𝑦 -\n｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡｡\n𝑆𝑒𝑛𝑑 𝑝𝑖𝑐 𝑜𝑛𝑒𝑣𝑖𝑒𝑤!!",
-      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
-      "autoai": false,
+      "goodbye_message": "Bye @user. Dah hilang sorang beban dari group @group 😌",
+      "autoai": true,
       "antilink": false,
       "welcome": true,
-      "goodbye": false,
+      "goodbye": true,
       "antitoxic": false,
-      "antipromosi": false,
-      "only_admin": false
+      "antipromosi": true,
+      "only_admin": true,
+      "antispam": true
     },
     {
       "group_id": "120363378930842508@g.us",
@@ -120,6 +121,188 @@
       "antitoxic": false,
       "antipromosi": false,
       "only_admin": false
+    },
+    {
+      "group_id": "120363317533128297@g.us",
+      "welcome_message": "hi! @user welcome to @group amalkan membaca rules ya🤍\n\n○اللهم صل علي سيدنا محمد وعلي ال سيدنا محمد○\n𝙒𝙚𝙡𝙘𝙤𝙢𝙚 𝙩𝙤 𝙧𝙖𝙛𝙖𝙚𝙡'𝙨★\nrules \n- 18+? kick.\n- snd gmbr/video once view.\n- z? mksure bck ss, klu pfp gmba ko haram xyh gatal z sni\n- toxic? plz go away.\n- no need cctv.\n- anticall\n- antitag\n\n*Love is not just the rush of a heartbeat or the butterflies in your stomach. It is not just about stolen glances or whispered confessions under the stars. Love is waking up every day and choosing the same person, over and over again, even when the excitement fades and reality sets in. It is about patience in the midst of misunderstandings, kindness in the face of flaws, and the willingness to stay even when walking away seems easier.*\n\n*Love is found in the smallest moments—the way their laughter feels like music in a quiet room, the way their touch feels like home, the way their presence alone is enough to make an ordinary day extraordinary. It is in the way they remember the little things, like how you take your coffee or the song that makes you smile on a rainy day.*\n____________________\n\n_Love is not just a fairytale written in poetry and songs. It is not just candlelit dinners, surprise gifts, or sweet words whispered in the quiet of the night. Love is deeper than the moments that make your heart race; it is in the moments that make your soul feel at home. It is the steady presence of someone who sees every side of you—the beautiful, the broken, the imperfect—and still chooses you, every single day._\n\n_Love is not about being flawless; it is about embracing each other's imperfections. It is about knowing that the person you love is not perfect, and yet, in your eyes, they are enough. It is about choosing to stay when things get hard, choosing to listen when words fail, and choosing to understand even when you don’t agree. Love is not about winning arguments, but about finding common ground._\n\nlink? here , dear.★\nhttps://chat.whatsapp.com/DWGdq5tnxILKpJIOtjaoaD\n\n*_-prequel's of rafael-_* ──𝘿𝙖𝙣𝙞𝙚𝙡★\nhttps://chat.whatsapp.com/F9JtMthhuKsFxwMF61SHnP",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": true,
+      "welcome": false,
+      "goodbye": false,
+      "antitoxic": true,
+      "antipromosi": true,
+      "only_admin": false,
+      "antispam": true
+    },
+    {
+      "group_id": "120363419369797563@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363400582847679@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": true,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": true,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363396018905038@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363399067868469@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363400928296515@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363420070938557@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": true,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363419650415596@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "60193734892@s.whatsapp.net",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363398077383552@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363399896481512@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363399850005677@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "6281387864712@s.whatsapp.net",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363350331702171@g.us",
+      "welcome_message": "Selamat datang @user di @group!\n\nSilakan baca deskripsi grup ya~",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": true,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": false,
+      "only_admin": false
+    },
+    {
+      "group_id": "120363416092887872@g.us",
+      "welcome_message": "welcome to grup\n⋆ ˚｡⋆♛𝖛𝖎𝖗𝖙𝖚𝖆𝖑 𝖋𝖗𝖎𝖊𝖓𝖉𝖘♛⋆｡˚ ⋆\n\n@user\nɪɴᴛʀᴏ ᴍɪɴᴛᴀ ᴀᴅᴍɪɴ ʏᴀᴡᴡ🫰🏻🫦\n\n🤏ᴍᴏɢᴀ ʙᴇᴛᴀʜ ɴᴇᴡ ᴍᴇᴍ",
+      "goodbye_message": "Selamat tinggal @user!\nSemoga kita berjumpa lagi di lain waktu.",
+      "autoai": false,
+      "antilink": false,
+      "welcome": false,
+      "goodbye": false,
+      "antitoxic": false,
+      "antipromosi": true,
+      "only_admin": false,
+      "antispam": true
     }
   ],
   "spam_detection": [
@@ -128,6 +311,433 @@
       "group_id": "120363420976976851@g.us",
       "message_count": 1,
       "last_message": "2025-04-09T15:02:19+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60137345871",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-04T16:33:05+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60196803672",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T20:19:25+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "601127401636",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-20T22:08:54+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60105058262",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T03:07:04+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60138693493",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-04T16:34:44+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60175816989",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T03:05:12+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60182948420",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 2,
+      "last_message": "2025-04-24T22:56:51+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "601162090830",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-19T16:56:06+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60143881486",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-20T17:38:28+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "601162483649",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-21T22:33:55+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60183587107",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-23T00:34:25+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60183893359",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T21:10:13+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60149042594",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 2,
+      "last_message": "2025-04-26T14:09:47+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "5511944677693",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 5,
+      "last_message": "2025-04-28T15:44:08+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "5513982007758",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-27T18:43:14+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "55139820077584",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-27T19:46:13+07:00",
+      "warning_count": 4
+    },
+    {
+      "user_id": "6282123213337",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-04-29T14:39:04+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283186486252",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-04T06:12:51+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283137294748",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-04T18:36:14+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "117261801099498",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T20:59:21+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "104995441655980",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 2,
+      "last_message": "2025-05-07T18:17:47+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "4359844839457",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 2,
+      "last_message": "2025-05-06T20:58:33+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "71769054511356",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-04T23:32:26+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "601136055698",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-05T02:57:07+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "138350124113923",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-05T18:52:21+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "263586840633422",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-10T00:58:45+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "74749812207668",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-05T14:37:52+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "124279576375523",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T21:27:09+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "126903532949549",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T19:54:06+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "219219476123690",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-05T19:33:44+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "18975719223508",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T14:29:47+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "164648108187899",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T17:49:49+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "249705573437662",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-06T14:15:05+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "132040766791783",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T12:38:13+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "152510127976475",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-06T12:02:16+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "66331558842409",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T22:32:33+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60165524718",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-06T21:03:20+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "60134858249",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T23:51:08+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6281573733229",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T17:25:51+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6285798765939",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T06:29:45+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283894980556",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T06:55:31+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6285712454689",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T18:03:24+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6288220430834",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T15:35:29+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6285142554954",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T17:20:12+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283179565071",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T20:58:35+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6282178314805",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T17:22:06+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "18911277891584",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T20:59:42+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "204556961063045",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-07T21:28:57+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "48546518724689",
+      "group_id": "120363178856068106@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T05:01:37+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6288989700669",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T09:27:23+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "91041042530544",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T22:27:48+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283110771919",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T18:48:52+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6282117433455",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T14:20:29+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6281392226175",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T15:46:47+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6282123115195",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T16:19:18+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6285828476865",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T20:17:41+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6287873425915",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-08T20:47:59+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "139655357968515",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 2,
+      "last_message": "2025-05-08T22:39:37+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "145384743661657",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T14:23:58+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "601115171351",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T17:27:17+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283837784609",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-09T18:04:15+07:00",
       "warning_count": 0
     }
   ]

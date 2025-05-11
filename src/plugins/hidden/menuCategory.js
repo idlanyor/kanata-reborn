@@ -32,7 +32,7 @@ export default async ({ sock, id, m, cmd }) => {
         footer: '© 2024 Kanata Bot • Created by Roy',
         buttons: [
             {
-                buttonId: 'category',
+                buttonId: 'menu',
                 buttonText: {
                     displayText: '⬅️ Kembali'
                 },

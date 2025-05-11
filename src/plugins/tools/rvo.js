@@ -3,22 +3,20 @@ import { getMedia } from "../../helper/mediaMsg.js";
 export const handler = 'rvo'
 export const description = 'Read View Once'
 
-export default async ({ sock, m, id }) => {
+export default async ({ sock, m, id,attf }) => {
     try {
         // Cek apakah ada quoted message dan apakah itu view once
         const ViewOnceImg = m.quoted?.message?.imageMessage;
         const ViewOnceVid = m.quoted?.message?.videoMessage;
         console.log(ViewOnceImg)
-        return
+        // return
 
         if (!m.quoted || (!ViewOnceImg?.viewOnce && !ViewOnceVid?.viewOnce)) {
             await m.reply('❌ Reply pesan view once yang ingin dibuka!');
             return;
         }
 
-        let attf;
         if (ViewOnceImg?.viewOnce) {
-            attf = await getMedia({ message: { imageMessage: ViewOnceImg } });
 
             await sock.sendMessage(id, {
                 image: attf,
@@ -26,7 +24,6 @@ export default async ({ sock, m, id }) => {
             }, { quoted: m });
 
         } else if (ViewOnceVid?.viewOnce) {
-            attf = await getMedia({ message: { videoMessage: ViewOnceVid } });
 
             await sock.sendMessage(id, {
                 video: attf,
