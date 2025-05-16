@@ -12,7 +12,7 @@ import NodeCache from "node-cache";
 import fs from 'fs-extra';
 import { startBot } from "../../app.js";
 import { logger } from './logger.js';
-
+import qrcode from 'qrcode-terminal';
 
 class Kanata {
     constructor(data, io = null) {
@@ -59,7 +59,7 @@ class Kanata {
                 version,
                 markOnlineOnConnect: true,
                 logger: P,
-                printQRInTerminal: false,
+                printQRInTerminal: true,
                 browser: Browsers.macOS("Safari"),
                 auth: {
                     creds: state.creds,
@@ -78,7 +78,6 @@ class Kanata {
                     maxRetries: 5,
                     keepAlive: true,
                     connectTimeout: 30000,
-                    
                 },
             });
 
@@ -86,36 +85,21 @@ class Kanata {
             store?.bind(sock.ev);
             sock.ev.on("creds.update", saveCreds);
 
-            // Handle pairing code
+            // Handle QR code
             if (!sock.authState.creds.registered) {
-                logger.connection.connecting("Waiting for pairing code...");
-                this.io?.emit("broadcastMessage", `Waiting for pairing code...`);
-
-                const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-                let retryCount = 0;
-                const maxRetries = 3;
-
-                while (retryCount < maxRetries) {
-                    try {
-                        await delay(6000);
-                        const code = await sock.requestPairingCode(this.phoneNumber, "KANATAV3");
-                        logger.connection.pairing(code);
-                        this.io?.emit("pairCode", `${code}`);
-                        break;
-                    } catch (err) {
-                        retryCount++;
-                        if (retryCount >= maxRetries) {
-                            logger.error("Failed to get pairing code, removing session and restarting...");
-                            await fs.remove(`./${this.sessionId}`);
-                            await startBot();
-                        }
-                    }
-                }
+                logger.connection.connecting("Waiting for QR code scan...");
+                this.io?.emit("broadcastMessage", "Waiting for QR code scan...");
             }
 
-            // Handle connection updates
-            sock.ev.on("connection.update", async (update) => {
-                const { connection, lastDisconnect } = update;
+            // Handle QR code updates
+            sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+                if (qr) {
+                    logger.connection.connecting("QR Code received, please scan!");
+                    // Generate QR code in terminal
+                    qrcode.generate(qr, { small: true });
+                    this.io?.emit("qr", qr);
+                    this.io?.emit("broadcastMessage", "QR Code received, please scan!");
+                }
 
                 switch (connection) {
                     case "connecting":

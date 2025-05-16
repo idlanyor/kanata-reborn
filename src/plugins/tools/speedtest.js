@@ -11,7 +11,9 @@ export async function runSpeedTest() {
         let result = `🌐 *Speed Test Sedang Berjalan*\n\n`;
         result += `⏳ Mohon tunggu sekitar 30 detik...\n`;
         
-        const { stdout } = await execAsync('speedtest -f json');
+        // Check OS and use appropriate command
+        const command = process.platform === 'win32' ? 'speedtest --json' : 'speedtest -f json';
+        const { stdout } = await execAsync(command);
         const test = JSON.parse(stdout);
         
         result = `🚀 *Hasil Speed Test*\n\n`;
