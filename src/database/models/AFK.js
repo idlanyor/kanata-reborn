@@ -3,53 +3,72 @@ import moment from 'moment';
 
 class AFK {
     static async setAFK(userId, reason) {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT OR REPLACE INTO afk_status (user_id, reason, start_time) 
-                   VALUES (?, ?, CURRENT_TIMESTAMP)`,
-            [userId, reason],
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            });
-        });
+        await db.read();
+        
+        // Check if afk_status array exists, create if not
+        if (!db.data.afk_status) {
+            db.data.afk_status = [];
+        }
+        
+        // Find existing AFK status or create new entry
+        const existingIndex = db.data.afk_status.findIndex(afk => afk.user_id === userId);
+        
+        const afkData = {
+            user_id: userId,
+            reason: reason,
+            start_time: new Date().toISOString(),
+            mentioned_by: null
+        };
+        
+        if (existingIndex !== -1) {
+            db.data.afk_status[existingIndex] = afkData;
+        } else {
+            db.data.afk_status.push(afkData);
+        }
+        
+        await db.write();
+        return afkData;
     }
 
     static async removeAFK(userId) {
-        return new Promise((resolve, reject) => {
-            db.run('DELETE FROM afk_status WHERE user_id = ?',
-            [userId],
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            });
-        });
+        await db.read();
+        
+        if (!db.data.afk_status) return;
+        
+        const initialLength = db.data.afk_status.length;
+        db.data.afk_status = db.data.afk_status.filter(afk => afk.user_id !== userId);
+        
+        if (db.data.afk_status.length !== initialLength) {
+            await db.write();
+        }
+        
+        return true;
     }
 
     static async getAFK(userId) {
-        return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM afk_status WHERE user_id = ?',
-            [userId],
-            (err, row) => {
-                if (err) reject(err);
-                resolve(row);
-            });
-        });
+        await db.read();
+        
+        if (!db.data.afk_status) return null;
+        
+        return db.data.afk_status.find(afk => afk.user_id === userId) || null;
     }
 
     static async updateMentions(userId, mentionedBy) {
-        return new Promise((resolve, reject) => {
-            db.run(`UPDATE afk_status 
-                   SET mentioned_by = CASE 
-                        WHEN mentioned_by IS NULL THEN ? 
-                        ELSE mentioned_by || ',' || ?
-                   END 
-                   WHERE user_id = ?`,
-            [mentionedBy, mentionedBy, userId],
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            });
-        });
+        await db.read();
+        
+        if (!db.data.afk_status) return null;
+        
+        const afkStatus = db.data.afk_status.find(afk => afk.user_id === userId);
+        if (!afkStatus) return null;
+        
+        if (!afkStatus.mentioned_by) {
+            afkStatus.mentioned_by = mentionedBy;
+        } else {
+            afkStatus.mentioned_by += ',' + mentionedBy;
+        }
+        
+        await db.write();
+        return afkStatus;
     }
 
     static formatDuration(startTime) {
