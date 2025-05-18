@@ -450,14 +450,14 @@
       "user_id": "117261801099498",
       "group_id": "120363317533128297@g.us",
       "message_count": 1,
-      "last_message": "2025-05-07T20:59:21+07:00",
+      "last_message": "2025-05-17T05:59:49+02:00",
       "warning_count": 0
     },
     {
       "user_id": "104995441655980",
       "group_id": "120363317533128297@g.us",
-      "message_count": 2,
-      "last_message": "2025-05-07T18:17:47+07:00",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:53:00+02:00",
       "warning_count": 0
     },
     {
@@ -604,7 +604,7 @@
       "user_id": "6285712454689",
       "group_id": "120363416092887872@g.us",
       "message_count": 1,
-      "last_message": "2025-05-09T18:03:24+07:00",
+      "last_message": "2025-05-17T04:13:20+02:00",
       "warning_count": 0
     },
     {
@@ -745,6 +745,55 @@
       "group_id": "120363416092887872@g.us",
       "message_count": 1,
       "last_message": "2025-05-11T12:13:36+07:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "6283185895076",
+      "group_id": "120363416092887872@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:17:20+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "66271580266567",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:55:51+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "25812870897747",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:28:55+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "119155781009592",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:55:45+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "20436108759271",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T05:41:34+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "157007009054904",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T06:01:55+02:00",
+      "warning_count": 0
+    },
+    {
+      "user_id": "150766404816985",
+      "group_id": "120363317533128297@g.us",
+      "message_count": 1,
+      "last_message": "2025-05-17T06:02:48+02:00",
       "warning_count": 0
     }
   ]

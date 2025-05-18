@@ -120,7 +120,7 @@ class Kanata {
                         if (reason === DisconnectReason.loggedOut) {
                             logger.error("Invalid session, removing session and restarting...");
                             this.io?.emit("broadcastMessage", "Invalid session, restarting...");
-                            await fs.remove(`./${this.sessionId}`);
+                            // await fs.remove(`./${this.sessionId}`);
                             logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
                         } else if (reason === DisconnectReason.badSession) {
