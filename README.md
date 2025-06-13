@@ -1,3 +1,4 @@
+<!-- GitAds-Verify: R8RVGTUVXK5U9RDXKJ6SO4HZ8LYTQXRC -->
 <div align="center">
   
 # 🌟 Kanata V3 - WhatsApp Bot
