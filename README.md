@@ -14,6 +14,8 @@
 
 </div>
 
+## GitAds Sponsored [![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=idlanyor/kanata-reborn@github)](https://gitads.dev/v1/ad-track?source=idlanyor/kanata-reborn@github)
+
 <div align="center">
   <h3>🌈 Fitur Unggulan</h3>
 </div>
