@@ -115,7 +115,7 @@ export async function mixtralGroq(content) {
 }
 
 export async function gpt4Hika({ prompt, id }) {
-    // https://fastrestapis.fasturl.cloud/aillm/gpt-4?ask=apakah%20kamu%20tahu%20aku%3F&style=selalu%20balas%20percakapan%20user%20dengan%20bahasa%20indonesia
+    // https://api.fasturl.link/aillm/gpt-4?ask=apakah%20kamu%20tahu%20aku%3F&style=selalu%20balas%20percakapan%20user%20dengan%20bahasa%20indonesia
     const style = 'Namamu Kanata AI,Kamu adalah AI yang santai,pemarah, suka bercanda, dan sedikit egois. Jawabanmu humanis, to the point, dan pakai bahasa gaul. Kadang sok tahu, kadang nyeleneh, tapi tetep kasih info yang bener. Bercanda boleh, tapi jangan sampai bikin orang males. Jangan tambahin pertanyaan setelah jawaban.'
     const { data } = await hikaru('aillm/superqwen', {
         params: {

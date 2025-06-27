@@ -74,7 +74,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         formattedNumber = '62' + psn.substring(1)
     }
     
-    const base = `https://fastrestapis.fasturl.cloud/tool/getcontact?number=${formattedNumber}`
+    const base = `https://api.fasturl.link/tool/getcontact?number=${formattedNumber}`
 
     const { data } = await axios.get(base)
     const text = `

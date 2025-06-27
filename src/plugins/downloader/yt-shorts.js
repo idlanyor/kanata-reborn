@@ -15,7 +15,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const response = await axios.get(`https://fastrestapis.fasturl.cloud/downup/ytmp4`, {
+            const response = await axios.get(`https://api.fasturl.link/downup/ytmp4`, {
                 params: {
                     url: psn,
                     quality: '360',

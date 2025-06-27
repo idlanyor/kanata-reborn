@@ -53,7 +53,7 @@ export default async ({ sock, m, id, psn, sender }) => {
         }
 
         // Get video from FastURL API
-        const response = await axios.get(`https://fastrestapis.fasturl.cloud/downup/ytmp4`, {
+        const response = await axios.get(`https://api.fasturl.link/downup/ytmp4`, {
             params: {
                 url: videoUrl,
                 quality: quality,

@@ -13,7 +13,7 @@ import { setTimeout } from 'timers';
 import pkg from '@fizzxydev/baileys-pro';
 const { proto, generateWAMessageFromContent } = pkg;
 
-const URL = 'https://fastrestapis.fasturl.cloud/religious/prayerschedule?city=Purbalingga';
+const URL = 'https://api.fasturl.link/religious/prayerschedule?city=Purbalingga';
 const FILE_PATH = 'src/lib/services/jadwalshalat.json';
 
 const data = await readFile(FILE_PATH, 'utf-8');
@@ -161,18 +161,18 @@ function generatePrayerMessage(name, time) {
 
 async function getPrayerImage(name) {
     const images = {
-        // 'Sahur': 'https://fastrestapis.fasturl.cloud/file/v2/FieAa6x.jpg',
-        // 'Imsyak': 'https://fastrestapis.fasturl.cloud/file/v2/wdGBB0L.jpg',
-        'Shubuh': 'https://fastrestapis.fasturl.cloud/file/v2/J7r7Kzj.jpg',
-        'Dzuhur': 'https://fastrestapis.fasturl.cloud/file/v2/Nm7xLET.jpg',
-        'Ashar': 'https://fastrestapis.fasturl.cloud/file/v2/vl5k4iD.jpg',
-        'Maghrib': 'https://fastrestapis.fasturl.cloud/file/v2/dATGtcL.jpg',
-        // 'Buka': 'https://fastrestapis.fasturl.cloud/file/v2/NaP2lnd.jpg',
-        'Isya': 'https://fastrestapis.fasturl.cloud/file/v2/pLwruV9.jpg',
-        // 'Ramadhan': 'https://fastrestapis.fasturl.cloud/file/v2/sdb0OYA.jpg',
+        // 'Sahur': 'https://api.fasturl.link/file/v2/FieAa6x.jpg',
+        // 'Imsyak': 'https://api.fasturl.link/file/v2/wdGBB0L.jpg',
+        'Shubuh': 'https://api.fasturl.link/file/v2/J7r7Kzj.jpg',
+        'Dzuhur': 'https://api.fasturl.link/file/v2/Nm7xLET.jpg',
+        'Ashar': 'https://api.fasturl.link/file/v2/vl5k4iD.jpg',
+        'Maghrib': 'https://api.fasturl.link/file/v2/dATGtcL.jpg',
+        // 'Buka': 'https://api.fasturl.link/file/v2/NaP2lnd.jpg',
+        'Isya': 'https://api.fasturl.link/file/v2/pLwruV9.jpg',
+        // 'Ramadhan': 'https://api.fasturl.link/file/v2/sdb0OYA.jpg',
     };
     console.log(images[name]);
-    return images[name] || 'https://fastrestapis.fasturl.cloud/file/v2/sdb0OYA.jpg';
+    return images[name] || 'https://api.fasturl.link/file/v2/sdb0OYA.jpg';
 }
 
 cron.schedule('0 0 */28 * *', fetchPrayerSchedule);

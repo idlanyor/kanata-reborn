@@ -10,7 +10,7 @@ console.log(attf)
     try {
       // Pesan sukses upload gambar
       const imageUrl = await uploadGambar2(attf);
-      const { data } = await axios.get('https://fastrestapis.fasturl.cloud/aillm/gpt-4o-turbo', {
+      const { data } = await axios.get('https://api.fasturl.link/aillm/gpt-4o-turbo', {
         params: {
           ask: psn,
           imageUrl,

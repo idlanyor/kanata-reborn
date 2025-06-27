@@ -14,7 +14,7 @@ export default async ({ sock, m, id, psn }) => {
     try {
         await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
 
-        const res = await axios.get(`https://fastrestapis.fasturl.cloud/downup/igdown?url=${encodeURIComponent(psn)}`, {
+        const res = await axios.get(`https://api.fasturl.link/downup/igdown?url=${encodeURIComponent(psn)}`, {
             headers: { accept: 'application/json' }
         });
 

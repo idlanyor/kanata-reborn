@@ -45,10 +45,10 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     const encodedBg = encodeURIComponent(bgColor);
 
     let profilePic = await sock.profilePictureUrl(id, "image")
-        .catch(() => "https://fastrestapis.fasturl.cloud/file/v2/CYOz4sa.jpg");
+        .catch(() => "https://api.fasturl.link/file/v2/CYOz4sa.jpg");
     const encodedAvatar = encodeURIComponent(profilePic);
 
-    const apiUrl = `https://fastrestapis.fasturl.cloud/maker/quotly?name=${encodedName}&text=${encodedText}&avatar=${encodedAvatar}&bgColor=${encodedBg}`;
+    const apiUrl = `https://api.fasturl.link/maker/quotly?name=${encodedName}&text=${encodedText}&avatar=${encodedAvatar}&bgColor=${encodedBg}`;
 
     try {
         const { data: imageBuffer } = await axios.get(apiUrl, {
