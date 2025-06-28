@@ -1,5 +1,5 @@
-import pkg from '@fizzxydev/baileys-pro';
-const { generateWAMessageFromContent, proto } = pkg;
+import pkg from '@antidonasi/baileys';
+
 export const handler = "listai"
 export const description = "📜 *List Artificial Intelligence* 📜";
 

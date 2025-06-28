@@ -22,7 +22,6 @@ import Group from './src/database/models/Group.js';
 import { addMessageHandler } from './src/helper/message.js'
 // import { autoAI } from './src/lib/autoai.js'
 import GeminiHandler from './src/lib/geminiHandler.js';
-import { loadSavedSessions } from './src/plugins/bot/jadibot.js';
 
 const app = express()
 const server = createServer(app)
@@ -387,11 +386,7 @@ async function loadPlugin(cmd) {
 }
 
 export async function startBot() {
-    const phoneNumber = await getPhoneNumber();
-    const bot = new Kanata({
-        phoneNumber,
-        sessionId: globalThis.sessionName,
-    });
+    const bot = new Kanata(globalThis.sessionName);
 
     bot.start().then(sock => {
         logger.success('Bot started successfully!');
@@ -757,18 +752,7 @@ export async function startBot() {
                     call(events['call'], sock);
                 }
 
-                // Connection update & load saved sessions
-                if (events['connection.update']) {
-                    const { connection } = events['connection.update'];
-                    if (connection === 'open') {
-                        try {
-                            await loadSavedSessions(sock);
-                            logger.success('Successfully loaded saved jadibot sessions');
-                        } catch (err) {
-                            logger.error('Error loading saved sessions:', err);
-                        }
-                    }
-                }
+                
             }
         );
 

@@ -1,6 +1,6 @@
 import { hikaru } from "../../helper/hikaru.js";
 import loadAssets from "../../helper/loadAssets.js";
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@antidonasi/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
 export const handler = "roast";

@@ -1,7 +1,7 @@
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
 import { PassThrough } from 'stream';
-import { downloadContentFromMessage } from '@fizzxydev/baileys-pro';
+import { downloadContentFromMessage } from '@antidonasi/baileys';
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 

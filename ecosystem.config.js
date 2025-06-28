@@ -1,6 +1,6 @@
 export const apps = [
     {
-        name: "k3", // kasih nama yang cakep
+        name: "k3",
         script: "npm",
         args: "start",
         instances: 1,

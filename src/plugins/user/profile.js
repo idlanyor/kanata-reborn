@@ -1,5 +1,5 @@
 import User from '../../database/models/User.js';
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@antidonasi/baileys';
 import { getPpUrl } from "../../helper/bot.js";
 const { proto, generateWAMessageFromContent } = pkg;
 

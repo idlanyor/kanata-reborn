@@ -1,7 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import pkg from '@fizzxydev/baileys-pro';
-const { proto, generateWAMessageFromContent } = pkg;
+import { generateWAMessageFromContent, proto } from '@antidonasi/baileys';
 const execAsync = promisify(exec);
 
 export const handler = "speedtest";

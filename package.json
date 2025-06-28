@@ -6,7 +6,7 @@
   "type": "module",
   "private": "true",
   "scripts": {
-    "start": "node ."
+    "start": "bun ."
   },
   "keywords": [
     "bot",
@@ -16,7 +16,7 @@
   "author": "Roynaldi",
   "license": "MIT",
   "dependencies": {
-    "@fizzxydev/baileys-pro": "npm:@neoxr/baileys@7.6.15",
+    "@antidonasi/baileys": "npm:@neoxr/baileys@latest",
     "@google/generative-ai": "latest",
     "@hapi/boom": "latest",
     "@ilovepdf/ilovepdf-nodejs": "latest",
@@ -48,7 +48,7 @@
     "ipinfo": "latest",
     "jsbarcode": "latest",
     "lowdb": "latest",
-    "mathjs": "^14.4.0",
+    "mathjs": "^14.5.2",
     "moment": "latest",
     "node-cache": "^5.1.2",
     "node-cron": "latest",

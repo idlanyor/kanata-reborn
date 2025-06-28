@@ -1,5 +1,5 @@
-import pkg from '@fizzxydev/baileys-pro';
-const { generateWAMessageFromContent, proto } = pkg;
+import pkg from '@antidonasi/baileys';
+
 export const handler = 'tesint'
 export const description = ''
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {

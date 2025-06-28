@@ -1,11 +1,10 @@
-import pkg from '@fizzxydev/baileys-pro';
-const { proto, generateWAMessageFromContent } = pkg
+import { generateWAMessageFromContent, proto } from '@antidonasi/baileys';
 import moment from 'moment';
 import os from 'os';
 
 export const description = "Ping Bot & System Info";
 export const handler = "ping";
-
+    
 const calculatePing = function (timestamp, now) {
     return moment.duration(now - moment(timestamp * 1000)).asSeconds();
 };

@@ -1,8 +1,6 @@
-import pkg from '@fizzxydev/baileys-pro';
-import { getBuffer } from '../../helper/mediaMsg.js';
-const { proto, generateWAMessageFromContent } = pkg
+import pkg from '@antidonasi/baileys';
 import os from 'os';
-import si from 'systeminformation'; // Tambahkan library systeminformation
+import si from 'systeminformation';
 
 export const handler = "statsnl"
 export const description = "📊 Informasi sistem";
@@ -21,18 +19,20 @@ export async function systemSpec() {
     const usedMem = totalMem - freeMem;
     const ramUsagePercent = (usedMem / totalMem) * 100; // Persentase RAM terpakai
     const ramFreePercent = (freeMem / totalMem) * 100; // Persentase RAM tersedia
-    const uptime = os.uptime() / 3600; // Dalam jam
+    const uptime = os.uptime(); // Dalam detik
 
-    const hours = Math.floor(uptime);
-    const minutes = Math.floor((uptime - hours) * 60);
-    const seconds = Math.floor(((uptime - hours) * 60 - minutes) * 60);
+    // Format uptime (Hari, jam, menit, detik)
+    const days = Math.floor(uptime / (24 * 3600));
+    const hours = Math.floor((uptime % (24 * 3600)) / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
 
     OS += `🧠 *Total RAM*: ${totalMem.toFixed(2)} GB\n`;
     OS += `📊 *RAM Terpakai*: ${usedMem.toFixed(2)} GB (${ramUsagePercent.toFixed(2)}%)\n`;
     OS += `💾 *RAM Tersedia*: ${freeMem.toFixed(2)} GB (${ramFreePercent.toFixed(2)}%)\n\n`;
 
     // Informasi Waktu Aktif (Uptime)
-    OS += `⏱️ *Uptime*: ${hours} jam ${minutes} menit ${seconds} detik\n\n`;
+    OS += `⏱️ *Uptime*: ${days} hari ${hours} jam ${minutes} menit ${seconds} detik\n\n`;
 
     // Informasi CPU
     OS += `🖥️ *CPU Info*:\n`;
@@ -47,28 +47,7 @@ export async function systemSpec() {
     const diskIo = await si.disksIO();
     OS += `💽 *Disk Activity*:\n`;
     OS += `   📥 *Read*: ${(diskIo.rIO / (1024 ** 2)).toFixed(2)} MB\n`;
-    OS += `   📤 *Write*: ${(diskIo.wIO / (1024 ** 2)).toFixed(2)} MB\n\n`;
-
-    // Informasi Jaringan
-    const networkStats = await si.networkStats();
-    const networkInterfaces = os.networkInterfaces();
-    OS += `🌐 *Network Interfaces*:\n`;
-    for (const [name, interfaces] of Object.entries(networkInterfaces)) {
-        interfaces.forEach((iface) => {
-            OS += `   🔹 *${name}* (${iface.family})\n`;
-            OS += `      ▪️ IP Address: ${iface.address}\n`;
-            OS += `      ▪️ Netmask: ${iface.netmask}\n`;
-            OS += `      ▪️ MAC Address: ${iface.mac}\n`;
-        });
-    }
-
-    OS += `📊 *Network Traffic*:\n`;
-    networkStats.forEach((net, index) => {
-        OS += `   🔹 *Interface ${index + 1}*:\n`;
-        OS += `      ▪️ Received: ${(net.rx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
-        OS += `      ▪️ Transmitted: ${(net.tx_bytes / (1024 ** 2)).toFixed(2)} MB\n`;
-        OS += `      ▪️ Speed: ${net.ms} ms\n`;
-    });
+    OS += `   📤 *Write*: ${(diskIo.wIO / (1024 ** 2)).toFixed(2)} MB\n`;
 
     return OS;
 }
@@ -89,23 +68,6 @@ function calculateCpuLoad() {
     return usage;
 }
 
-
 export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
-    // let msg = generateWAMessageFromContent(
-    //     globalThis.newsLetterJid,
-    //     {
-    //         orderMessage: {
-    //             productId: "8569472943180260",
-    //             title: "Kanata Bot",
-    //             description: "now",
-    //             currencyCode: "IDR",
-    //             message: await systemSpec(),
-    //             priceAmount1000: "91000",
-    //             thumbnail: await getBuffer('https://files.catbox.moe/2wynab.jpg'),
-    //             surface: "Kanata Bot",
-    //             contextInfo: { mentionedJid: [id] },
-    //         },
-    //     }, {});
-    // await sock.relayMessage(globalThis.newsLetterJid, msg.message, {});
     await sock.sendMessage(globalThis.newsLetterJid, { text: await systemSpec() });
 };

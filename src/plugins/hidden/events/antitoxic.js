@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@antidonasi/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const TOXIC_WORDS = ['anjing', 'bangsat', 'kontol', 'memek', 'jembut', 'ngentot', 'goblok', 'tolol', 'babi', 'monyet', 'lonte', 'bejat', 'keparat', 'biadab', 'bajingan', 'bacot', 'tai', 'jancok', 'perek', 'bencong', 'banci', 'fuck', 'shit', 'bitch', 'pussy', 'asshole', 'bastard'];

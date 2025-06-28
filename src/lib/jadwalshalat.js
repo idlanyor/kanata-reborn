@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import cron from 'node-cron';
 import { setTimeout } from 'timers';
-import pkg from '@fizzxydev/baileys-pro';
+import pkg from '@antidonasi/baileys';
 const { proto, generateWAMessageFromContent } = pkg;
 
 const URL = 'https://api.fasturl.link/religious/prayerschedule?city=Purbalingga';

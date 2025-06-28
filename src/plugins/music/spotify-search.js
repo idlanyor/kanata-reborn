@@ -1,5 +1,4 @@
-import pkg, { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
-const { proto, prepareWAMessageMedia } = pkg
+import { generateWAMessageFromContent, proto, prepareWAMessageMedia } from '@antidonasi/baileys';
 import { spotifySearch } from '../../lib/neoxr/spotify.js';
 import { createCanvas,registerFont } from 'canvas';
 import fs from 'fs';
@@ -19,10 +18,8 @@ registerFont(join(__dirname, '../../assets/fonts/Poppins-Regular.ttf'), { family
 export const handler = "spotifysearch"
 export const description = "Cari Musik dari *Spotify*";
 
-// Lokasi penyimpanan gambar sementara
 const tempImagePath = path.join(process.cwd(), 'temp', 'spotify-search.jpg');
 
-// Fungsi untuk membuat gambar Spotify Search menggunakan canvas
 const createSpotifySearchImage = async (query, results = []) => {
     // Buat direktori temp jika belum ada
     const tempDir = path.join(process.cwd(), 'temp');

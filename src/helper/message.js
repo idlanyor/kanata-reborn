@@ -1,4 +1,4 @@
-import pkg from '@fizzxydev/baileys-pro'
+import pkg from '@antidonasi/baileys'
 const { generateWAMessageFromContent, proto } = pkg
 
 export function addMessageHandler(m, sock) {
