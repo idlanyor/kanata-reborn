@@ -1,7 +1,7 @@
 import User from '../../database/models/User.js';
-import pkg from '@antidonasi/baileys';
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 import { getPpUrl } from "../../helper/bot.js";
-const { proto, generateWAMessageFromContent } = pkg;
+
 
 export const handler = ['profile', 'me'];
 export const description = "View User Profile";

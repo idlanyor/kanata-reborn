@@ -166,11 +166,11 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
     if (id.endsWith('@g.us')) {
         const lastUsage = groupCooldowns.get(id);
         const now = Date.now();
-        
+
         if (lastUsage && (now - lastUsage) < COOLDOWN_DURATION) {
             return; // Skip jika masih dalam cooldown
         }
-        
+
         groupCooldowns.set(id, now);
     }
 
@@ -196,26 +196,26 @@ async function prosesPerintah({ command, sock, m, id, sender, noTel, attf }) {
 
             // Optimasi pengecekan fitur grup
             const checks = [];
-            
+
             if (settings.antispam) {
                 checks.push(Group.checkSpam(noTel, id));
             }
             if (settings.antipromosi) {
                 checks.push(import('./src/plugins/hidden/events/antipromosi.js')
-                    .then(({ default: antipromosi }) => 
+                    .then(({ default: antipromosi }) =>
                         antipromosi({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
             if (settings.antilink) {
                 checks.push(import('./src/plugins/hidden/events/antilink.js')
-                    .then(({ default: antilink }) => 
+                    .then(({ default: antilink }) =>
                         antilink({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
             if (settings.antitoxic) {
                 checks.push(import('./src/plugins/hidden/events/antitoxic.js')
-                    .then(({ default: antitoxic }) => 
+                    .then(({ default: antitoxic }) =>
                         antitoxic({ sock, m, id, psn: m.body, sender: noTel + '@s.whatsapp.net' })));
             }
-            
+
             // Jalankan semua pengecekan secara paralel
             await Promise.all(checks);
         } else {
@@ -386,8 +386,11 @@ async function loadPlugin(cmd) {
 }
 
 export async function startBot() {
-    const bot = new Kanata(globalThis.sessionName);
-
+    const phoneNumber = await getPhoneNumber();
+    const bot = new Kanata({
+        phoneNumber,
+        sessionId: globalThis.sessionName,
+    });
     bot.start().then(sock => {
         logger.success('Bot started successfully!');
         logger.divider();
@@ -752,7 +755,7 @@ export async function startBot() {
                     call(events['call'], sock);
                 }
 
-                
+
             }
         );
 

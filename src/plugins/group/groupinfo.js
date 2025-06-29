@@ -1,5 +1,5 @@
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 export const handler = ['groupinfo', 'gcinfo'];
 export const description = 'Menampilkan informasi grup';

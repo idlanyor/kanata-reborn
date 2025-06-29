@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 const SPAM_INTERVAL = 3000; // 3 detik
 const SPAM_LIMIT = 5; // Jumlah pesan maksimal dalam interval

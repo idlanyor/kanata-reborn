@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { generateWAMessageFromContent, proto } from '@antidonasi/baileys';
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 const execAsync = promisify(exec);
 
 export const handler = "speedtest";
@@ -10,9 +11,7 @@ export async function runSpeedTest() {
         let result = `🌐 *Speed Test Sedang Berjalan*\n\n`;
         result += `⏳ Mohon tunggu sekitar 30 detik...\n`;
         
-        // Check OS and use appropriate command
-        const command = process.platform === 'win32' ? 'speedtest --json' : 'speedtest -f json';
-        const { stdout } = await execAsync(command);
+        const { stdout } = await execAsync('speedtest -f json');
         const test = JSON.parse(stdout);
         
         result = `🚀 *Hasil Speed Test*\n\n`;

@@ -5,7 +5,8 @@
  * @module : ES6 Module
  * Bebas tempel jangan copot we em-nya 🙇
  */
-import { generateWAMessageFromContent, proto,  prepareWAMessageMedia } from '@antidonasi/baileys';
+import {  proto, prepareWAMessageMedia, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 import { memberJkt } from '../../lib/scraper/jkt48.js';
 
 export const handler = 'jktmember'

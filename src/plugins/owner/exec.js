@@ -4,7 +4,6 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 export default async ({ sock, m, id, noTel, psn }) => {
-    if (!globalThis.isOwner(noTel)) return;
 
     if (!psn) {
         await sock.sendMessage(id, { text: '❌ Masukkan perintah yang akan dieksekusi!' });

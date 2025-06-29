@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 const PROMO_PATTERNS = [
     'join grup',

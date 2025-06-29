@@ -8,13 +8,16 @@ import {
 } from '@antidonasi/baileys';
 import pino from "pino";
 import NodeCache from "node-cache";
+import fs from 'fs-extra';
 import { startBot } from "../../app.js";
 import { logger } from './logger.js';
-import qrcode from 'qrcode-terminal';
+
 
 class Kanata {
-    constructor(sessionId, io = null) {
-        this.sessionId = sessionId;
+    constructor(data, io = null) {
+        this.phoneNumber = data.phoneNumber;
+        this.sessionId = data.sessionId;
+        this.useStore = data.useStore;
         this.io = io;
     }
 
@@ -24,6 +27,7 @@ class Kanata {
 
         try {
             const msgRetryCounterCache = new NodeCache();
+            const useStore = this.useStore;
 
             // Configure loggers
             const MAIN_LOGGER = pino({
@@ -45,7 +49,7 @@ class Kanata {
                 version,
                 markOnlineOnConnect: true,
                 logger: P,
-                printQRInTerminal: true,
+                printQRInTerminal: false,
                 browser: Browsers.macOS("Safari"),
                 auth: {
                     creds: state.creds,
@@ -64,27 +68,43 @@ class Kanata {
                     maxRetries: 5,
                     keepAlive: true,
                     connectTimeout: 30000,
+                    
                 },
             });
 
-            // Bind credentials
+            // Bind store and credentials
             sock.ev.on("creds.update", saveCreds);
 
-            // Handle QR code
+            // Handle pairing code
             if (!sock.authState.creds.registered) {
-                logger.connection.connecting("Waiting for QR code scan...");
-                this.io?.emit("broadcastMessage", "Waiting for QR code scan...");
+                logger.connection.connecting("Waiting for pairing code...");
+                this.io?.emit("broadcastMessage", `Waiting for pairing code...`);
+
+                const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+                let retryCount = 0;
+                const maxRetries = 3;
+
+                while (retryCount < maxRetries) {
+                    try {
+                        await delay(6000);
+                        const code = await sock.requestPairingCode(this.phoneNumber, "KANATAV3");
+                        logger.connection.pairing(code);
+                        this.io?.emit("pairCode", `${code}`);
+                        break;
+                    } catch (err) {
+                        retryCount++;
+                        if (retryCount >= maxRetries) {
+                            logger.error("Failed to get pairing code, removing session and restarting...");
+                            await fs.remove(`./${this.sessionId}`);
+                            await startBot();
+                        }
+                    }
+                }
             }
 
-            // Handle QR code updates
-            sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
-                if (qr) {
-                    logger.connection.connecting("QR Code received, please scan!");
-                    // Generate QR code in terminal
-                    qrcode.generate(qr, { small: true });
-                    this.io?.emit("qr", qr);
-                    this.io?.emit("broadcastMessage", "QR Code received, please scan!");
-                }
+            // Handle connection updates
+            sock.ev.on("connection.update", async (update) => {
+                const { connection, lastDisconnect } = update;
 
                 switch (connection) {
                     case "connecting":
@@ -105,7 +125,7 @@ class Kanata {
                         if (reason === DisconnectReason.loggedOut) {
                             logger.error("Invalid session, removing session and restarting...");
                             this.io?.emit("broadcastMessage", "Invalid session, restarting...");
-                            // await fs.remove(`./${this.sessionId}`);
+                            await fs.remove(`./${this.sessionId}`);
                             logger.info(`Session ${this.sessionId} removed!`);
                             await startBot();
                         } else if (reason === DisconnectReason.badSession) {

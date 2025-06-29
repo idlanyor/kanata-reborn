@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent, proto, prepareWAMessageMedia } from '@antidonasi/baileys';
+import { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 import { getBuffer } from '../../helper/mediaMsg.js';
 import os from 'os';
 import si from 'systeminformation';

@@ -194,7 +194,7 @@ export async function menuCard(username, handle, avatarUrl) {
         ctx.fillText('Version: 3.0', canvas.width - 50, 175);
         ctx.fillText('Creator: Roy', canvas.width - 50, 205);
         ctx.fillText('Type: ES6 Module', canvas.width - 50, 235);
-        ctx.fillText('Library: @antidonasi/baileys', canvas.width - 50, 265);
+        ctx.fillText('Library: @fizzxydev/baileys-pro', canvas.width - 50, 265);
 
         // Tambahkan informasi di sisi kiri dengan efek 3D
         ctx.save();

@@ -1,4 +1,4 @@
-import { downloadMediaMessage } from '@antidonasi/baileys';
+import { downloadMediaMessage } from '@fizzxydev/baileys-pro';
 
 export const handler = [ 'setpp'];
 export const description = 'Mengubah foto profil bot';

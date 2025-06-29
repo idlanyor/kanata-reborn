@@ -1,6 +1,6 @@
 import Group from '../../database/models/Group.js';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 export const handler = 'settings';
 export const description = 'Mengatur fitur grup';

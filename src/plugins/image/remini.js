@@ -6,7 +6,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏱️ Bentar,gambar burikmu sedang diproses` });
         try {
             const imageUrl = await uploadGambar2(attf);
-            const { url } = await fetch(`https://api.fasturl.link/aiimage/upscale?imageUrl=${imageUrl}&resize=2`);
+            const { url } = await fetch(globalThis.hikaru.baseUrl + `aiimage/upscale?imageUrl=${imageUrl}&resize=2`, {
+                headers: {
+                    'x-api-key': globalThis.hikaru.apiKey
+                }
+            }).then(res => res.json());
             await sock.sendMessage(id, {
                 image: { url },
                 caption: '📷 HD Image berhasil! Gambar burikmu telah dikonversi ke kualitas HD 🎉'

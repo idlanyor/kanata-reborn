@@ -12,16 +12,14 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
     if (!psn) {
         let warnaTersedia = Object.keys(colorMap).map(w => `- ${w}`).join("\n");
-        return await sock.sendMessage(id, {
-            text:
-                `👉Quoted Chat Maker👈\n\n` +
-                `Gunakan perintah:\n` +
-                `*qc <teks> --<warna>*\n\n` +
-                `📌 *Contoh:*\n` +
-                `- qc Halo Dunia --merah\n` +
-                `- qc --biru Ini teksnya\n\n` +
-                `🎨 *Warna Tersedia:*\n${warnaTersedia}`
-        });
+        return await m.reply(
+            `👉Quoted Chat Maker👈\n\n` +
+            `Gunakan perintah:\n` +
+            `*qc <teks> --<warna>*\n\n` +
+            `📌 *Contoh:*\n` +
+            `- qc Halo Dunia --merah\n` +
+            `- qc --biru Ini teksnya\n\n` +
+            `🎨 *Warna Tersedia:*\n${warnaTersedia}`);
     }
 
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
@@ -45,20 +43,23 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     const encodedBg = encodeURIComponent(bgColor);
 
     let profilePic = await sock.profilePictureUrl(id, "image")
-        .catch(() => "https://api.fasturl.link/file/v2/CYOz4sa.jpg");
+        .catch(() => globalThis.hikaru.baseUrl + "file/v2/CYOz4sa.jpg");
     const encodedAvatar = encodeURIComponent(profilePic);
 
-    const apiUrl = `https://api.fasturl.link/maker/quotly?name=${encodedName}&text=${encodedText}&avatar=${encodedAvatar}&bgColor=${encodedBg}`;
+    const apiUrl = globalThis.hikaru.baseUrl + `maker/quotly?name=${encodedName}&text=${encodedText}&avatar=${encodedAvatar}&bgColor=${encodedBg}`;
 
     try {
         const { data: imageBuffer } = await axios.get(apiUrl, {
             responseType: "arraybuffer",
-            headers: { accept: "image/png" }
+            headers: { 
+                accept: "image/png",
+                'x-api-key': globalThis.hikaru.apiKey
+            }
         });
 
         const stickerOption = {
-            pack: "Kanata",
-            author: "Roy",
+            pack: "Kanata Bot",
+            author: "wa.me/628157695152",
             type: StickerTypes.FULL,
             quality: 100
         };

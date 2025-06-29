@@ -9,7 +9,7 @@
 // - Jika Anda mengubah sesuatu, tambahkan informasi di sini
 
 // Informasi:
-// - Gunakan Module https://www.npmjs.com/package/@antidonasi/baileys Versi 6.6.5
+// - Gunakan Module https://www.npmjs.com/package/@fizzxydev/baileys-pro Versi 6.6.5
 // - Jika Anda menggunakan versi lain, mungkin akan terjadi kesalahan
 
 /**

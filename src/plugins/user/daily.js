@@ -1,6 +1,6 @@
 import User from '../../database/models/User.js';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 export default async ({ sock, m, id, noTel }) => {
     try {

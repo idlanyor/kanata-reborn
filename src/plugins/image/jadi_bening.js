@@ -6,7 +6,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏱️ tunggu Bentar,Bot sedang berimajinasi` });
         try {
             const imageUrl = await uploadGambar2(attf);
-            const { url } = await fetch(`https://api.fasturl.link/aiimage/imgreconstruction-v1?url=${imageUrl}&style=Photo%20variation`);
+            const { url } = await fetch(globalThis.hikaru.baseUrl + `aiimage/imgreconstruction-v1?url=${imageUrl}&style=Photo%20variation`, {
+                headers: {
+                    'x-api-key': globalThis.hikaru.apiKey
+                }
+            }).then(res => res.json());
             await sock.sendMessage(id, {
                 image: { url },
                 caption: '📷 Image Reconstruction berhasil! 🎉'

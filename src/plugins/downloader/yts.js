@@ -1,4 +1,4 @@
-import { generateWAMessageFromContent, proto, prepareWAMessageMedia } from '@antidonasi/baileys';
+import {  proto, prepareWAMessageMedia,generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 import { ytsearch } from "../../lib/youtube.js";
 export const handler = "yts"
 export const description = "Cari Video dari *YouTube* khusus Grup";

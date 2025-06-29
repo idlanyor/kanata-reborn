@@ -5,7 +5,11 @@ export const description = 'Anime Brat Video Generator'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (!psn) return m.reply('teksnya mana cik?')
     sock.sendMessage(id, { react: { text: '⏱️', key: m.key } })
-    const { url } = await fetch(`https://api.fasturl.link/maker/animbrat?text=${encodeURIComponent(psn)}&mode=animated&position=center`)
+    const { url } = await fetch(globalThis.hikaru.baseUrl + `maker/animbrat?text=${encodeURIComponent(psn)}&mode=animated&position=center`, {
+        headers: {
+            'x-api-key': globalThis.hikaru.apiKey
+        }
+    }).then(res => res.json())
     const stickerOption = {
         pack: "KanataBot",
         author: "Roy",

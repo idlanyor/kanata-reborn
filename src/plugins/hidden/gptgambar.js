@@ -10,13 +10,16 @@ console.log(attf)
     try {
       // Pesan sukses upload gambar
       const imageUrl = await uploadGambar2(attf);
-      const { data } = await axios.get('https://api.fasturl.link/aillm/gpt-4o-turbo', {
+      const { data } = await axios.get(globalThis.hikaru.baseUrl + 'aillm/gpt-4o-turbo', {
         params: {
           ask: psn,
           imageUrl,
           style: 'Kamu adalah AI spesialis analisis gambar yang mampu mengenali dan menjelaskan objek, teks, dan kode yang ada di dalam gambar. Jika ada teks, kamu akan mengekstraknya secara akurat. Jika ada kode pemrograman, kamu akan mengidentifikasinya, menjelaskan fungsinya, dan memastikan bisa dieksekusi jika memungkinkan. Penjelasanmu jelas, detail, dan to the point.',
           sessionId: id
 
+        },
+        headers: {
+            'x-api-key': globalThis.hikaru.apiKey
         }
       })
       await sock.sendMessage(id, {

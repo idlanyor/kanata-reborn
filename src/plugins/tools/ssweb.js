@@ -21,11 +21,12 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
     try {
         await sock.sendMessage(id, { text: '📸 Capturing screenshot, please wait... ⏳' });
 
-        const apiUrl = `https://api.fasturl.link/tool/screenshot?url=${encodeURIComponent(url)}&width=1280&height=800&delay=0&fullPage=false&darkMode=false&type=png`;
+        const apiUrl = globalThis.hikaru.baseUrl + `tool/screenshot?url=${encodeURIComponent(url)}&width=1280&height=800&delay=0&fullPage=false&darkMode=false&type=png`;
 
         const response = await fetch(apiUrl, {
             headers: {
-                'accept': 'image/png'
+                'accept': 'image/png',
+                'x-api-key': globalThis.hikaru.apiKey
             }
         });
 

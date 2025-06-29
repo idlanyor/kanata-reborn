@@ -1,6 +1,6 @@
 import { unixToDate } from "../../helper/date.js";
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 export const handler = 'stalkch'
 export const description = 'Retrieve Information from Channel/Newsletter'

@@ -14,7 +14,7 @@ export const threads = async (link) => {
         if (!id || !id[1]) {
             return {
                 status: false,
-                message: "Invalid Threads URL format", 
+                message: "Invalid Threads URL format",
                 data: null,
                 error: "Could not extract post ID"
             };
@@ -27,7 +27,7 @@ export const threads = async (link) => {
 
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36');
-        
+
         await page.goto(`https://threadster.app/download/${id[1]}`, {
             waitUntil: 'networkidle0'
         });
@@ -76,11 +76,11 @@ export const threads = async (link) => {
     }
 };
 
-// (async () => {
-//     try {
-//         const result = await threads('https://www.threads.net/@budikuang/post/DFDaS9UyhbJ?xmt=AQGzTcf8Jg0MTzaOE7JWGSYs5EyzaAcIrlfk9-z635Texw');
-//         console.log(result);
-//     } catch (error) {
-//         console.error("Error:", error.message);
-//     }
-// })();
+(async () => {
+    try {
+        const result = await threads('https://www.threads.net/@budikuang/post/DFDaS9UyhbJ?xmt=AQGzTcf8Jg0MTzaOE7JWGSYs5EyzaAcIrlfk9-z635Texw');
+        console.log(result);
+    } catch (error) {
+        console.error("Error:", error.message);
+    }
+})();

@@ -10,10 +10,9 @@ import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import cron from 'node-cron';
 import { setTimeout } from 'timers';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 
-const URL = 'https://api.fasturl.link/religious/prayerschedule?city=Purbalingga';
+const URL = globalThis.hikaru.baseUrl + 'religious/prayerschedule?city=Purbalingga';
 const FILE_PATH = 'src/lib/services/jadwalshalat.json';
 
 const data = await readFile(FILE_PATH, 'utf-8');
@@ -23,7 +22,11 @@ const jadwalToday = jsh.result.monthSchedule.find(item => item.date === today);
 
 async function fetchPrayerSchedule() {
     try {
-        const response = await fetch(URL);
+        const response = await fetch(URL, {
+            headers: {
+                'x-api-key': globalThis.hikaru.apiKey
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
@@ -161,18 +164,18 @@ function generatePrayerMessage(name, time) {
 
 async function getPrayerImage(name) {
     const images = {
-        // 'Sahur': 'https://api.fasturl.link/file/v2/FieAa6x.jpg',
-        // 'Imsyak': 'https://api.fasturl.link/file/v2/wdGBB0L.jpg',
-        'Shubuh': 'https://api.fasturl.link/file/v2/J7r7Kzj.jpg',
-        'Dzuhur': 'https://api.fasturl.link/file/v2/Nm7xLET.jpg',
-        'Ashar': 'https://api.fasturl.link/file/v2/vl5k4iD.jpg',
-        'Maghrib': 'https://api.fasturl.link/file/v2/dATGtcL.jpg',
-        // 'Buka': 'https://api.fasturl.link/file/v2/NaP2lnd.jpg',
-        'Isya': 'https://api.fasturl.link/file/v2/pLwruV9.jpg',
-        // 'Ramadhan': 'https://api.fasturl.link/file/v2/sdb0OYA.jpg',
+        // 'Sahur': globalThis.hikaru.baseUrl + 'file/v2/FieAa6x.jpg',
+        // 'Imsyak': globalThis.hikaru.baseUrl + 'file/v2/wdGBB0L.jpg',
+        'Shubuh': globalThis.hikaru.baseUrl + 'file/v2/J7r7Kzj.jpg',
+        'Dzuhur': globalThis.hikaru.baseUrl + 'file/v2/Nm7xLET.jpg',
+        'Ashar': globalThis.hikaru.baseUrl + 'file/v2/vl5k4iD.jpg',
+        'Maghrib': globalThis.hikaru.baseUrl + 'file/v2/dATGtcL.jpg',
+        // 'Buka': globalThis.hikaru.baseUrl + 'file/v2/NaP2lnd.jpg',
+        'Isya': globalThis.hikaru.baseUrl + 'file/v2/pLwruV9.jpg',
+        // 'Ramadhan': globalThis.hikaru.baseUrl + 'file/v2/sdb0OYA.jpg',
     };
     console.log(images[name]);
-    return images[name] || 'https://api.fasturl.link/file/v2/sdb0OYA.jpg';
+    return images[name] || globalThis.hikaru.baseUrl + 'file/v2/sdb0OYA.jpg';
 }
 
 cron.schedule('0 0 */28 * *', fetchPrayerSchedule);

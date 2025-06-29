@@ -9,7 +9,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         try {
             let response = await removeBg(attf, psn)
             const gambarBurik = await uploadGambar2(response)
-            const { url } = await fetch('https://api.fasturl.link/aiimage/imgenlarger?url=' + gambarBurik)
+            const { url } = await fetch(globalThis.hikaru.baseUrl + 'aiimage/imgenlarger?url=' + gambarBurik, {
+                headers: {
+                    'x-api-key': globalThis.hikaru.apiKey
+                }
+            }).then(res => res.json())
             await sock.sendMessage(m.key.remoteJid, {
                 document: { url },
                 mimetype: 'image/png',

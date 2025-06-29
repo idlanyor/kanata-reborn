@@ -4,8 +4,7 @@
  * @name : RedNote (Xiaohongshu) Downloader
  * @module : ES6 Module
  */
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 import { rednote } from '../../lib/scraper/rednote.js';
 
 export const handler = 'rednote';
@@ -58,7 +57,7 @@ export default async ({ sock, m, id, psn }) => {
                     }
                 }
             }
-        }, { quoted:m });
+        }, { quoted: m });
 
         await sock.relayMessage(id, message.message, { messageId: message.key.id });
 
@@ -70,7 +69,7 @@ export default async ({ sock, m, id, psn }) => {
             caption: `🎥 *${title || 'RedNote Video'}*\n\n` +
                 `_Downloaded by KanataV3_`,
             mimetype: 'video/mp4'
-        }, { quoted:m });
+        }, { quoted: m });
 
         await sock.sendMessage(id, { react: { text: '✅', key: m.key } });
 

@@ -14,8 +14,11 @@ export default async ({ sock, m, id, psn }) => {
     try {
         await sock.sendMessage(id, { react: { text: '⏱️', key: m.key } });
 
-        const res = await axios.get(`https://api.fasturl.link/downup/igdown?url=${encodeURIComponent(psn)}`, {
-            headers: { accept: 'application/json' }
+        const res = await axios.get(globalThis.hikaru.baseUrl + `downup/igdown/simple?url=${encodeURIComponent(psn)}`, {
+            headers: {
+                accept: 'application/json',
+                'x-api-key': globalThis.hikaru.apiKey
+            }
         });
 
         const result = res.data?.result;
@@ -28,17 +31,18 @@ export default async ({ sock, m, id, psn }) => {
         }
 
         for (const item of result.data) {
-            if (item.thumbnail) {
-                await sock.sendMessage(id, {
-                    image: { url: item.thumbnail },
-                    caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-                });
-            }
             if (item.url) {
-                await sock.sendMessage(id, {
-                    video: { url: item.url },
-                    caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Roy~404~'
-                });
+                if (item.url.includes('/thumb?')) {
+                    await sock.sendMessage(id, {
+                        image: { url: item.url },
+                        caption: '🖼️ *Gambar berhasil diunduh!*\n\n👨‍💻 By: Kanata V3 ~201~'
+                    });
+                } else {
+                    await sock.sendMessage(id, {
+                        video: { url: item.url },
+                        caption: '🎥 *Video berhasil diunduh!*\n\n👨‍💻 By: Kanata V3 ~201~'
+                    });
+                }
             }
         }
 

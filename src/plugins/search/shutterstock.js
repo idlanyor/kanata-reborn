@@ -4,7 +4,8 @@
  * @name : Shutterstock Search with Carousel
  * @module : ES6 Module
  */
-import { generateWAMessageFromContent, proto, prepareWAMessageMedia } from '@antidonasi/baileys';
+import {  proto, prepareWAMessageMedia, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 import { shutterstockSearch } from '../../lib/scraper/shutterstock.js';
 
 export const handler = 'shutterstock'

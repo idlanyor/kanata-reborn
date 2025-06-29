@@ -2,7 +2,6 @@ import { checkOwner } from '../../helper/permission.js';
 import util from 'util';
 
 export default async ({ sock, m, id, noTel, psn, sender }) => {
-    if (!globalThis.isOwner(noTel)) return;
 
     if (!psn) {
         await sock.sendMessage(id, { text: '❌ Masukkan kode yang akan dieval!' });

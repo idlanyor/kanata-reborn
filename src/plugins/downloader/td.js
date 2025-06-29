@@ -1,6 +1,6 @@
-import pkg from '@antidonasi/baileys';
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
 import { tiktokDl } from "../../lib/scraper/tiktok.js";
-const { proto, generateWAMessageFromContent } = pkg;
+
 
 export const description = "Downloader TikTok provided by *Roy*";
 export const handler = "td"

@@ -74,9 +74,13 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         formattedNumber = '62' + psn.substring(1)
     }
     
-    const base = `https://api.fasturl.link/tool/getcontact?number=${formattedNumber}`
+    const base = globalThis.hikaru.baseUrl + `tool/getcontact?number=${formattedNumber}`
 
-    const { data } = await axios.get(base)
+    const { data } = await axios.get(base, {
+        headers: {
+            'x-api-key': globalThis.hikaru.apiKey
+        }
+    })
     const text = `
 User Data:
 - Name: ${data.result.userData.name}

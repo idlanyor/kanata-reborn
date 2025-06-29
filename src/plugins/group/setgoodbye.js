@@ -1,6 +1,6 @@
 import Group from '../../database/models/Group.js';
-import pkg from '@antidonasi/baileys';
-const { proto, generateWAMessageFromContent } = pkg;
+import { proto, generateWAMessageFromContent } from '@fizzxydev/baileys-pro';
+
 
 export const handler = 'setgoodbye';
 export const description = 'Mengatur pesan perpisahan untuk anggota yang keluar';

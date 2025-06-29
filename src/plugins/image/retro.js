@@ -8,7 +8,11 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         try {
             // Mengunggah gambar dan mengubah menjadi HD menggunakan API retro
             const imageUrl = await uploadGambar2(attf);
-            const { url } = await fetch(`https://api.fasturl.link/aiimage/imgcolorize?url=${imageUrl}`);
+            const { url } = await fetch(globalThis.hikaru.baseUrl + `aiimage/imgcolorize?url=${imageUrl}`, {
+                headers: {
+                    'x-api-key': globalThis.hikaru.apiKey
+                }
+            }).then(res => res.json());
             await sock.sendMessage(id, {
                 image: { url },
                 caption: '📷 Retro Image berhasil 🎉'

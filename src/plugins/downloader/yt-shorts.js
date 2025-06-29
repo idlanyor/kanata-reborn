@@ -15,14 +15,15 @@ export default async ({ sock, m, id, psn, sender, noTel, caption }) => {
 
         // Cek apakah input adalah URL YouTube
         if (psn.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-            const response = await axios.get(`https://api.fasturl.link/downup/ytmp4`, {
+            const response = await axios.get(globalThis.hikaru.baseUrl + `downup/ytmp4`, {
                 params: {
                     url: psn,
                     quality: '360',
                     server: 'server2'
                 },
                 headers: {
-                    'accept': 'application/json'
+                    'accept': 'application/json',
+                    'x-api-key': globalThis.hikaru.apiKey
                 }
             });
 

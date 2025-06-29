@@ -1,6 +1,6 @@
 import { getGroupMetadata } from "../../helper/group.js";
 
-export const handler = '~anohimitahananonamaewobokutachiwamadashiranai'
+export const handler = 'ht'
 export const description = 'Tag semua anggota group secara tersembunyi'
 export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
     if (!m.isAdmin) return m.reply('Access Denied \nCommand Khusus Admin')

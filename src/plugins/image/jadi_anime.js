@@ -6,9 +6,13 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         await sock.sendMessage(id, { text: `⏱️ tunggu Bentar,Bot sedang berimajinasi` });
         try {
             const imageUrl = await uploadGambar2(attf);
-            let url = `https://api.fasturl.link/aiimage/imgreconstruction-v1?url=${imageUrl}&style=Anime%20Drawing`
+            let url = globalThis.hikaru.baseUrl + `aiimage/imgreconstruction-v1?url=${imageUrl}&style=Anime%20Drawing`
             console.log(url)
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: {
+                    'x-api-key': globalThis.hikaru.apiKey
+                }
+            });
             await sock.sendMessage(id, {
                 image: { url: response.url },
                 caption: '📷 Image to Anime berhasil! 🎉'

@@ -1,12 +1,12 @@
 import axios from "axios";
 
 export const description = "🐦 Simple Twitter/X Video Downloader by *FastURL*";
-export const handler = "xdl";
+export const handler = "xd";
 
 export default async ({ sock, m, id, psn }) => {
     if (psn === '') {
         await sock.sendMessage(id, {
-            text: '📥 *Format salah bro!*\n\nKetik:\n`xdl <url>`\n\nContoh:\n`xdl https://x.com/i/status/1823260489704669415`'
+            text: '📥 *Format salah bro!*\n\nKetik:\n`xd <url>`\n\nContoh:\n`xd https://x.com/i/status/1823260489704669415`'
         });
         return;
     }
@@ -14,8 +14,11 @@ export default async ({ sock, m, id, psn }) => {
     try {
         await sock.sendMessage(id, { react: { text: '⏳', key: m.key } });
 
-        const res = await axios.get(`https://api.fasturl.link/downup/twdown/simple?url=${encodeURIComponent(psn)}`, {
-            headers: { accept: 'application/json' }
+        const res = await axios.get(globalThis.hikaru.baseUrl + `downup/twdown/simple?url=${encodeURIComponent(psn)}`, {
+            headers: { 
+                accept: 'application/json',
+                'x-api-key': globalThis.hikaru.apiKey
+            }
         });
 
         const result = res.data?.result;
