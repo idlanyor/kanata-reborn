@@ -76,11 +76,11 @@ export const threads = async (link) => {
     }
 };
 
-(async () => {
-    try {
-        const result = await threads('https://www.threads.net/@budikuang/post/DFDaS9UyhbJ?xmt=AQGzTcf8Jg0MTzaOE7JWGSYs5EyzaAcIrlfk9-z635Texw');
-        console.log(result);
-    } catch (error) {
-        console.error("Error:", error.message);
-    }
-})();
+// (async () => {
+//     try {
+//         const result = await threads('https://www.threads.net/@budikuang/post/DFDaS9UyhbJ?xmt=AQGzTcf8Jg0MTzaOE7JWGSYs5EyzaAcIrlfk9-z635Texw');
+//         console.log(result);
+//     } catch (error) {
+//         console.error("Error:", error.message);
+//     }
+// })();

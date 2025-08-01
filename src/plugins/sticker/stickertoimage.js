@@ -51,8 +51,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
             // Check if it's a quoted message with sticker
             const quotedMessage = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             if (!quotedMessage?.stickerMessage) {
-                await sock.sendMessage(id, { 
-                    text: `🔄 *Sticker to Image Converter*\n\n📝 *Cara Penggunaan:*\n• Reply stiker dengan caption: .sticker2img\n• Atau kirim stiker dengan caption: .sticker2img\n\n💡 *Fitur:*\n• Konversi stiker ke format gambar (PNG)\n• Mendukung stiker animasi dan statis\n• Kualitas tinggi\n\n⚙️ *Opsi:*\n• .sticker2img - Konversi ke PNG\n• .sticker2img jpg - Konversi ke JPG` 
+                await sock.sendMessage(id, {
+                    text: `🔄 *Sticker to Image Converter*\n\n📝 *Cara Penggunaan:*\n• Reply stiker dengan caption: .sticker2img\n• Atau kirim stiker dengan caption: .sticker2img\n\n💡 *Fitur:*\n• Konversi stiker ke format gambar (PNG)\n• Mendukung stiker animasi dan statis\n• Kualitas tinggi\n\n⚙️ *Opsi:*\n• .sticker2img - Konversi ke PNG\n• .sticker2img jpg - Konversi ke JPG`
                 });
                 return;
             }
@@ -60,10 +60,10 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
         // Get the sticker media using custom function
         const stickerData = await getStickerMedia(m);
-        
+
         if (!stickerData || !stickerData.buffer) {
-            await sock.sendMessage(id, { 
-                text: "❌ Gagal mengambil data stiker. Silakan coba lagi." 
+            await sock.sendMessage(id, {
+                text: "❌ Gagal mengambil data stiker. Silakan coba lagi."
             });
             return;
         }
@@ -73,8 +73,8 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
         const mimetype = outputFormat === 'jpg' ? 'image/jpeg' : 'image/png';
 
         // Send processing message
-        const processingMsg = await sock.sendMessage(id, { 
-            text: `⏳ Sedang mengkonversi stiker ke ${outputFormat.toUpperCase()}...` 
+        const processingMsg = await sock.sendMessage(id, {
+            text: `⏳ Sedang mengkonversi stiker ke ${outputFormat.toUpperCase()}...`
         });
 
         try {
@@ -93,7 +93,7 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
             // Send the converted image
             await sock.sendMessage(id, imageMessage, { quoted: m });
-            
+
             // Delete processing message
             if (processingMsg.key) {
                 await sock.sendMessage(id, { delete: processingMsg.key });
@@ -101,15 +101,15 @@ export default async ({ sock, m, id, psn, sender, noTel, caption, attf }) => {
 
         } catch (conversionError) {
             console.error('Error converting sticker to image:', conversionError);
-            await sock.sendMessage(id, { 
-                text: `❌ Gagal mengkonversi stiker ke gambar:\n${conversionError.message}\n\n💡 *Tips:*\n• Pastikan stiker tidak rusak\n• Coba dengan stiker lain\n• Periksa koneksi internet` 
+            await sock.sendMessage(id, {
+                text: `❌ Gagal mengkonversi stiker ke gambar:\n${conversionError.message}\n\n💡 *Tips:*\n• Pastikan stiker tidak rusak\n• Coba dengan stiker lain\n• Periksa koneksi internet`
             });
         }
 
     } catch (error) {
         console.error('Error in sticker to image conversion:', error);
-        await sock.sendMessage(id, { 
-            text: `❌ Terjadi kesalahan:\n${error.message}\n\n🔧 *Solusi:*\n• Pastikan stiker valid\n• Coba lagi dalam beberapa saat\n• Hubungi admin jika masalah berlanjut` 
+        await sock.sendMessage(id, {
+            text: `❌ Terjadi kesalahan:\n${error.message}\n\n🔧 *Solusi:*\n• Pastikan stiker valid\n• Coba lagi dalam beberapa saat\n• Hubungi admin jika masalah berlanjut`
         });
     }
 }; 
